@@ -1,13 +1,18 @@
 # Android Studio / Gradle
 .gradle/
-.idea/
 *.iml
+
+# IDEA (keep useful configs)
+.idea/*
+!.idea/codeStyles/
+!.idea/runConfigurations/
 
 # Build output
 build/
 captures/
 .externalNativeBuild/
 .cxx/
+out/
 
 # Local configuration
 local.properties
@@ -19,3 +24,14 @@ local.properties
 *.apk
 *.aab
 
+# Logs / temp
+*.log
+*.tmp
+*.swp
+
+# Security
+*.jks
+*.keystore
+
+# Kotlin
+*.kotlin_module
