@@ -2,60 +2,83 @@ package com.example.projecthub.repository
 
 import com.example.projecthub.local.dao.SyncQueueDao
 import com.example.projecthub.local.dao.UserDao
-import com.example.projecthub.local.entities.SyncQueueEntity
 import com.example.projecthub.local.entities.UserEntity
-import com.example.projecthub.remote.supabase.SupabaseClientProvider
+import com.example.projecthub.remote.supabase.UserRemoteDataSource
 import com.example.projecthub.remote.supabase.models.UserDto
-import io.github.jan.supabase.postgrest.from
 
 class UserRepository(
     private val userDao: UserDao,
-    private val syncQueueDao: SyncQueueDao
+    private val syncQueueDao: SyncQueueDao,
+    private val userRemoteDataSource: UserRemoteDataSource = UserRemoteDataSource()
 ) {
 
-    suspend fun saveUserLocally(user: UserEntity) {
-        userDao.insertUser(user)
-    }
+    suspend fun register(
+        nome: String,
+        username: String,
+        email: String,
+        password: String
+    ): Result<Unit> {
+        return try {
+            val existingUser = userRemoteDataSource.getUserByEmail(email)
 
-    suspend fun getLocalUserByEmail(email: String): UserEntity? {
-        return userDao.getUserByEmail(email)
-    }
-
-    suspend fun registerUser(userDto: UserDto) {
-        SupabaseClientProvider.client
-            .from("users")
-            .insert(userDto)
-    }
-
-    suspend fun getUserByEmailRemote(email: String): UserDto? {
-        return SupabaseClientProvider.client
-            .from("users")
-            .select {
-                filter {
-                    eq("email", email)
-                }
+            if (existingUser != null) {
+                return Result.failure(Exception("Já existe uma conta com este email."))
             }
-            .decodeSingleOrNull<UserDto>()
+
+            val newUser = UserDto(
+                id = null,
+                nome = nome,
+                username = username,
+                email = email,
+                password = password,
+                foto = null,
+                role = "UTILIZADOR",
+                createdAt = null,
+                status = "ATIVO"
+            )
+
+            userRemoteDataSource.registerUser(newUser)
+
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
-    suspend fun updateUserOffline(user: UserEntity) {
-        userDao.updateUser(user)
+    suspend fun login(
+        email: String,
+        password: String
+    ): Result<UserDto> {
+        return try {
+            val user = userRemoteDataSource.getUserByEmail(email)
 
-        syncQueueDao.insertSyncAction(
-            SyncQueueEntity(
-                action = "update_profile",
-                payload = """
-                    {
-                        "id": ${user.id},
-                        "nome": "${user.nome}",
-                        "username": "${user.username}",
-                        "email": "${user.email}",
-                        "foto": "${user.foto}",
-                        "status": "${user.status}"
-                    }
-                """.trimIndent(),
-                synced = false
-            )
-        )
+            if (user == null) {
+                Result.failure(Exception("Utilizador não encontrado."))
+
+            } else if (user.password != password) {
+                Result.failure(Exception("Password incorreta."))
+
+            } else {
+                userDao.insertUser(
+                    UserEntity(
+                        id = user.id ?: 0,
+                        nome = user.nome,
+                        username = user.username,
+                        email = user.email,
+                        password = user.password,
+                        foto = user.foto,
+                        role = user.role,
+                        createdAt = user.createdAt,
+                        status = user.status
+                    )
+                )
+
+                Result.success(user)
+            }
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }
