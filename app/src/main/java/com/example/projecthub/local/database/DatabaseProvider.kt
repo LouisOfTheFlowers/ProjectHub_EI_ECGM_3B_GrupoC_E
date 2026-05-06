@@ -15,11 +15,11 @@ object DatabaseProvider {
                 AppDatabase::class.java,
                 "projecthub_database"
             )
-                .fallbackToDestructiveMigration(false)
+                .fallbackToDestructiveMigration()
                 .build()
 
             INSTANCE = instance
             instance
         }
     }
-}
+}   
