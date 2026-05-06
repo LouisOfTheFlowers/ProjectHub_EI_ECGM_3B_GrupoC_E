@@ -22,4 +22,4 @@ object DatabaseProvider {
             instance
         }
     }
-}   
+}
