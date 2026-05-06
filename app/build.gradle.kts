@@ -40,10 +40,6 @@ android {
     }
 }
 
-kotlin {
-    jvmToolchain(11)
-}
-
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
