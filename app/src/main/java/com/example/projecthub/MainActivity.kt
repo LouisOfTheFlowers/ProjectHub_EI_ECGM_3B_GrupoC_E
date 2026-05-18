@@ -4,9 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import com.example.projecthub.ui.theme.ProjectHubTheme
+import com.example.projecthub.uiscreens.AdminDashboardScreen
 import com.example.projecthub.uiscreens.LoginScreen
 import com.example.projecthub.uiscreens.RegisterScreen
 import com.example.projecthub.viewmodel.AuthViewModel
@@ -33,7 +33,13 @@ class MainActivity : ComponentActivity() {
                         onGoToLogin = { currentScreen = "login" }
                     )
 
-                    "home" -> Text("Login feito com sucesso.")
+                    "home" -> AdminDashboardScreen(
+                        onLogout = {
+                            authViewModel.logout {
+                                currentScreen = "login"
+                            }
+                        }
+                    )
                 }
             }
         }
