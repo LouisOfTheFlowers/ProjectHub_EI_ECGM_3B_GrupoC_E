@@ -9,12 +9,12 @@ data class UserDto(
     val nome: String,
     val username: String,
     val email: String,
-    val password: String,
+    val password: String = "",
     val foto: String? = null,
     val role: String = "UTILIZADOR",
 
     @SerialName("created_at")
     val createdAt: String? = null,
 
-    val status: String = "ATIVO"
+    val status: String = "PENDENTE"
 )

@@ -3,12 +3,21 @@ package com.example.projecthub.repository
 import com.example.projecthub.local.dao.SyncQueueDao
 import com.example.projecthub.local.dao.UserDao
 import com.example.projecthub.local.entities.UserEntity
+import com.example.projecthub.remote.supabase.AuthRemoteDataSource
 import com.example.projecthub.remote.supabase.UserRemoteDataSource
 import com.example.projecthub.remote.supabase.models.UserDto
+import io.github.jan.supabase.auth.exception.AuthErrorCode
+import io.github.jan.supabase.auth.exception.AuthRestException
+
+data class AuthenticatedUser(
+    val user: UserDto,
+    val jwt: String
+)
 
 class UserRepository(
     private val userDao: UserDao,
     private val syncQueueDao: SyncQueueDao,
+    private val authRemoteDataSource: AuthRemoteDataSource = AuthRemoteDataSource(),
     private val userRemoteDataSource: UserRemoteDataSource = UserRemoteDataSource()
 ) {
 
@@ -19,25 +28,20 @@ class UserRepository(
         password: String
     ): Result<Unit> {
         return try {
-            val existingUser = userRemoteDataSource.getUserByEmail(email)
+            try {
+                authRemoteDataSource.register(
+                    nome = nome,
+                    username = username,
+                    email = email,
+                    password = password
+                )
+            } catch (e: AuthRestException) {
+                if (!e.isExistingAuthUserError()) {
+                    throw e
+                }
 
-            if (existingUser != null) {
-                return Result.failure(Exception("Já existe uma conta com este email."))
+                authRemoteDataSource.login(email, password)
             }
-
-            val newUser = UserDto(
-                id = null,
-                nome = nome,
-                username = username,
-                email = email,
-                password = password,
-                foto = null,
-                role = "UTILIZADOR",
-                createdAt = null,
-                status = "ATIVO"
-            )
-
-            userRemoteDataSource.registerUser(newUser)
 
             Result.success(Unit)
 
@@ -49,16 +53,13 @@ class UserRepository(
     suspend fun login(
         email: String,
         password: String
-    ): Result<UserDto> {
+    ): Result<AuthenticatedUser> {
         return try {
+            val session = authRemoteDataSource.login(email, password)
             val user = userRemoteDataSource.getUserByEmail(email)
 
             if (user == null) {
                 Result.failure(Exception("Utilizador não encontrado."))
-
-            } else if (user.password != password) {
-                Result.failure(Exception("Password incorreta."))
-
             } else {
                 userDao.insertUser(
                     UserEntity(
@@ -66,7 +67,7 @@ class UserRepository(
                         nome = user.nome,
                         username = user.username,
                         email = user.email,
-                        password = user.password,
+                        password = "",
                         foto = user.foto,
                         role = user.role,
                         createdAt = user.createdAt,
@@ -74,11 +75,27 @@ class UserRepository(
                     )
                 )
 
-                Result.success(user)
+                Result.success(
+                    AuthenticatedUser(
+                        user = user,
+                        jwt = session.accessToken
+                    )
+                )
             }
 
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    suspend fun logout() {
+        authRemoteDataSource.logout()
+        userDao.deleteAllUsers()
+    }
+
+    private fun AuthRestException.isExistingAuthUserError(): Boolean {
+        return errorCode == AuthErrorCode.EmailExists ||
+            errorCode == AuthErrorCode.UserAlreadyExists ||
+            error.contains("already", ignoreCase = true)
     }
 }
