@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -42,7 +43,8 @@ import com.example.projecthub.R
 
 enum class AdminSection {
     Dashboard,
-    Projects
+    Projects,
+    Tasks
 }
 
 private val AdminScaffoldAccent = AuthAccent
@@ -100,19 +102,22 @@ private fun AdminTopBar(onMenuClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(62.dp)
             .background(AdminScaffoldAccent)
+            .statusBarsPadding()
+            .height(62.dp)
             .padding(horizontal = 18.dp),
         contentAlignment = Alignment.Center
     ) {
-        MenuIcon(
+        Box(
             modifier = Modifier
                 .align(Alignment.CenterStart)
+                .size(48.dp)
                 .clip(RoundedCornerShape(6.dp))
-                .clickable(onClick = onMenuClick)
-                .padding(2.dp),
-            color = Color.White
-        )
+                .clickable(onClick = onMenuClick),
+            contentAlignment = Alignment.Center
+        ) {
+            MenuIcon(color = Color.White)
+        }
 
         Text(
             text = "Project Hub",
@@ -169,6 +174,7 @@ private fun AdminSidebar(
             .width(284.dp)
             .fillMaxHeight()
             .background(Color(0xFF0F1724))
+            .statusBarsPadding()
             .padding(horizontal = 14.dp, vertical = 22.dp)
     ) {
         Row(
@@ -219,7 +225,12 @@ private fun AdminSidebar(
             selected = selectedSection == AdminSection.Projects,
             onClick = { onNavigate(AdminSection.Projects) }
         )
-        SidebarItem("Todas as Tarefas", SidebarIcon.Tasks)
+        SidebarItem(
+            "Todas as Tarefas",
+            SidebarIcon.Tasks,
+            selected = selectedSection == AdminSection.Tasks,
+            onClick = { onNavigate(AdminSection.Tasks) }
+        )
         SidebarItem("Gestão de Equipas", SidebarIcon.Teams)
         SidebarItem("Relatórios Executivos", SidebarIcon.Reports)
         SidebarItem("Definições Globais", SidebarIcon.Settings)

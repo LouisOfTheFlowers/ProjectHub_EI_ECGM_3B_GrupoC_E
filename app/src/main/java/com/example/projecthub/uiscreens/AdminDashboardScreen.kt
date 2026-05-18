@@ -66,6 +66,8 @@ fun AdminDashboardScreen(
             }
 
             AdminSection.Projects -> AdminProjectsScreen()
+
+            AdminSection.Tasks -> AdminTasksScreen()
         }
     }
 }
