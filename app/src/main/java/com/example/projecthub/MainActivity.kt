@@ -6,15 +6,19 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.settings.AppNotificationHelper
 import com.example.projecthub.settings.AppSettingsProvider
 import com.example.projecthub.settings.AppThemeMode
 import com.example.projecthub.ui.theme.ProjectHubTheme
+import com.example.projecthub.uiscreens.AdminDashboardScreen
 import com.example.projecthub.uiscreens.LoginScreen
 import com.example.projecthub.uiscreens.RegisterScreen
 import com.example.projecthub.viewmodel.AdminSettingsViewModel
@@ -50,9 +54,6 @@ class MainActivity : ComponentActivity() {
                     val authViewModel: AuthViewModel = viewModel()
                     var currentScreen by remember { mutableStateOf("login") }
 
-<<<<<<< Updated upstream
-                    "home" -> Text("Login feito com sucesso.")
-=======
                     when (currentScreen) {
                         "login" -> LoginScreen(
                             authViewModel = authViewModel,
@@ -73,14 +74,10 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
->>>>>>> Stashed changes
                 }
             }
         }
     }
-<<<<<<< Updated upstream
-}
-=======
 
     private fun requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
@@ -93,4 +90,3 @@ class MainActivity : ComponentActivity() {
         )
     }
 }
->>>>>>> Stashed changes
