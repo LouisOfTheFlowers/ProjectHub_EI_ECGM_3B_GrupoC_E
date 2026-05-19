@@ -14,6 +14,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.projecthub.settings.currentAppSettings
+import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.settings.t
 import com.example.projecthub.viewmodel.AuthViewModel
 
 @Composable
@@ -28,6 +31,27 @@ fun LoginScreen(
     val isLoading = authViewModel.isLoading
     val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
     val isFormValid = isEmailValid && password.length >= 6
+    val language = currentAppSettings().language
+    val goToRegister = rememberSoundClick(onGoToRegister)
+    val loginClick = rememberSoundClick {
+        if (email.isNotBlank() && !isEmailValid) {
+            message = language.t("login.invalidEmail")
+            return@rememberSoundClick
+        }
+
+        if (!isFormValid) {
+            message = language.t("login.invalidForm")
+            return@rememberSoundClick
+        }
+
+        authViewModel.login(email, password) { success, resultMessage ->
+            message = resultMessage
+
+            if (success) {
+                onLoginSuccess()
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -38,14 +62,14 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        AuthHeader(subtitle = "Iniciar sessão")
+        AuthHeader(subtitle = language.t("login.subtitle"))
 
         Spacer(modifier = Modifier.height(32.dp))
 
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Email") },
+            label = { Text(language.t("login.email")) },
             singleLine = true,
             isError = message.isNotEmpty() && !isEmailValid,
             keyboardOptions = KeyboardOptions(
@@ -61,7 +85,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Palavra-passe") },
+            label = { Text(language.t("login.password")) },
             singleLine = true,
             isError = message.isNotEmpty() && password.length in 1..5,
             visualTransformation = PasswordVisualTransformation(),
@@ -76,25 +100,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = {
-                if (email.isNotBlank() && !isEmailValid) {
-                    message = "Insere um email válido, por exemplo nome@email.com."
-                    return@Button
-                }
-
-                if (!isFormValid) {
-                    message = "Preenche o email e uma palavra-passe com pelo menos 6 caracteres."
-                    return@Button
-                }
-
-                authViewModel.login(email, password) { success, resultMessage ->
-                    message = resultMessage
-
-                    if (success) {
-                        onLoginSuccess()
-                    }
-                }
-            },
+            onClick = loginClick,
             enabled = !isLoading,
             colors = authButtonColors(),
             modifier = Modifier.fillMaxWidth()
@@ -106,17 +112,17 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             } else {
-                Text("Entrar")
+                Text(language.t("login.submit"))
             }
         }
 
         TextButton(
-            onClick = onGoToRegister,
+            onClick = goToRegister,
             enabled = !isLoading,
             colors = ButtonDefaults.textButtonColors(contentColor = AuthAccent),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Criar conta")
+            Text(language.t("login.createAccount"))
         }
 
         if (message.isNotEmpty()) {

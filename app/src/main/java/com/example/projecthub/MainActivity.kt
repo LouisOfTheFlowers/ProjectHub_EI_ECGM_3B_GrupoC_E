@@ -1,14 +1,23 @@
 package com.example.projecthub
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.core.app.ActivityCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.projecthub.settings.AppNotificationHelper
+import com.example.projecthub.settings.AppSettingsProvider
+import com.example.projecthub.settings.AppThemeMode
 import com.example.projecthub.ui.theme.ProjectHubTheme
 import com.example.projecthub.uiscreens.LoginScreen
 import com.example.projecthub.uiscreens.RegisterScreen
+import com.example.projecthub.viewmodel.AdminSettingsViewModel
 import com.example.projecthub.viewmodel.AuthViewModel
 
 class MainActivity : ComponentActivity() {
@@ -17,25 +26,71 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            ProjectHubTheme {
-                val authViewModel: AuthViewModel = viewModel()
-                var currentScreen by remember { mutableStateOf("login") }
+            val settingsViewModel: AdminSettingsViewModel = viewModel()
+            val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
+            val systemDark = isSystemInDarkTheme()
+            val darkTheme = when (settings.themeMode) {
+                AppThemeMode.Light -> false
+                AppThemeMode.Dark -> true
+                AppThemeMode.System -> systemDark
+            }
 
-                when (currentScreen) {
-                    "login" -> LoginScreen(
-                        authViewModel = authViewModel,
-                        onGoToRegister = { currentScreen = "register" },
-                        onLoginSuccess = { currentScreen = "home" }
-                    )
+            LaunchedEffect(settings.notificationsEnabled) {
+                if (settings.notificationsEnabled) {
+                    AppNotificationHelper.createChannels(this@MainActivity)
+                    requestNotificationPermissionIfNeeded()
+                }
+            }
 
-                    "register" -> RegisterScreen(
-                        authViewModel = authViewModel,
-                        onGoToLogin = { currentScreen = "login" }
-                    )
+            ProjectHubTheme(
+                darkTheme = darkTheme,
+                dynamicColor = false
+            ) {
+                AppSettingsProvider(settings = settings) {
+                    val authViewModel: AuthViewModel = viewModel()
+                    var currentScreen by remember { mutableStateOf("login") }
 
+<<<<<<< Updated upstream
                     "home" -> Text("Login feito com sucesso.")
+=======
+                    when (currentScreen) {
+                        "login" -> LoginScreen(
+                            authViewModel = authViewModel,
+                            onGoToRegister = { currentScreen = "register" },
+                            onLoginSuccess = { currentScreen = "home" }
+                        )
+
+                        "register" -> RegisterScreen(
+                            authViewModel = authViewModel,
+                            onGoToLogin = { currentScreen = "login" }
+                        )
+
+                        "home" -> AdminDashboardScreen(
+                            onLogout = {
+                                authViewModel.logout {
+                                    currentScreen = "login"
+                                }
+                            }
+                        )
+                    }
+>>>>>>> Stashed changes
                 }
             }
         }
     }
+<<<<<<< Updated upstream
 }
+=======
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (AppNotificationHelper.canPostNotifications(this)) return
+
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+            42
+        )
+    }
+}
+>>>>>>> Stashed changes
