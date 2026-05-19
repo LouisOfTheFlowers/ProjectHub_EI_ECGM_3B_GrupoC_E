@@ -11,6 +11,13 @@ class UserRemoteDataSource {
             .insert(user)
     }
 
+    suspend fun getUsers(): List<UserDto> {
+        return SupabaseClientProvider.client
+            .from("users")
+            .select()
+            .decodeAs<List<UserDto>>()
+    }
+
     suspend fun getUserByEmail(email: String): UserDto? {
         return try {
             SupabaseClientProvider.client
