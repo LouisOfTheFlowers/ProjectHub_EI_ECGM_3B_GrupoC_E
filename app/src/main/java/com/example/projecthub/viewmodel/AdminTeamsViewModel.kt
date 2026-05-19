@@ -44,6 +44,7 @@ data class AdminTeamsState(
     val activeUsers: Int = 0,
     val isLoading: Boolean = true,
     val updatingRoleUserId: Int? = null,
+    val deletingUserId: Int? = null,
     val errorMessage: String? = null
 )
 
@@ -161,6 +162,28 @@ class AdminTeamsViewModel(
         }
     }
 
+    fun deleteUser(user: AdminTeamUserItem) {
+        viewModelScope.launch {
+            state = state.copy(deletingUserId = user.id, errorMessage = null)
+
+            val result = runCatching {
+                userRemoteDataSource.deleteUser(user.id)
+            }
+
+            if (result.isSuccess) {
+                loadTeams()
+            } else {
+                state = state.copy(
+                    deletingUserId = null,
+                    errorMessage = userErrorMessage(
+                        result.exceptionOrNull(),
+                        fallback = "Não foi possível remover o utilizador."
+                    )
+                )
+            }
+        }
+    }
+
     private fun applyFilters() {
         val query = state.searchQuery.trim()
         val selectedRole = state.selectedRole
@@ -185,5 +208,31 @@ class AdminTeamsViewModel(
         }
 
         state = state.copy(visibleUsers = filteredUsers)
+    }
+
+    private fun userErrorMessage(error: Throwable?, fallback: String): String {
+        val rawMessage = error?.message.orEmpty()
+
+        return when {
+            rawMessage.contains("admin_delete_user", ignoreCase = true) ||
+                rawMessage.contains("function", ignoreCase = true) ->
+                "Aplica a migration de remoção de utilizadores no Supabase antes de apagar utilizadores."
+
+            rawMessage.contains("Only admins", ignoreCase = true) ||
+                rawMessage.contains("Apenas administradores", ignoreCase = true) ->
+                "Apenas administradores podem remover utilizadores."
+
+            rawMessage.contains("própria conta", ignoreCase = true) ||
+                rawMessage.contains("propria conta", ignoreCase = true) ->
+                "Não podes remover a tua própria conta de administrador."
+
+            rawMessage.isBlank() -> fallback
+
+            else -> rawMessage
+                .lineSequence()
+                .firstOrNull()
+                ?.take(160)
+                ?: fallback
+        }
     }
 }

@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -23,6 +26,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.settings.currentAppSettings
+import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
 import com.example.projecthub.viewmodel.AdminTeamProjectOption
 import com.example.projecthub.viewmodel.AdminTeamUserItem
@@ -57,6 +62,8 @@ fun AdminTeamsScreen(
     viewModel: AdminTeamsViewModel = viewModel()
 ) {
     val state = viewModel.state
+    var userToDelete by remember { mutableStateOf<AdminTeamUserItem?>(null) }
+    val language = currentAppSettings().language
 
     Column {
         TeamsHeader()
@@ -72,7 +79,31 @@ fun AdminTeamsScreen(
         Spacer(modifier = Modifier.height(18.dp))
         TeamUserList(
             state = state,
-            onRoleSelected = viewModel::updateUserRole
+            onRoleSelected = viewModel::updateUserRole,
+            onDeleteUser = { userToDelete = it }
+        )
+    }
+
+    userToDelete?.let { user ->
+        AlertDialog(
+            onDismissRequest = { userToDelete = null },
+            title = { Text("Remover utilizador") },
+            text = { Text("Tens a certeza que queres remover \"${user.name}\"? Esta ação elimina o acesso e os dados associados ao utilizador.") },
+            confirmButton = {
+                TextButton(
+                    onClick = rememberSoundClick {
+                        viewModel.deleteUser(user)
+                        userToDelete = null
+                    }
+                ) {
+                    Text(language.t("common.delete"), color = TeamsRed, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = rememberSoundClick { userToDelete = null }) {
+                    Text(language.t("common.cancel"))
+                }
+            }
         )
     }
 }
@@ -317,7 +348,8 @@ private fun ProjectFilter(
 @Composable
 private fun TeamUserList(
     state: AdminTeamsState,
-    onRoleSelected: (AdminTeamUserItem, String) -> Unit
+    onRoleSelected: (AdminTeamUserItem, String) -> Unit,
+    onDeleteUser: (AdminTeamUserItem) -> Unit
 ) {
     val language = currentAppSettings().language
     when {
@@ -332,41 +364,47 @@ private fun TeamUserList(
             }
         }
 
-        state.errorMessage != null -> {
-            Text(
-                text = state.errorMessage,
-                color = TeamsRed,
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp
-            )
-        }
-
-        state.visibleUsers.isEmpty() -> {
-            Text(
-                text = "Nenhum utilizador corresponde aos filtros.",
-                color = TeamsMuted,
-                fontSize = 15.sp
-            )
-        }
-
         else -> {
-            state.visibleUsers.forEach { user ->
-                TeamUserCard(
-                    user = user,
-                    isUpdatingRole = state.updatingRoleUserId == user.id,
-                    onRoleSelected = onRoleSelected
-                )
-                Spacer(modifier = Modifier.height(10.dp))
+            Column {
+                state.errorMessage?.let { message ->
+                    Text(
+                        text = message,
+                        color = TeamsRed,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                if (state.visibleUsers.isEmpty()) {
+                    Text(
+                        text = "Nenhum utilizador corresponde aos filtros.",
+                        color = TeamsMuted,
+                        fontSize = 15.sp
+                    )
+                } else {
+                    state.visibleUsers.forEach { user ->
+                        TeamUserCard(
+                            user = user,
+                            isUpdatingRole = state.updatingRoleUserId == user.id,
+                            isDeleting = state.deletingUserId == user.id,
+                            onRoleSelected = onRoleSelected,
+                            onDelete = { onDeleteUser(user) }
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
+                }
             }
         }
     }
 }
-
 @Composable
 private fun TeamUserCard(
     user: AdminTeamUserItem,
     isUpdatingRole: Boolean,
-    onRoleSelected: (AdminTeamUserItem, String) -> Unit
+    isDeleting: Boolean,
+    onRoleSelected: (AdminTeamUserItem, String) -> Unit,
+    onDelete: () -> Unit
 ) {
     val language = currentAppSettings().language
     val statusColor = if (user.isActive) TeamsGreen else TeamsOrange
@@ -438,7 +476,9 @@ private fun TeamUserCard(
             UserRoleEditor(
                 user = user,
                 isUpdating = isUpdatingRole,
-                onRoleSelected = onRoleSelected
+                isDeleting = isDeleting,
+                onRoleSelected = onRoleSelected,
+                onDelete = onDelete
             )
         }
     }
@@ -449,10 +489,13 @@ private fun TeamUserCard(
 private fun UserRoleEditor(
     user: AdminTeamUserItem,
     isUpdating: Boolean,
-    onRoleSelected: (AdminTeamUserItem, String) -> Unit
+    isDeleting: Boolean,
+    onRoleSelected: (AdminTeamUserItem, String) -> Unit,
+    onDelete: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     val language = currentAppSettings().language
+    val deleteClick = rememberSoundClick(onDelete)
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -503,6 +546,32 @@ private fun UserRoleEditor(
                 strokeWidth = 2.dp,
                 color = TeamsAccent
             )
+        }
+
+        Button(
+            onClick = deleteClick,
+            enabled = !isUpdating && !isDeleting,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = TeamsRed,
+                contentColor = Color.White,
+                disabledContainerColor = TeamsRed.copy(alpha = 0.45f),
+                disabledContentColor = Color.White
+            ),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            if (isDeleting) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
+                    color = Color.White
+                )
+            } else {
+                Text(
+                    text = "Remover",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp
+                )
+            }
         }
     }
 }

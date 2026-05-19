@@ -76,6 +76,8 @@ fun AdminDashboardScreen(
 
             AdminSection.Teams -> AdminTeamsScreen()
 
+            AdminSection.Reports -> AdminReportsScreen()
+
             AdminSection.Settings -> AdminSettingsScreen()
         }
     }
