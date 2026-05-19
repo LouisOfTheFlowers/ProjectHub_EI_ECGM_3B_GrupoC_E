@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,6 +37,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.settings.AppLanguage
+import com.example.projecthub.settings.currentAppSettings
+import com.example.projecthub.settings.t
 import com.example.projecthub.viewmodel.AdminDashboardState
 import com.example.projecthub.viewmodel.AdminDashboardViewModel
 
@@ -52,6 +56,7 @@ fun AdminDashboardScreen(
 ) {
     val state = viewModel.state
     var currentSection by remember { mutableStateOf(AdminSection.Dashboard) }
+    val language = currentAppSettings().language
 
     AdminScaffold(
         selectedSection = currentSection,
@@ -60,28 +65,32 @@ fun AdminDashboardScreen(
     ) {
         when (currentSection) {
             AdminSection.Dashboard -> {
-                DashboardHeader()
+                DashboardHeader(language = language)
                 Spacer(modifier = Modifier.height(22.dp))
-                DashboardContent(state = state)
+                DashboardContent(state = state, language = language)
             }
 
             AdminSection.Projects -> AdminProjectsScreen()
 
             AdminSection.Tasks -> AdminTasksScreen()
+
+            AdminSection.Teams -> AdminTeamsScreen()
+
+            AdminSection.Settings -> AdminSettingsScreen()
         }
     }
 }
 
 @Composable
-private fun DashboardHeader() {
+private fun DashboardHeader(language: AppLanguage) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
             Text(
-                text = "Admin Dashboard",
-                color = AdminInk,
+                text = language.t("dashboard.title"),
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
             )
@@ -90,7 +99,10 @@ private fun DashboardHeader() {
 }
 
 @Composable
-private fun DashboardContent(state: AdminDashboardState) {
+private fun DashboardContent(
+    state: AdminDashboardState,
+    language: AppLanguage
+) {
     when {
         state.isLoading -> {
             Box(
@@ -105,8 +117,8 @@ private fun DashboardContent(state: AdminDashboardState) {
 
         state.errorMessage != null -> {
             MetricCard(
-                label = "Estado da Dashboard",
-                value = "Erro",
+                label = language.t("dashboard.state"),
+                value = language.t("dashboard.error"),
                 accent = AdminRed,
                 detail = state.errorMessage,
                 icon = DashboardIcon.Warning
@@ -115,26 +127,26 @@ private fun DashboardContent(state: AdminDashboardState) {
 
         else -> {
             MetricCard(
-                label = "Utilizadores ativos",
+                label = language.t("dashboard.activeUsers"),
                 value = state.activeUsers.toString(),
                 accent = AdminOrange,
-                detail = "Contas com estado ativo",
+                detail = language.t("dashboard.activeUsersDetail"),
                 icon = DashboardIcon.Users
             )
             Spacer(modifier = Modifier.height(12.dp))
             MetricCard(
-                label = "Projetos concluídos",
+                label = language.t("dashboard.completedProjects"),
                 value = state.completedProjects.toString(),
                 accent = AdminAccent,
-                detail = "Total de projetos finalizados",
+                detail = language.t("dashboard.completedProjectsDetail"),
                 icon = DashboardIcon.Completed
             )
             Spacer(modifier = Modifier.height(12.dp))
             MetricCard(
-                label = "Projetos por concluir",
+                label = language.t("dashboard.pendingProjects"),
                 value = state.pendingProjects.toString(),
                 accent = AdminRed,
-                detail = "Projetos ainda não finalizados",
+                detail = language.t("dashboard.pendingProjectsDetail"),
                 icon = DashboardIcon.Pending
             )
         }
@@ -161,7 +173,7 @@ private fun MetricCard(
             .fillMaxWidth()
             .height(108.dp),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
@@ -188,16 +200,16 @@ private fun MetricCard(
                 Spacer(modifier = Modifier.width(14.dp))
 
                 Column {
-                    Text(
-                        text = label,
-                        color = AdminInk,
+                Text(
+                    text = label,
+                    color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = detail,
-                        color = AdminMuted,
+                Text(
+                    text = detail,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
                         fontSize = 13.sp
                     )
                 }
@@ -205,13 +217,14 @@ private fun MetricCard(
 
             Text(
                 text = value,
-                color = AdminInk,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 36.sp
             )
         }
     }
 }
+
 
 @Composable
 private fun MetricIcon(

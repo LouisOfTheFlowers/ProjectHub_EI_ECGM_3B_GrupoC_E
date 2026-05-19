@@ -27,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,11 +41,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.projecthub.R
+import com.example.projecthub.settings.currentAppSettings
+import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.settings.t
 
 enum class AdminSection {
     Dashboard,
     Projects,
-    Tasks
+    Tasks,
+    Teams,
+    Settings
 }
 
 private val AdminScaffoldAccent = AuthAccent
@@ -58,24 +64,25 @@ fun AdminScaffold(
     content: @Composable () -> Unit
 ) {
     var isSidebarOpen by remember { mutableStateOf(false) }
+    val openSidebar = rememberSoundClick { isSidebarOpen = true }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFEFF1F5))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .border(5.dp, AdminScaffoldAccent)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.surface)
         ) {
-            AdminTopBar(onMenuClick = { isSidebarOpen = true })
+            AdminTopBar(onMenuClick = openSidebar)
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(AdminScaffoldSurface)
+                    .background(MaterialTheme.colorScheme.background)
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp, vertical = 22.dp)
             ) {
@@ -146,6 +153,7 @@ private fun SidebarOverlay(
     onNavigate: (AdminSection) -> Unit,
     onLogout: () -> Unit
 ) {
+    val dismiss = rememberSoundClick(onDismiss)
     Row(modifier = Modifier.fillMaxSize()) {
         AdminSidebar(
             selectedSection = selectedSection,
@@ -158,7 +166,7 @@ private fun SidebarOverlay(
                 .weight(1f)
                 .fillMaxHeight()
                 .background(Color.Black.copy(alpha = 0.35f))
-                .clickable(onClick = onDismiss)
+                .clickable(onClick = dismiss)
         )
     }
 }
@@ -169,6 +177,7 @@ private fun AdminSidebar(
     onNavigate: (AdminSection) -> Unit,
     onLogout: () -> Unit
 ) {
+    val language = currentAppSettings().language
     Column(
         modifier = Modifier
             .width(284.dp)
@@ -214,30 +223,40 @@ private fun AdminSidebar(
         Spacer(modifier = Modifier.height(24.dp))
 
         SidebarItem(
-            "Dashboard",
+            language.t("sidebar.dashboard"),
             SidebarIcon.Dashboard,
             selected = selectedSection == AdminSection.Dashboard,
             onClick = { onNavigate(AdminSection.Dashboard) }
         )
         SidebarItem(
-            "Todos os Projetos",
+            language.t("sidebar.projects"),
             SidebarIcon.Projects,
             selected = selectedSection == AdminSection.Projects,
             onClick = { onNavigate(AdminSection.Projects) }
         )
         SidebarItem(
-            "Todas as Tarefas",
+            language.t("sidebar.tasks"),
             SidebarIcon.Tasks,
             selected = selectedSection == AdminSection.Tasks,
             onClick = { onNavigate(AdminSection.Tasks) }
         )
-        SidebarItem("Gestão de Equipas", SidebarIcon.Teams)
-        SidebarItem("Relatórios Executivos", SidebarIcon.Reports)
-        SidebarItem("Definições Globais", SidebarIcon.Settings)
+        SidebarItem(
+            language.t("sidebar.teams"),
+            SidebarIcon.Teams,
+            selected = selectedSection == AdminSection.Teams,
+            onClick = { onNavigate(AdminSection.Teams) }
+        )
+        SidebarItem(language.t("sidebar.reports"), SidebarIcon.Reports)
+        SidebarItem(
+            language.t("sidebar.settings"),
+            SidebarIcon.Settings,
+            selected = selectedSection == AdminSection.Settings,
+            onClick = { onNavigate(AdminSection.Settings) }
+        )
 
         Spacer(modifier = Modifier.weight(1f))
 
-        SidebarItem("Sair", SidebarIcon.Logout, onClick = onLogout)
+        SidebarItem(language.t("sidebar.logout"), SidebarIcon.Logout, onClick = onLogout)
     }
 }
 
@@ -248,13 +267,14 @@ private fun SidebarItem(
     selected: Boolean = false,
     onClick: () -> Unit = {}
 ) {
+    val click = rememberSoundClick(onClick)
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(52.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(if (selected) Color(0xFF1E293B) else Color.Transparent)
-            .clickable(onClick = onClick)
+            .clickable(onClick = click)
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

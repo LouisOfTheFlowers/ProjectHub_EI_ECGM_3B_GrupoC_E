@@ -42,6 +42,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.settings.currentAppSettings
+import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.settings.t
 import com.example.projecthub.viewmodel.AdminProjectTaskGroup
 import com.example.projecthub.viewmodel.AdminTaskListItem
 import com.example.projecthub.viewmodel.AdminTaskStatusFilter
@@ -100,8 +103,7 @@ fun AdminTasksScreen(
             Spacer(modifier = Modifier.height(18.dp))
             TaskProjectList(
                 state = state,
-                onToggleProject = viewModel::toggleProject,
-                onToggleTaskCompletion = viewModel::toggleTaskCompletion
+                onToggleProject = viewModel::toggleProject
             )
         }
     }
@@ -109,6 +111,8 @@ fun AdminTasksScreen(
 
 @Composable
 private fun TasksHeader(onAddTask: () -> Unit) {
+    val language = currentAppSettings().language
+    val addTaskClick = rememberSoundClick(onAddTask)
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -116,20 +120,20 @@ private fun TasksHeader(onAddTask: () -> Unit) {
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Todas as Tarefas",
+                text = language.t("tasks.title"),
                 color = TasksInk,
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 24.sp
             )
             Text(
-                text = "Tarefas organizadas por projeto",
+                text = language.t("tasks.subtitle"),
                 color = TasksMuted,
                 fontSize = 14.sp
             )
         }
 
         androidx.compose.material3.Button(
-            onClick = onAddTask,
+            onClick = addTaskClick,
             colors = ButtonDefaults.buttonColors(
                 containerColor = TasksAccent,
                 contentColor = Color.White
@@ -137,7 +141,7 @@ private fun TasksHeader(onAddTask: () -> Unit) {
             shape = RoundedCornerShape(8.dp)
         ) {
             Text(
-                text = "Adicionar",
+                text = language.t("tasks.add"),
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp
             )
@@ -147,21 +151,22 @@ private fun TasksHeader(onAddTask: () -> Unit) {
 
 @Composable
 private fun TaskStats(state: AdminTasksState) {
+    val language = currentAppSettings().language
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         CompactStatCard(
-            title = "Total",
+            title = language.t("common.total"),
             value = state.totalTasks.toString(),
             accent = TasksAccent,
             modifier = Modifier.weight(1f)
         )
         CompactStatCard(
-            title = "Pendentes",
+            title = language.t("common.pending"),
             value = state.pendingTasks.toString(),
             accent = TasksOrange,
             modifier = Modifier.weight(1f)
         )
         CompactStatCard(
-            title = "Completadas",
+            title = language.t("common.completed"),
             value = state.completedTasks.toString(),
             accent = TasksGreen,
             modifier = Modifier.weight(1f)
@@ -176,6 +181,7 @@ private fun CompactStatCard(
     accent: Color,
     modifier: Modifier = Modifier
 ) {
+    val language = currentAppSettings().language
     Card(
         modifier = modifier.height(82.dp),
         shape = RoundedCornerShape(8.dp),
@@ -200,6 +206,7 @@ private fun TaskFilters(
     onSearchChange: (String) -> Unit,
     onStatusChange: (AdminTaskStatusFilter) -> Unit
 ) {
+    val language = currentAppSettings().language
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -212,7 +219,7 @@ private fun TaskFilters(
                 onValueChange = onSearchChange,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                placeholder = { Text("Pesquisar por projeto ou tarefa...") }
+                placeholder = { Text(language.t("tasks.search")) }
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -231,6 +238,7 @@ private fun StatusDropdown(
     onOptionSelected: (AdminTaskStatusFilter) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val openClick = rememberSoundClick { expanded = true }
 
     Box {
         Row(
@@ -239,7 +247,7 @@ private fun StatusDropdown(
                 .height(52.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
-                .clickable { expanded = true }
+                .clickable(onClick = openClick)
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
@@ -285,9 +293,9 @@ private fun StatusDropdown(
 @Composable
 private fun TaskProjectList(
     state: AdminTasksState,
-    onToggleProject: (Int) -> Unit,
-    onToggleTaskCompletion: (AdminTaskListItem) -> Unit
+    onToggleProject: (Int) -> Unit
 ) {
+    val language = currentAppSettings().language
     when {
         state.isLoading -> {
             Box(
@@ -321,9 +329,7 @@ private fun TaskProjectList(
             state.projectGroups.forEach { group ->
                 ProjectTaskSection(
                     group = group,
-                    isUpdatingTaskId = state.isUpdatingTaskId,
-                    onToggleProject = { onToggleProject(group.projectId) },
-                    onToggleTaskCompletion = onToggleTaskCompletion
+                    onToggleProject = { onToggleProject(group.projectId) }
                 )
                 Spacer(modifier = Modifier.height(10.dp))
             }
@@ -334,10 +340,9 @@ private fun TaskProjectList(
 @Composable
 private fun ProjectTaskSection(
     group: AdminProjectTaskGroup,
-    isUpdatingTaskId: Int?,
-    onToggleProject: () -> Unit,
-    onToggleTaskCompletion: (AdminTaskListItem) -> Unit
+    onToggleProject: () -> Unit
 ) {
+    val toggleClick = rememberSoundClick(onToggleProject)
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -348,7 +353,7 @@ private fun ProjectTaskSection(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = onToggleProject)
+                    .clickable(onClick = toggleClick)
                     .padding(horizontal = 14.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -405,11 +410,7 @@ private fun ProjectTaskSection(
                     )
                 } else {
                     group.visibleTasks.forEach { task ->
-                        TaskCard(
-                            task = task,
-                            isUpdating = isUpdatingTaskId == task.id,
-                            onToggleCompletion = { onToggleTaskCompletion(task) }
-                        )
+                        TaskCard(task = task)
                     }
                 }
             }
@@ -418,11 +419,7 @@ private fun ProjectTaskSection(
 }
 
 @Composable
-private fun TaskCard(
-    task: AdminTaskListItem,
-    isUpdating: Boolean,
-    onToggleCompletion: () -> Unit
-) {
+private fun TaskCard(task: AdminTaskListItem) {
     val statusColor = when {
         task.isCompleted -> TasksGreen
         task.isDelayed -> TasksRed
@@ -467,30 +464,14 @@ private fun TaskCard(
 
                 CompletionIcon(
                     isCompleted = task.isCompleted,
-                    isLoading = isUpdating,
-                    color = statusColor,
-                    onClick = onToggleCompletion
+                    color = statusColor
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            TaskInfoRow("Início", task.startDate.toDisplayDate())
-            TaskInfoRow("Prazo", task.dueDate.toDisplayDate())
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            TextButton(
-                onClick = onToggleCompletion,
-                enabled = !isUpdating,
-                colors = ButtonDefaults.textButtonColors(contentColor = statusColor),
-                modifier = Modifier.align(Alignment.End)
-            ) {
-                Text(
-                    text = if (task.isCompleted) "Marcar pendente" else "Marcar completada",
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            TaskInfoRow("Início", task.startDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
+            TaskInfoRow("Prazo", task.dueDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
         }
     }
 }
@@ -498,54 +479,43 @@ private fun TaskCard(
 @Composable
 private fun CompletionIcon(
     isCompleted: Boolean,
-    isLoading: Boolean,
-    color: Color,
-    onClick: () -> Unit
+    color: Color
 ) {
     Box(
         modifier = Modifier
             .size(38.dp)
             .clip(CircleShape)
-            .background(color.copy(alpha = 0.14f))
-            .clickable(enabled = !isLoading, onClick = onClick),
+            .background(color.copy(alpha = 0.14f)),
         contentAlignment = Alignment.Center
     ) {
-        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(18.dp),
-                strokeWidth = 2.dp,
-                color = color
-            )
-        } else {
-            Canvas(modifier = Modifier.size(21.dp)) {
-                val stroke = Stroke(width = 2.4.dp.toPx(), cap = StrokeCap.Round)
+        Canvas(modifier = Modifier.size(21.dp)) {
+            val stroke = Stroke(width = 2.4.dp.toPx(), cap = StrokeCap.Round)
 
-                if (isCompleted) {
-                    drawCircle(color = color, style = stroke)
-                    drawLine(
-                        color = color,
-                        start = Offset(size.width * 0.28f, size.height * 0.52f),
-                        end = Offset(size.width * 0.44f, size.height * 0.68f),
-                        strokeWidth = stroke.width,
-                        cap = StrokeCap.Round
-                    )
-                    drawLine(
-                        color = color,
-                        start = Offset(size.width * 0.44f, size.height * 0.68f),
-                        end = Offset(size.width * 0.76f, size.height * 0.34f),
-                        strokeWidth = stroke.width,
-                        cap = StrokeCap.Round
-                    )
-                } else {
-                    drawCircle(color = color, style = stroke)
-                    drawLine(
-                        color = color,
-                        start = Offset(size.width * 0.34f, size.height * 0.5f),
-                        end = Offset(size.width * 0.66f, size.height * 0.5f),
-                        strokeWidth = stroke.width,
-                        cap = StrokeCap.Round
-                    )
-                }
+            if (isCompleted) {
+                drawCircle(color = color, style = stroke)
+                drawLine(
+                    color = color,
+                    start = Offset(size.width * 0.28f, size.height * 0.52f),
+                    end = Offset(size.width * 0.44f, size.height * 0.68f),
+                    strokeWidth = stroke.width,
+                    cap = StrokeCap.Round
+                )
+                drawLine(
+                    color = color,
+                    start = Offset(size.width * 0.44f, size.height * 0.68f),
+                    end = Offset(size.width * 0.76f, size.height * 0.34f),
+                    strokeWidth = stroke.width,
+                    cap = StrokeCap.Round
+                )
+            } else {
+                drawCircle(color = color, style = stroke)
+                drawLine(
+                    color = color,
+                    start = Offset(size.width * 0.34f, size.height * 0.5f),
+                    end = Offset(size.width * 0.66f, size.height * 0.5f),
+                    strokeWidth = stroke.width,
+                    cap = StrokeCap.Round
+                )
             }
         }
     }
@@ -569,7 +539,7 @@ private fun TaskInfoRow(label: String, value: String) {
     }
 }
 
-private fun String.toDisplayDate(): String {
+private fun String.toDisplayDate(pattern: String = "dd/MM/yyyy"): String {
     val trimmed = trim()
 
     if (trimmed.isBlank() || trimmed == "-") {
@@ -582,5 +552,5 @@ private fun String.toDisplayDate(): String {
         return trimmed
     }
 
-    return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+    return date.format(DateTimeFormatter.ofPattern(pattern))
 }

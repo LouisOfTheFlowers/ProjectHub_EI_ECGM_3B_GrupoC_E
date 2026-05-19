@@ -14,6 +14,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.projecthub.settings.currentAppSettings
+import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.settings.t
 import com.example.projecthub.viewmodel.AuthViewModel
 
 @Composable
@@ -35,6 +38,27 @@ fun RegisterScreen(
         username.isNotBlank() &&
         isEmailValid &&
         isPasswordValid
+    val language = currentAppSettings().language
+    val goToLogin = rememberSoundClick(onGoToLogin)
+    val registerClick = rememberSoundClick {
+        if (email.isNotBlank() && !isEmailValid) {
+            message = language.t("register.invalidEmail")
+            return@rememberSoundClick
+        }
+
+        if (!isFormValid) {
+            message = language.t("register.invalidForm")
+            return@rememberSoundClick
+        }
+
+        authViewModel.register(nome, username, email, password) { success, resultMessage ->
+            message = resultMessage
+
+            if (success) {
+                onGoToLogin()
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -45,14 +69,14 @@ fun RegisterScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        AuthHeader(subtitle = "Criar conta")
+        AuthHeader(subtitle = language.t("register.subtitle"))
 
         Spacer(modifier = Modifier.height(32.dp))
 
         OutlinedTextField(
             value = nome,
             onValueChange = { nome = it },
-            label = { Text("Nome") },
+            label = { Text(language.t("register.name")) },
             singleLine = true,
             isError = message.isNotEmpty() && nome.isBlank(),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -65,7 +89,7 @@ fun RegisterScreen(
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
-            label = { Text("Username") },
+            label = { Text(language.t("register.username")) },
             singleLine = true,
             isError = message.isNotEmpty() && username.isBlank(),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -78,7 +102,7 @@ fun RegisterScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Email") },
+            label = { Text(language.t("register.email")) },
             singleLine = true,
             isError = message.isNotEmpty() && !isEmailValid,
             keyboardOptions = KeyboardOptions(
@@ -94,7 +118,7 @@ fun RegisterScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Palavra-passe") },
+            label = { Text(language.t("register.password")) },
             singleLine = true,
             isError = message.isNotEmpty() && password.isNotEmpty() && !isPasswordValid,
             visualTransformation = PasswordVisualTransformation(),
@@ -109,25 +133,7 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = {
-                if (email.isNotBlank() && !isEmailValid) {
-                    message = "Insere um email válido, por exemplo nome@email.com."
-                    return@Button
-                }
-
-                if (!isFormValid) {
-                    message = "Preenche todos os campos e usa uma palavra-passe com pelo menos 8 caracteres, letras e números."
-                    return@Button
-                }
-
-                authViewModel.register(nome, username, email, password) { success, resultMessage ->
-                    message = resultMessage
-
-                    if (success) {
-                        onGoToLogin()
-                    }
-                }
-            },
+            onClick = registerClick,
             enabled = !isLoading,
             colors = authButtonColors(),
             modifier = Modifier.fillMaxWidth()
@@ -139,17 +145,17 @@ fun RegisterScreen(
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             } else {
-                Text("Registar")
+                Text(language.t("register.submit"))
             }
         }
 
         TextButton(
-            onClick = onGoToLogin,
+            onClick = goToLogin,
             enabled = !isLoading,
             colors = ButtonDefaults.textButtonColors(contentColor = AuthAccent),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Já tenho conta")
+            Text(language.t("register.haveAccount"))
         }
 
         if (message.isNotEmpty()) {

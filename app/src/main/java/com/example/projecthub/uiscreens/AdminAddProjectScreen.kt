@@ -45,6 +45,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.projecthub.settings.currentAppSettings
+import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.settings.t
 import com.example.projecthub.viewmodel.AdminProjectManager
 import com.example.projecthub.viewmodel.AdminProjectsState
 import java.time.Instant
@@ -68,14 +71,19 @@ fun AdminAddProjectScreen(
     var endDate by remember { mutableStateOf("") }
     var selectedManager by remember { mutableStateOf<AdminProjectManager?>(null) }
     var activeDateField by remember { mutableStateOf<DateField?>(null) }
+    val language = currentAppSettings().language
+    val backClick = rememberSoundClick(onBack)
+    val createClick = rememberSoundClick {
+        onCreate(name.text, description.text, startDate, endDate, selectedManager?.id)
+    }
 
     Column {
         TextButton(
-            onClick = onBack,
+            onClick = backClick,
             colors = ButtonDefaults.textButtonColors(contentColor = AddProjectInk)
         ) {
             Text(
-                text = "< Voltar aos Projetos",
+                text = language.t("addProject.back"),
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
             )
@@ -91,7 +99,7 @@ fun AdminAddProjectScreen(
         ) {
             Column(modifier = Modifier.padding(18.dp)) {
                 Text(
-                    text = "Adicionar Novo Projeto",
+                    text = language.t("addProject.title"),
                     color = AddProjectInk,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 25.sp
@@ -99,7 +107,7 @@ fun AdminAddProjectScreen(
 
                 Spacer(modifier = Modifier.height(18.dp))
 
-                FormLabel("Nome do Projeto")
+                FormLabel(language.t("addProject.name"))
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -109,7 +117,7 @@ fun AdminAddProjectScreen(
                         capitalization = KeyboardCapitalization.Words,
                         keyboardType = KeyboardType.Text
                     ),
-                    placeholder = { Text("Ex: Sistema CRM") }
+                    placeholder = { Text(language.t("addProject.namePlaceholder")) }
                 )
                 AccentCharacterRow(
                     onInsert = { character -> name = name.insertText(character) }
@@ -117,7 +125,7 @@ fun AdminAddProjectScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FormLabel("Descrição")
+                FormLabel(language.t("projects.description"))
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
@@ -128,7 +136,7 @@ fun AdminAddProjectScreen(
                         capitalization = KeyboardCapitalization.Sentences,
                         keyboardType = KeyboardType.Text
                     ),
-                    placeholder = { Text("Descreva os objetivos e âmbito do projeto...") }
+                    placeholder = { Text(language.t("addProject.descriptionPlaceholder")) }
                 )
                 AccentCharacterRow(
                     onInsert = { character -> description = description.insertText(character) }
@@ -136,23 +144,23 @@ fun AdminAddProjectScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FormLabel("Data de Início")
+                FormLabel(language.t("addProject.startDate"))
                 DatePickerField(
                     value = startDate,
-                    onClick = { activeDateField = DateField.Start }
+                    onClick = rememberSoundClick { activeDateField = DateField.Start }
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FormLabel("Data de Fim (Prazo)")
+                FormLabel(language.t("addProject.endDate"))
                 DatePickerField(
                     value = endDate,
-                    onClick = { activeDateField = DateField.End }
+                    onClick = rememberSoundClick { activeDateField = DateField.End }
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FormLabel("Gestor do Projeto")
+                FormLabel(language.t("addProject.manager"))
                 ManagerDropdown(
                     selectedManager = selectedManager,
                     managers = state.managers,
@@ -172,15 +180,7 @@ fun AdminAddProjectScreen(
                 Spacer(modifier = Modifier.height(18.dp))
 
                 Button(
-                    onClick = {
-                        onCreate(
-                            name.text,
-                            description.text,
-                            startDate,
-                            endDate,
-                            selectedManager?.id
-                        )
-                    },
+                    onClick = createClick,
                     enabled = !state.isCreating,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AddProjectAccent,
@@ -199,7 +199,7 @@ fun AdminAddProjectScreen(
                         )
                     } else {
                         Text(
-                            text = "Criar Projeto",
+                            text = language.t("addProject.submit"),
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
                         )
@@ -209,7 +209,7 @@ fun AdminAddProjectScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Button(
-                    onClick = onBack,
+                    onClick = backClick,
                     enabled = !state.isCreating,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFE5E7EB),
@@ -221,7 +221,7 @@ fun AdminAddProjectScreen(
                         .height(52.dp)
                 ) {
                     Text(
-                        text = "Cancelar",
+                        text = language.t("common.cancel"),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
@@ -257,12 +257,13 @@ private fun AccentCharacterRow(onInsert: (String) -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         characters.forEach { character ->
+            val click = rememberSoundClick { onInsert(character) }
             Box(
                 modifier = Modifier
                     .height(34.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(AddProjectAccent.copy(alpha = 0.12f))
-                    .clickable { onInsert(character) }
+                    .clickable(onClick = click)
                     .padding(horizontal = 12.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -299,13 +300,14 @@ private fun DatePickerField(
     value: String,
     onClick: () -> Unit
 ) {
+    val click = rememberSoundClick(onClick)
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
             .clip(RoundedCornerShape(8.dp))
             .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
+            .clickable(onClick = click)
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -329,6 +331,7 @@ private fun ProjectDatePickerDialog(
     onDateSelected: (String) -> Unit
 ) {
     val datePickerState = rememberDatePickerState()
+    val language = currentAppSettings().language
 
     DatePickerDialog(
         onDismissRequest = onDismiss,
@@ -347,8 +350,8 @@ private fun ProjectDatePickerDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+            TextButton(onClick = rememberSoundClick(onDismiss)) {
+                Text(language.t("common.cancel"))
             }
         }
     ) {
@@ -382,6 +385,8 @@ private fun ManagerDropdown(
     onManagerSelected: (AdminProjectManager) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val language = currentAppSettings().language
+    val openClick = rememberSoundClick { expanded = true }
 
     Box {
         Row(
@@ -390,13 +395,13 @@ private fun ManagerDropdown(
                 .height(56.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
-                .clickable(enabled = managers.isNotEmpty()) { expanded = true }
+                .clickable(enabled = managers.isNotEmpty(), onClick = openClick)
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = selectedManager?.name ?: "Selecione um gestor",
+                text = selectedManager?.name ?: language.t("addProject.managerPlaceholder"),
                 color = if (selectedManager == null) AddProjectMuted else AddProjectInk,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp
