@@ -5,17 +5,17 @@ import io.github.jan.supabase.postgrest.from
 
 class UserRemoteDataSource {
 
-    suspend fun registerUser(user: UserDto) {
-        SupabaseClientProvider.client
-            .from("users")
-            .insert(user)
-    }
-
     suspend fun getUsers(): List<UserDto> {
         return SupabaseClientProvider.client
             .from("users")
             .select()
             .decodeAs<List<UserDto>>()
+    }
+
+    suspend fun registerUser(user: UserDto) {
+        SupabaseClientProvider.client
+            .from("users")
+            .insert(user)
     }
 
     suspend fun getUserByEmail(email: String): UserDto? {

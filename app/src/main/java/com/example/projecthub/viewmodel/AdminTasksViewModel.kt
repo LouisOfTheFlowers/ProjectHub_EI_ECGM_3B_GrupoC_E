@@ -18,6 +18,11 @@ enum class AdminTaskStatusFilter(val label: String) {
     Completed("Completadas")
 }
 
+data class AdminTaskProjectOption(
+    val id: Int,
+    val name: String
+)
+
 data class AdminTaskListItem(
     val id: Int,
     val title: String,
@@ -27,11 +32,6 @@ data class AdminTaskListItem(
     val dueDate: String,
     val isCompleted: Boolean,
     val isDelayed: Boolean
-)
-
-data class AdminTaskProjectOption(
-    val id: Int,
-    val name: String
 )
 
 data class AdminProjectTaskGroup(
@@ -55,7 +55,6 @@ data class AdminTasksState(
     val completedTasks: Int = 0,
     val isLoading: Boolean = true,
     val isCreating: Boolean = false,
-    val isUpdatingTaskId: Int? = null,
     val createErrorMessage: String? = null,
     val errorMessage: String? = null
 )
@@ -141,6 +140,7 @@ class AdminTasksViewModel(
 
             state = state.copy(
                 projects = projectOptions,
+                expandedProjectIds = sourceGroups.map { it.projectId }.toSet(),
                 isLoading = false
             )
             applyFilters()
@@ -226,28 +226,6 @@ class AdminTasksViewModel(
         }
     }
 
-    fun toggleTaskCompletion(task: AdminTaskListItem) {
-        viewModelScope.launch {
-            state = state.copy(isUpdatingTaskId = task.id, errorMessage = null)
-
-            val nextStatus = if (task.isCompleted) "PENDENTE" else "CONCLUIDO"
-            val result = tarefaRepository.atualizarStatusTarefa(
-                tarefaId = task.id,
-                status = nextStatus
-            )
-
-            if (result.isSuccess) {
-                loadTasks()
-            } else {
-                state = state.copy(
-                    isUpdatingTaskId = null,
-                    errorMessage = result.exceptionOrNull()?.message
-                        ?: "Não foi possível atualizar a tarefa."
-                )
-            }
-        }
-    }
-
     private fun applyFilters() {
         val query = state.searchQuery.trim()
         val groups = sourceGroups.map { group ->
@@ -275,6 +253,8 @@ class AdminTasksViewModel(
                 pendingTasks = group.tasks.count { !it.isCompleted },
                 isExpanded = group.projectId in state.expandedProjectIds
             )
+        }.filter { group ->
+            query.isBlank() && state.selectedStatus == AdminTaskStatusFilter.All || group.visibleTasks.isNotEmpty()
         }
 
         val allTasks = sourceGroups.flatMap { it.tasks }
@@ -282,8 +262,7 @@ class AdminTasksViewModel(
             projectGroups = groups,
             totalTasks = allTasks.size,
             completedTasks = allTasks.count { it.isCompleted },
-            pendingTasks = allTasks.count { !it.isCompleted },
-            isUpdatingTaskId = null
+            pendingTasks = allTasks.count { !it.isCompleted }
         )
     }
 
