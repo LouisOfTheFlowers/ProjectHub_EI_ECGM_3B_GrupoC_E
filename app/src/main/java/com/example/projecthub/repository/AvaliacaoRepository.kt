@@ -93,6 +93,50 @@ class AvaliacaoRepository(
         }
     }
 
+    suspend fun saveAvaliacao(
+        projetoId: Int,
+        userId: Int,
+        classificacao: Int,
+        comentario: String? = null
+    ): Result<Unit> {
+        return try {
+            if (classificacao < 0 || classificacao > 5) {
+                return Result.failure(Exception("A classificacao deve estar entre 0 e 5."))
+            }
+
+            val existingAvaliacao =
+                avaliacaoRemoteDataSource.getAvaliacaoByProjetoAndUser(
+                    projetoId = projetoId,
+                    userId = userId
+                )
+
+            if (existingAvaliacao == null) {
+                avaliacaoRemoteDataSource.createAvaliacao(
+                    AvaliacaoDto(
+                        id = null,
+                        projeto_id = projetoId,
+                        user_id = userId,
+                        classificacao = classificacao,
+                        comentario = comentario
+                    )
+                )
+            } else {
+                avaliacaoRemoteDataSource.updateAvaliacao(
+                    avaliacaoId = existingAvaliacao.id ?: return Result.failure(Exception("A avaliacao nao tem id.")),
+                    avaliacao = existingAvaliacao.copy(
+                        classificacao = classificacao,
+                        comentario = comentario
+                    )
+                )
+            }
+
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun updateAvaliacao(
         avaliacaoId: Int,
         projetoId: Int,

@@ -19,6 +19,7 @@ import com.example.projecthub.settings.AppSettingsProvider
 import com.example.projecthub.settings.AppThemeMode
 import com.example.projecthub.ui.theme.ProjectHubTheme
 import com.example.projecthub.uiscreens.AdminDashboardScreen
+import com.example.projecthub.uiscreens.GestorDashboardScreen
 import com.example.projecthub.uiscreens.LoginScreen
 import com.example.projecthub.uiscreens.RegisterScreen
 import com.example.projecthub.viewmodel.AdminSettingsViewModel
@@ -66,13 +67,22 @@ class MainActivity : ComponentActivity() {
                             onGoToLogin = { currentScreen = "login" }
                         )
 
-                        "home" -> AdminDashboardScreen(
-                            onLogout = {
+                        "home" -> {
+                            val logout = {
                                 authViewModel.logout {
                                     currentScreen = "login"
                                 }
                             }
-                        )
+
+                            if (authViewModel.currentUser?.role?.equals("GESTOR", ignoreCase = true) == true) {
+                                GestorDashboardScreen(
+                                    gestorId = authViewModel.currentUser?.id,
+                                    onLogout = logout
+                                )
+                            } else {
+                                AdminDashboardScreen(onLogout = logout)
+                            }
+                        }
                     }
                 }
             }

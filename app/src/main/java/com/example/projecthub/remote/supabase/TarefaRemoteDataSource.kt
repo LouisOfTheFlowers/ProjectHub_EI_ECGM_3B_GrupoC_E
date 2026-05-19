@@ -2,8 +2,18 @@ package com.example.projecthub.remote.supabase
 
 import com.example.projecthub.remote.supabase.models.TarefaDto
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.rpc
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 class TarefaRemoteDataSource {
+
+    @Serializable
+    private data class ManagerDeleteTaskParams(
+        @SerialName("p_task_id")
+        val taskId: Int
+    )
 
     suspend fun getTarefas(): List<TarefaDto> {
         return SupabaseClientProvider.client
@@ -71,6 +81,15 @@ class TarefaRemoteDataSource {
             .insert(tarefa)
     }
 
+    suspend fun createTarefaReturning(tarefa: TarefaDto): TarefaDto {
+        return SupabaseClientProvider.client
+            .from("tarefas")
+            .insert(tarefa) {
+                select()
+            }
+            .decodeSingle<TarefaDto>()
+    }
+
     suspend fun updateTarefa(
         tarefaId: Int,
         tarefa: TarefaDto
@@ -92,6 +111,12 @@ class TarefaRemoteDataSource {
                     eq("id", tarefaId)
                 }
             }
+    }
+
+    suspend fun deleteManagerTask(tarefaId: Int) {
+        SupabaseClientProvider.client
+            .postgrest
+            .rpc("manager_delete_task", ManagerDeleteTaskParams(tarefaId))
     }
 
     suspend fun concluirTarefa(tarefaId: Int) {

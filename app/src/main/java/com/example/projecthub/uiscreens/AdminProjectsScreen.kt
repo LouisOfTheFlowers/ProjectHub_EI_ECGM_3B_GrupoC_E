@@ -508,7 +508,7 @@ private fun ProjectListCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            ProjectInfoRow("Coordenador", project.coordinator)
+            ProjectInfoRow("Gestor", project.coordinator)
             ProjectInfoRow("Pessoas", project.memberCount.toString())
             ProjectInfoRow("Início", project.startDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
             ProjectInfoRow("Prazo", project.dueDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
