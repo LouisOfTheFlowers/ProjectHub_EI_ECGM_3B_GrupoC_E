@@ -44,11 +44,12 @@ class ProjetoRepository(
         descricao: String?,
         dataInicio: String?,
         dataFim: String?,
-        gestorId: Int?
+        gestorId: Int?,
+        status: String = "PENDENTE"
     ): Result<Unit> {
         return try {
             if (nome.isBlank()) {
-                return Result.failure(Exception("O nome do projecto não pode estar vazio."))
+                return Result.failure(Exception("O nome do projeto não pode estar vazio."))
             }
 
             val projeto = ProjetoDto(
@@ -57,7 +58,7 @@ class ProjetoRepository(
                 descricao = descricao?.trim(),
                 data_inicio = dataInicio,
                 data_fim = dataFim,
-                status = "PENDENTE",
+                status = status,
                 gestor_id = gestorId,
                 created_at = null
             )
@@ -82,7 +83,7 @@ class ProjetoRepository(
     ): Result<Unit> {
         return try {
             if (nome.isBlank()) {
-                return Result.failure(Exception("O nome do projecto não pode estar vazio."))
+                return Result.failure(Exception("O nome do projeto não pode estar vazio."))
             }
 
             val projeto = ProjetoDto(

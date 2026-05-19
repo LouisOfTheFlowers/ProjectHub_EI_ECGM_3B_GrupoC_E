@@ -9,13 +9,13 @@ import com.example.projecthub.remote.supabase.models.TarefaDto
 import com.example.projecthub.repository.ProjetoRepository
 import com.example.projecthub.repository.TarefaRepository
 import kotlinx.coroutines.launch
+import java.text.Normalizer
 import java.time.LocalDate
 
 enum class AdminTaskStatusFilter(val label: String) {
     All("Todas"),
     Pending("Pendentes"),
-    Completed("Completadas"),
-    Delayed("Atrasadas")
+    Completed("Completadas")
 }
 
 data class AdminTaskProjectOption(
@@ -27,59 +27,50 @@ data class AdminTaskListItem(
     val id: Int,
     val title: String,
     val description: String,
-    val projectId: Int,
-    val status: String,
     val statusLabel: String,
     val startDate: String,
-    val dueDate: String
-) {
-    val isCompleted: Boolean
-        get() = status.equals("CONCLUIDO", ignoreCase = true)
-
+    val dueDate: String,
+    val isCompleted: Boolean,
     val isDelayed: Boolean
-        get() {
-            val due = runCatching { LocalDate.parse(dueDate.take(10)) }.getOrNull()
-            return !isCompleted && due != null && due.isBefore(LocalDate.now())
-        }
-}
+)
 
 data class AdminProjectTaskGroup(
     val projectId: Int,
     val projectName: String,
-    val tasks: List<AdminTaskListItem>,
+    val totalTasks: Int,
     val visibleTasks: List<AdminTaskListItem>,
-    val isExpanded: Boolean = true
-) {
-    val totalTasks: Int
-        get() = tasks.size
-
-    val pendingTasks: Int
-        get() = tasks.count { !it.isCompleted }
-
-    val completedTasks: Int
-        get() = tasks.count { it.isCompleted }
-}
+    val completedTasks: Int,
+    val pendingTasks: Int,
+    val isExpanded: Boolean
+)
 
 data class AdminTasksState(
-    val projects: List<AdminTaskProjectOption> = emptyList(),
-    val tasks: List<AdminTaskListItem> = emptyList(),
     val projectGroups: List<AdminProjectTaskGroup> = emptyList(),
+    val projects: List<AdminTaskProjectOption> = emptyList(),
     val expandedProjectIds: Set<Int> = emptySet(),
-    val searchQuery: String = "",
     val selectedStatus: AdminTaskStatusFilter = AdminTaskStatusFilter.All,
+    val searchQuery: String = "",
     val totalTasks: Int = 0,
     val pendingTasks: Int = 0,
     val completedTasks: Int = 0,
     val isLoading: Boolean = true,
     val isCreating: Boolean = false,
-    val errorMessage: String? = null,
-    val createErrorMessage: String? = null
+    val createErrorMessage: String? = null,
+    val errorMessage: String? = null
 )
 
 class AdminTasksViewModel(
     private val projetoRepository: ProjetoRepository = ProjetoRepository(),
     private val tarefaRepository: TarefaRepository = TarefaRepository()
 ) : ViewModel() {
+
+    private data class TaskGroupSource(
+        val projectId: Int,
+        val projectName: String,
+        val tasks: List<AdminTaskListItem>
+    )
+
+    private var sourceGroups: List<TaskGroupSource> = emptyList()
 
     var state by mutableStateOf(AdminTasksState())
         private set
@@ -104,28 +95,67 @@ class AdminTasksViewModel(
             }
 
             val projects = projectsResult.getOrDefault(emptyList())
-                .mapNotNull { project -> project.id?.let { AdminTaskProjectOption(it, project.nome) } }
-                .sortedBy { it.name.lowercase() }
+            val projectOptions = projects
+                .mapNotNull { project ->
+                    project.id?.let { id ->
+                        AdminTaskProjectOption(
+                            id = id,
+                            name = project.nome
+                        )
+                    }
+                }
+                .sortedBy { it.name }
+            val tasksByProject = tasksResult.getOrDefault(emptyList())
+                .groupBy { it.projeto_id }
 
-            val tasks = tasksResult.getOrDefault(emptyList())
-                .mapNotNull { it.toListItem() }
-                .sortedBy { it.title.lowercase() }
+            val projectGroups = projects
+                .mapNotNull { project ->
+                    val projectId = project.id ?: return@mapNotNull null
+                    TaskGroupSource(
+                        projectId = projectId,
+                        projectName = project.nome,
+                        tasks = tasksByProject[projectId]
+                            .orEmpty()
+                            .map { it.toListItem() }
+                            .sortedWith(compareBy<AdminTaskListItem> { it.isCompleted }.thenBy { it.title })
+                    )
+                }
+                .sortedBy { it.projectName }
+
+            val knownProjectIds = projectGroups.map { it.projectId }.toSet()
+            val orphanTasks = tasksByProject
+                .filterKeys { it !in knownProjectIds }
+                .flatMap { it.value }
+                .map { it.toListItem() }
+
+            sourceGroups = if (orphanTasks.isEmpty()) {
+                projectGroups
+            } else {
+                projectGroups + TaskGroupSource(
+                    projectId = -1,
+                    projectName = "Sem projeto",
+                    tasks = orphanTasks.sortedWith(compareBy<AdminTaskListItem> { it.isCompleted }.thenBy { it.title })
+                )
+            }
 
             state = state.copy(
-                projects = projects,
-                tasks = tasks,
-                expandedProjectIds = projects.map { it.id }.toSet(),
-                totalTasks = tasks.size,
-                pendingTasks = tasks.count { !it.isCompleted },
-                completedTasks = tasks.count { it.isCompleted },
+                projects = projectOptions,
+                expandedProjectIds = sourceGroups.map { it.projectId }.toSet(),
                 isLoading = false
             )
             applyFilters()
         }
     }
 
-    fun updateSearchQuery(query: String) {
-        state = state.copy(searchQuery = query)
+    fun toggleProject(projectId: Int) {
+        val expanded = state.expandedProjectIds
+        state = state.copy(
+            expandedProjectIds = if (projectId in expanded) {
+                expanded - projectId
+            } else {
+                expanded + projectId
+            }
+        )
         applyFilters()
     }
 
@@ -134,11 +164,8 @@ class AdminTasksViewModel(
         applyFilters()
     }
 
-    fun toggleProject(projectId: Int) {
-        val expanded = state.expandedProjectIds
-        state = state.copy(
-            expandedProjectIds = if (projectId in expanded) expanded - projectId else expanded + projectId
-        )
+    fun updateSearchQuery(query: String) {
+        state = state.copy(searchQuery = query)
         applyFilters()
     }
 
@@ -155,72 +182,168 @@ class AdminTasksViewModel(
         onSuccess: () -> Unit
     ) {
         viewModelScope.launch {
-            if (projectId == null) {
-                state = state.copy(createErrorMessage = "Seleciona um projeto.")
+            val startDate = startDateText.toInputLocalDateOrNull()
+            val endDate = endDateText.toInputLocalDateOrNull()
+
+            val validationError = when {
+                title.isBlank() -> "Indica o título da tarefa."
+                description.isBlank() -> "Indica a descrição da tarefa."
+                projectId == null -> "Seleciona o projeto da tarefa."
+                startDate == null -> "Indica a data de início no formato dd/mm/aaaa."
+                endDate == null -> "Indica a data de fim no formato dd/mm/aaaa."
+                startDate.isAfter(endDate) -> "A data de início não pode ser depois da data de fim."
+                else -> null
+            }
+
+            if (validationError != null || startDate == null || endDate == null || projectId == null) {
+                state = state.copy(createErrorMessage = validationError)
                 return@launch
             }
 
             state = state.copy(isCreating = true, createErrorMessage = null)
-            val result = tarefaRepository.createTarefa(title, description, projectId, startDateText, endDateText)
-            state = state.copy(isCreating = false)
+
+            val result = tarefaRepository.createTarefa(
+                titulo = title,
+                descricao = description,
+                projetoId = projectId,
+                dataInicio = startDate.toString(),
+                dataFim = endDate.toString()
+            )
 
             if (result.isSuccess) {
-                onSuccess()
+                state = state.copy(isCreating = false)
                 loadTasks()
+                onSuccess()
             } else {
-                state = state.copy(createErrorMessage = result.exceptionOrNull()?.message ?: "Erro ao criar tarefa.")
+                state = state.copy(
+                    isCreating = false,
+                    createErrorMessage = taskErrorMessage(
+                        result.exceptionOrNull(),
+                        fallback = "Não foi possível criar a tarefa."
+                    )
+                )
             }
         }
     }
 
     private fun applyFilters() {
         val query = state.searchQuery.trim()
-        val projectsById = state.projects.associateBy { it.id }
-
-        val groups = state.projects.map { project ->
-            val projectTasks = state.tasks.filter { it.projectId == project.id }
-            val visibleTasks = projectTasks.filter { task ->
-                val matchesQuery = query.isBlank() ||
-                    task.title.contains(query, true) ||
-                    task.description.contains(query, true) ||
-                    project.name.contains(query, true)
-
+        val groups = sourceGroups.map { group ->
+            val visibleTasks = group.tasks.filter { task ->
                 val matchesStatus = when (state.selectedStatus) {
                     AdminTaskStatusFilter.All -> true
                     AdminTaskStatusFilter.Pending -> !task.isCompleted
                     AdminTaskStatusFilter.Completed -> task.isCompleted
-                    AdminTaskStatusFilter.Delayed -> task.isDelayed
                 }
 
-                matchesQuery && matchesStatus
+                val matchesSearch = query.isBlank() ||
+                    group.projectName.contains(query, ignoreCase = true) ||
+                    task.title.contains(query, ignoreCase = true) ||
+                    task.description.contains(query, ignoreCase = true)
+
+                matchesStatus && matchesSearch
             }
 
             AdminProjectTaskGroup(
-                projectId = project.id,
-                projectName = projectsById[project.id]?.name ?: project.name,
-                tasks = projectTasks,
+                projectId = group.projectId,
+                projectName = group.projectName,
+                totalTasks = group.tasks.size,
                 visibleTasks = visibleTasks,
-                isExpanded = project.id in state.expandedProjectIds
+                completedTasks = group.tasks.count { it.isCompleted },
+                pendingTasks = group.tasks.count { !it.isCompleted },
+                isExpanded = group.projectId in state.expandedProjectIds
             )
         }.filter { group ->
             query.isBlank() && state.selectedStatus == AdminTaskStatusFilter.All || group.visibleTasks.isNotEmpty()
         }
 
-        state = state.copy(projectGroups = groups)
+        val allTasks = sourceGroups.flatMap { it.tasks }
+        state = state.copy(
+            projectGroups = groups,
+            totalTasks = allTasks.size,
+            completedTasks = allTasks.count { it.isCompleted },
+            pendingTasks = allTasks.count { !it.isCompleted }
+        )
     }
 
-    private fun TarefaDto.toListItem(): AdminTaskListItem? {
-        val taskId = id ?: return null
+    private fun TarefaDto.toListItem(): AdminTaskListItem {
+        val dueDate = data_fim?.toLocalDateOrNull()
+        val isCompleted = status.isCompletedStatus()
+        val isDelayed = !isCompleted && dueDate != null && dueDate.isBefore(LocalDate.now())
 
         return AdminTaskListItem(
-            id = taskId,
+            id = id ?: 0,
             title = titulo,
             description = descricao?.takeIf { it.isNotBlank() } ?: "Sem descrição",
-            projectId = projeto_id,
-            status = status,
-            statusLabel = status.replace("_", " "),
-            startDate = data_inicio ?: "-",
-            dueDate = data_fim ?: "-"
+            statusLabel = when {
+                isCompleted -> "Completada"
+                isDelayed -> "Atrasada"
+                else -> "Pendente"
+            },
+            startDate = data_inicio?.take(10) ?: "-",
+            dueDate = data_fim?.take(10) ?: "-",
+            isCompleted = isCompleted,
+            isDelayed = isDelayed
         )
+    }
+
+    private fun String.isCompletedStatus(): Boolean {
+        return normalizedStatus() in setOf(
+            "CONCLUIDO",
+            "CONCLUIDA",
+            "COMPLETO",
+            "COMPLETA",
+            "COMPLETADO",
+            "COMPLETADA",
+            "FINALIZADO",
+            "FINALIZADA"
+        )
+    }
+
+    private fun String.normalizedStatus(): String {
+        val withoutAccents = Normalizer.normalize(this, Normalizer.Form.NFD)
+            .replace("\\p{Mn}+".toRegex(), "")
+
+        return withoutAccents
+            .trim()
+            .replace(" ", "_")
+            .replace("-", "_")
+            .uppercase()
+    }
+
+    private fun String.toLocalDateOrNull(): LocalDate? {
+        return runCatching { LocalDate.parse(take(10)) }.getOrNull()
+    }
+
+    private fun String.toInputLocalDateOrNull(): LocalDate? {
+        val trimmed = trim()
+
+        return runCatching {
+            LocalDate.parse(trimmed, java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+        }.getOrElse {
+            runCatching { LocalDate.parse(trimmed) }.getOrNull()
+        }
+    }
+
+    private fun taskErrorMessage(error: Throwable?, fallback: String): String {
+        val rawMessage = error?.message.orEmpty()
+
+        return when {
+            rawMessage.contains("row-level security", ignoreCase = true) ||
+                rawMessage.contains("42501", ignoreCase = true) ->
+                "Sem permissão para criar tarefas. Aplica a migration de policies das tarefas no Supabase e confirma que a tua conta tem role ADMIN."
+
+            rawMessage.contains("network", ignoreCase = true) ||
+                rawMessage.contains("timeout", ignoreCase = true) ->
+                "Não foi possível ligar ao Supabase. Verifica a ligação à internet."
+
+            rawMessage.isBlank() -> fallback
+
+            else -> rawMessage
+                .lineSequence()
+                .firstOrNull()
+                ?.take(140)
+                ?: fallback
+        }
     }
 }

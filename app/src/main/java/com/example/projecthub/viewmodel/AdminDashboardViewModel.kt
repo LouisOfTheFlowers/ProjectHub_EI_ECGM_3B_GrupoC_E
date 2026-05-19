@@ -8,11 +8,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.projecthub.remote.supabase.UserRemoteDataSource
 import com.example.projecthub.repository.ProjetoRepository
 import kotlinx.coroutines.launch
+import java.text.Normalizer
 
 data class AdminDashboardState(
     val completedProjects: Int = 0,
-    val pendingProjects: Int = 0,
     val activeUsers: Int = 0,
+    val pendingProjects: Int = 0,
+    val totalProjects: Int = 0,
     val isLoading: Boolean = true,
     val errorMessage: String? = null
 )
@@ -33,26 +35,54 @@ class AdminDashboardViewModel(
         viewModelScope.launch {
             state = state.copy(isLoading = true, errorMessage = null)
 
-            val projectsResult = projetoRepository.getProjetos()
+            val projetosResult = projetoRepository.getProjetos()
             val usersResult = runCatching { userRemoteDataSource.getUsers() }
 
-            if (projectsResult.isFailure || usersResult.isFailure) {
+            if (projetosResult.isFailure || usersResult.isFailure) {
                 state = state.copy(
                     isLoading = false,
-                    errorMessage = "Não foi possível carregar a dashboard."
+                    errorMessage = "Não foi possível carregar os dados da dashboard."
                 )
                 return@launch
             }
 
-            val projects = projectsResult.getOrDefault(emptyList())
+            val projetos = projetosResult.getOrDefault(emptyList())
             val users = usersResult.getOrDefault(emptyList())
+            val completedProjects = projetos.count { it.status.isCompletedStatus() }
 
             state = AdminDashboardState(
-                completedProjects = projects.count { it.status.equals("CONCLUIDO", ignoreCase = true) },
-                pendingProjects = projects.count { !it.status.equals("CONCLUIDO", ignoreCase = true) },
-                activeUsers = users.count { it.status.equals("ATIVO", ignoreCase = true) },
+                completedProjects = completedProjects,
+                activeUsers = users.count { it.status.isActiveStatus() },
+                pendingProjects = projetos.size - completedProjects,
+                totalProjects = projetos.size,
                 isLoading = false
             )
         }
+    }
+
+    private fun String.isCompletedStatus(): Boolean {
+        return normalizedStatus() in setOf(
+            "CONCLUIDO",
+            "CONCLUIDA",
+            "COMPLETO",
+            "COMPLETA",
+            "FINALIZADO",
+            "FINALIZADA"
+        )
+    }
+
+    private fun String.isActiveStatus(): Boolean {
+        return normalizedStatus() in setOf("ATIVO", "ACTIVO")
+    }
+
+    private fun String.normalizedStatus(): String {
+        val withoutAccents = Normalizer.normalize(this, Normalizer.Form.NFD)
+            .replace("\\p{Mn}+".toRegex(), "")
+
+        return withoutAccents
+            .trim()
+            .replace(" ", "_")
+            .replace("-", "_")
+            .uppercase()
     }
 }
