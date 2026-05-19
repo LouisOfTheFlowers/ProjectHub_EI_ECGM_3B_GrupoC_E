@@ -50,6 +50,7 @@ enum class AdminSection {
     Projects,
     Tasks,
     Teams,
+    Reports,
     Settings
 }
 
@@ -246,7 +247,12 @@ private fun AdminSidebar(
             selected = selectedSection == AdminSection.Teams,
             onClick = { onNavigate(AdminSection.Teams) }
         )
-        SidebarItem(language.t("sidebar.reports"), SidebarIcon.Reports)
+        SidebarItem(
+            language.t("sidebar.reports"),
+            SidebarIcon.Reports,
+            selected = selectedSection == AdminSection.Reports,
+            onClick = { onNavigate(AdminSection.Reports) }
+        )
         SidebarItem(
             language.t("sidebar.settings"),
             SidebarIcon.Settings,
