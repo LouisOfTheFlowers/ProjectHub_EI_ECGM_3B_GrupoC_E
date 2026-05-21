@@ -77,10 +77,16 @@ class MainActivity : ComponentActivity() {
                             if (authViewModel.currentUser?.role?.equals("GESTOR", ignoreCase = true) == true) {
                                 GestorDashboardScreen(
                                     gestorId = authViewModel.currentUser?.id,
+                                    currentUser = authViewModel.currentUser,
+                                    onUserUpdated = authViewModel::updateCurrentUser,
                                     onLogout = logout
                                 )
                             } else {
-                                AdminDashboardScreen(onLogout = logout)
+                                AdminDashboardScreen(
+                                    currentUser = authViewModel.currentUser,
+                                    onUserUpdated = authViewModel::updateCurrentUser,
+                                    onLogout = logout
+                                )
                             }
                         }
                     }

@@ -43,6 +43,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.viewmodel.GestorTaskProjectOption
 import com.example.projecthub.viewmodel.GestorTaskUserOption
 import com.example.projecthub.viewmodel.GestorTasksState

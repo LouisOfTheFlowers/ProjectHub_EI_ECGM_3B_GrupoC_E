@@ -36,6 +36,23 @@ class AuthRemoteDataSource {
         return SupabaseClientProvider.client.auth.currentAccessTokenOrNull()
     }
 
+    suspend fun sendReauthenticationCode() {
+        SupabaseClientProvider.client.auth.reauthenticate()
+    }
+
+    suspend fun updateEmail(newEmail: String, nonce: String): UserInfo {
+        return SupabaseClientProvider.client.auth.updateUser {
+            email = newEmail
+            this.nonce = nonce
+        }
+    }
+
+    suspend fun updatePassword(newPassword: String): UserInfo {
+        return SupabaseClientProvider.client.auth.updateUser {
+            password = newPassword
+        }
+    }
+
     suspend fun logout() {
         SupabaseClientProvider.client.auth.signOut()
     }

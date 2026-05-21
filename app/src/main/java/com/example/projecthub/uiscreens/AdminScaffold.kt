@@ -51,7 +51,8 @@ enum class AdminSection {
     Tasks,
     Teams,
     Reports,
-    Settings
+    Settings,
+    Profile
 }
 
 private val AdminScaffoldAccent = AuthAccent
@@ -61,6 +62,8 @@ private val AdminScaffoldSurface = Color(0xFFF7F7FB)
 fun AdminScaffold(
     selectedSection: AdminSection,
     onNavigate: (AdminSection) -> Unit,
+    profilePhotoUri: String?,
+    profileName: String?,
     onLogout: () -> Unit,
     content: @Composable () -> Unit
 ) {
@@ -78,7 +81,12 @@ fun AdminScaffold(
                 .border(5.dp, AdminScaffoldAccent)
                 .background(MaterialTheme.colorScheme.surface)
         ) {
-            AdminTopBar(onMenuClick = openSidebar)
+            AdminTopBar(
+                onMenuClick = { isSidebarOpen = true },
+                profilePhotoUri = profilePhotoUri,
+                profileName = profileName,
+                onProfileClick = { onNavigate(AdminSection.Profile) }
+            )
 
             Column(
                 modifier = Modifier
@@ -106,7 +114,12 @@ fun AdminScaffold(
 }
 
 @Composable
-private fun AdminTopBar(onMenuClick: () -> Unit) {
+private fun AdminTopBar(
+    onMenuClick: () -> Unit,
+    profilePhotoUri: String?,
+    profileName: String?,
+    onProfileClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -134,14 +147,13 @@ private fun AdminTopBar(onMenuClick: () -> Unit) {
             fontSize = 21.sp
         )
 
-        Image(
-            painter = painterResource(id = R.drawable.projecthub_logo),
-            contentDescription = "Project Hub",
+        TopBarProfilePhoto(
+            photoUri = profilePhotoUri,
+            name = profileName,
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .size(40.dp)
-                .clip(CircleShape)
-                .background(Color.White)
+                .clickable(onClick = onProfileClick)
                 .padding(4.dp)
         )
     }

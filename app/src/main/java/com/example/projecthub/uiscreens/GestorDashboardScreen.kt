@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.remote.supabase.models.UserDto
 import com.example.projecthub.viewmodel.GestorDashboardState
 import com.example.projecthub.viewmodel.GestorDashboardViewModel
 
@@ -48,6 +49,8 @@ private val GestorRed = Color(0xFFEF4444)
 @Composable
 fun GestorDashboardScreen(
     gestorId: Int?,
+    currentUser: UserDto?,
+    onUserUpdated: (UserDto) -> Unit,
     onLogout: () -> Unit,
     viewModel: GestorDashboardViewModel = viewModel()
 ) {
@@ -61,6 +64,8 @@ fun GestorDashboardScreen(
     GestorScaffold(
         selectedSection = currentSection,
         onNavigate = { currentSection = it },
+        profilePhotoUri = currentUser?.foto,
+        profileName = currentUser?.nome,
         onLogout = onLogout
     ) {
         when (currentSection) {
@@ -74,11 +79,17 @@ fun GestorDashboardScreen(
 
             GestorSection.Tasks -> GestorTasksScreen(gestorId = gestorId)
 
-            GestorSection.Team -> PlaceholderSection("Minha Equipa")
+            GestorSection.Team -> GestorTeamScreen(gestorId = gestorId)
 
-            GestorSection.Reports -> PlaceholderSection("Relatorios de Projeto")
+            GestorSection.Reports -> GestorReportsScreen(gestorId = gestorId)
 
-            GestorSection.Settings -> PlaceholderSection("Definicoes")
+            GestorSection.Settings -> AdminSettingsScreen()
+
+            GestorSection.Profile -> GestorProfileScreen(
+                user = currentUser,
+                onUserUpdated = onUserUpdated,
+                onAccountDeleted = onLogout
+            )
         }
     }
 }

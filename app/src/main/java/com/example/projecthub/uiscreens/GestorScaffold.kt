@@ -48,7 +48,8 @@ enum class GestorSection {
     Tasks,
     Team,
     Reports,
-    Settings
+    Settings,
+    Profile
 }
 
 private val GestorScaffoldAccent = AuthAccent
@@ -57,6 +58,8 @@ private val GestorScaffoldAccent = AuthAccent
 fun GestorScaffold(
     selectedSection: GestorSection,
     onNavigate: (GestorSection) -> Unit,
+    profilePhotoUri: String?,
+    profileName: String?,
     onLogout: () -> Unit,
     content: @Composable () -> Unit
 ) {
@@ -74,7 +77,12 @@ fun GestorScaffold(
                 .border(5.dp, GestorScaffoldAccent)
                 .background(MaterialTheme.colorScheme.surface)
         ) {
-            GestorTopBar(onMenuClick = openSidebar)
+            GestorTopBar(
+                onMenuClick = openSidebar,
+                profilePhotoUri = profilePhotoUri,
+                profileName = profileName,
+                onProfileClick = { onNavigate(GestorSection.Profile) }
+            )
 
             Column(
                 modifier = Modifier
@@ -102,7 +110,12 @@ fun GestorScaffold(
 }
 
 @Composable
-private fun GestorTopBar(onMenuClick: () -> Unit) {
+private fun GestorTopBar(
+    onMenuClick: () -> Unit,
+    profilePhotoUri: String?,
+    profileName: String?,
+    onProfileClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -130,14 +143,13 @@ private fun GestorTopBar(onMenuClick: () -> Unit) {
             fontSize = 21.sp
         )
 
-        Image(
-            painter = painterResource(id = R.drawable.projecthub_logo),
-            contentDescription = "Project Hub",
+        TopBarProfilePhoto(
+            photoUri = profilePhotoUri,
+            name = profileName,
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .size(40.dp)
-                .clip(CircleShape)
-                .background(Color.White)
+                .clickable(onClick = onProfileClick)
                 .padding(4.dp)
         )
     }

@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.remote.supabase.models.UserDto
 import com.example.projecthub.settings.AppLanguage
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
@@ -51,6 +52,8 @@ private val AdminRed = Color(0xFFEF4444)
 
 @Composable
 fun AdminDashboardScreen(
+    currentUser: UserDto?,
+    onUserUpdated: (UserDto) -> Unit,
     onLogout: () -> Unit,
     viewModel: AdminDashboardViewModel = viewModel()
 ) {
@@ -61,6 +64,8 @@ fun AdminDashboardScreen(
     AdminScaffold(
         selectedSection = currentSection,
         onNavigate = { currentSection = it },
+        profilePhotoUri = currentUser?.foto,
+        profileName = currentUser?.nome,
         onLogout = onLogout
     ) {
         when (currentSection) {
@@ -79,6 +84,12 @@ fun AdminDashboardScreen(
             AdminSection.Reports -> AdminReportsScreen()
 
             AdminSection.Settings -> AdminSettingsScreen()
+
+            AdminSection.Profile -> GestorProfileScreen(
+                user = currentUser,
+                onUserUpdated = onUserUpdated,
+                onAccountDeleted = onLogout
+            )
         }
     }
 }
