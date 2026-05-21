@@ -52,11 +52,35 @@ internal fun AuthHeader(subtitle: String) {
 @Composable
 internal fun authTextFieldColors(): TextFieldColors {
     return OutlinedTextFieldDefaults.colors(
+        focusedTextColor = AuthText,
+        unfocusedTextColor = AuthText,
+        disabledTextColor = AuthText.copy(alpha = 0.55f),
         focusedBorderColor = AuthAccent,
         focusedLabelColor = AuthAccent,
         cursorColor = AuthAccent,
         unfocusedBorderColor = Color(0xFF80AEB7),
-        unfocusedLabelColor = Color(0xFF557A83)
+        unfocusedLabelColor = Color(0xFF557A83),
+        focusedPlaceholderColor = Color(0xFF557A83),
+        unfocusedPlaceholderColor = Color(0xFF557A83)
+    )
+}
+
+@Composable
+internal fun appTextFieldColors(): TextFieldColors {
+    return OutlinedTextFieldDefaults.colors(
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+        focusedBorderColor = AuthAccent,
+        focusedLabelColor = AuthAccent,
+        cursorColor = AuthAccent,
+        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+        focusedPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+        unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+        focusedContainerColor = MaterialTheme.colorScheme.surface,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+        disabledContainerColor = MaterialTheme.colorScheme.surface
     )
 }
 

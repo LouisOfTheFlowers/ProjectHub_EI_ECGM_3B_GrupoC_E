@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projecthub.local.database.DatabaseProvider
+import com.example.projecthub.remote.supabase.models.UserDto
 import com.example.projecthub.repository.UserRepository
 import io.github.jan.supabase.auth.exception.AuthErrorCode
 import io.github.jan.supabase.auth.exception.AuthRestException
@@ -33,6 +34,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         private set
 
     var jwt by mutableStateOf<String?>(null)
+        private set
+
+    var currentUser by mutableStateOf<UserDto?>(null)
         private set
 
     fun register(
@@ -78,6 +82,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             isLoading = false
 
             if (result.isSuccess) {
+                currentUser = result.getOrNull()?.user
                 isLoggedIn = true
                 jwt = result.getOrNull()?.jwt
                 message = "Login efetuado com sucesso."
@@ -96,10 +101,15 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             repository.logout()
             jwt = null
+            currentUser = null
             isLoggedIn = false
             message = ""
             onResult()
         }
+    }
+
+    fun updateCurrentUser(user: UserDto) {
+        currentUser = user
     }
 
     private fun authErrorMessage(error: Throwable?, fallback: String): String {

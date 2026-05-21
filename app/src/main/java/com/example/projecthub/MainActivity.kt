@@ -1,14 +1,28 @@
 package com.example.projecthub
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.core.app.ActivityCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.*
+import com.example.projecthub.settings.AppNotificationHelper
+import com.example.projecthub.settings.AppSettingsProvider
+import com.example.projecthub.settings.AppThemeMode
 import com.example.projecthub.ui.theme.ProjectHubTheme
 import com.example.projecthub.uiscreens.AdminDashboardScreen
+import com.example.projecthub.uiscreens.GestorDashboardScreen
 import com.example.projecthub.uiscreens.LoginScreen
 import com.example.projecthub.uiscreens.RegisterScreen
+import com.example.projecthub.viewmodel.AdminSettingsViewModel
 import com.example.projecthub.viewmodel.AuthViewModel
 
 class MainActivity : ComponentActivity() {
@@ -17,31 +31,78 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            ProjectHubTheme {
-                val authViewModel: AuthViewModel = viewModel()
-                var currentScreen by remember { mutableStateOf("login") }
+            val settingsViewModel: AdminSettingsViewModel = viewModel()
+            val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
+            val systemDark = isSystemInDarkTheme()
+            val darkTheme = when (settings.themeMode) {
+                AppThemeMode.Light -> false
+                AppThemeMode.Dark -> true
+                AppThemeMode.System -> systemDark
+            }
 
-                when (currentScreen) {
-                    "login" -> LoginScreen(
-                        authViewModel = authViewModel,
-                        onGoToRegister = { currentScreen = "register" },
-                        onLoginSuccess = { currentScreen = "home" }
-                    )
+            LaunchedEffect(settings.notificationsEnabled) {
+                if (settings.notificationsEnabled) {
+                    AppNotificationHelper.createChannels(this@MainActivity)
+                    requestNotificationPermissionIfNeeded()
+                }
+            }
 
-                    "register" -> RegisterScreen(
-                        authViewModel = authViewModel,
-                        onGoToLogin = { currentScreen = "login" }
-                    )
+            ProjectHubTheme(
+                darkTheme = darkTheme,
+                dynamicColor = false
+            ) {
+                AppSettingsProvider(settings = settings) {
+                    val authViewModel: AuthViewModel = viewModel()
+                    var currentScreen by remember { mutableStateOf("login") }
 
-                    "home" -> AdminDashboardScreen(
-                        onLogout = {
-                            authViewModel.logout {
-                                currentScreen = "login"
+                    when (currentScreen) {
+                        "login" -> LoginScreen(
+                            authViewModel = authViewModel,
+                            onGoToRegister = { currentScreen = "register" },
+                            onLoginSuccess = { currentScreen = "home" }
+                        )
+
+                        "register" -> RegisterScreen(
+                            authViewModel = authViewModel,
+                            onGoToLogin = { currentScreen = "login" }
+                        )
+
+                        "home" -> {
+                            val logout = {
+                                authViewModel.logout {
+                                    currentScreen = "login"
+                                }
+                            }
+
+                            if (authViewModel.currentUser?.role?.equals("GESTOR", ignoreCase = true) == true) {
+                                GestorDashboardScreen(
+                                    gestorId = authViewModel.currentUser?.id,
+                                    currentUser = authViewModel.currentUser,
+                                    onUserUpdated = authViewModel::updateCurrentUser,
+                                    onLogout = logout
+                                )
+                            } else {
+                                AdminDashboardScreen(
+                                    currentUser = authViewModel.currentUser,
+                                    onUserUpdated = authViewModel::updateCurrentUser,
+                                    onLogout = logout
+                                )
                             }
                         }
-                    )
+                    }
                 }
             }
         }
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (AppNotificationHelper.canPostNotifications(this)) return
+
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+            42
+        )
     }
 }

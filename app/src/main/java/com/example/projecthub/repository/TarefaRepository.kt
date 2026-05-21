@@ -86,6 +86,35 @@ class TarefaRepository(
         }
     }
 
+    suspend fun createTarefaReturning(
+        titulo: String,
+        descricao: String?,
+        projetoId: Int,
+        dataInicio: String?,
+        dataFim: String?
+    ): Result<TarefaDto> {
+        return try {
+            if (titulo.isBlank()) {
+                return Result.failure(Exception("O titulo da tarefa nao pode estar vazio."))
+            }
+
+            val tarefa = TarefaDto(
+                id = null,
+                titulo = titulo.trim(),
+                descricao = descricao?.trim(),
+                projeto_id = projetoId,
+                status = "PENDENTE",
+                data_inicio = dataInicio,
+                data_fim = dataFim
+            )
+
+            Result.success(tarefaRemoteDataSource.createTarefaReturning(tarefa))
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun updateTarefa(
         tarefaId: Int,
         titulo: String,
@@ -125,6 +154,15 @@ class TarefaRepository(
     suspend fun deleteTarefa(tarefaId: Int): Result<Unit> {
         return try {
             tarefaRemoteDataSource.deleteTarefa(tarefaId)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteManagerTask(tarefaId: Int): Result<Unit> {
+        return try {
+            tarefaRemoteDataSource.deleteManagerTask(tarefaId)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

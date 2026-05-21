@@ -15,6 +15,17 @@ class ProjetoUserRepository(
         }
     }
 
+    suspend fun getProjectMemberCounts(): Result<Map<Int, Int>> {
+        return try {
+            val counts = projetoUserRemoteDataSource.getProjectMemberCounts()
+                .associate { count -> count.projeto_id to count.membros.toInt() }
+
+            Result.success(counts)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun getProjetoUserById(id: Int): Result<ProjetoUserDto?> {
         return try {
             Result.success(projetoUserRemoteDataSource.getProjetoUserById(id))

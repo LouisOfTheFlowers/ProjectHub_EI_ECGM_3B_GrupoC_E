@@ -1,7 +1,10 @@
 package com.example.projecthub.remote.supabase
 
+import com.example.projecthub.remote.supabase.models.ProjectMemberCountDto
 import com.example.projecthub.remote.supabase.models.ProjetoUserDto
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.rpc
 
 class ProjetoUserRemoteDataSource {
 
@@ -10,6 +13,13 @@ class ProjetoUserRemoteDataSource {
             .from("projeto_users")
             .select()
             .decodeAs<List<ProjetoUserDto>>()
+    }
+
+    suspend fun getProjectMemberCounts(): List<ProjectMemberCountDto> {
+        return SupabaseClientProvider.client
+            .postgrest
+            .rpc("get_project_member_counts")
+            .decodeAs<List<ProjectMemberCountDto>>()
     }
 
     suspend fun getProjetoUserById(id: Int): ProjetoUserDto? {
