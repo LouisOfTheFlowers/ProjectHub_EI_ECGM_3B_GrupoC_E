@@ -48,6 +48,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.settings.currentAppSettings
+import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.settings.t
 import com.example.projecthub.viewmodel.AdminProjectListItem
 import com.example.projecthub.viewmodel.AdminProjectManager
 import com.example.projecthub.viewmodel.AdminProjectsState
@@ -72,6 +75,7 @@ fun AdminProjectsScreen(
     var isCreatingProject by remember { mutableStateOf(false) }
     var projectToDelete by remember { mutableStateOf<AdminProjectListItem?>(null) }
     var projectToEdit by remember { mutableStateOf<AdminProjectListItem?>(null) }
+    val language = currentAppSettings().language
 
     if (isCreatingProject) {
         AdminAddProjectScreen(
@@ -112,21 +116,21 @@ fun AdminProjectsScreen(
     projectToDelete?.let { project ->
         AlertDialog(
             onDismissRequest = { projectToDelete = null },
-            title = { Text("Apagar projeto") },
-            text = { Text("Tens a certeza que queres apagar \"${project.name}\"?") },
+            title = { Text(language.t("projects.deleteTitle")) },
+            text = { Text("${language.t("projects.deleteQuestion")} \"${project.name}\"?") },
             confirmButton = {
                 TextButton(
-                    onClick = {
+                    onClick = rememberSoundClick {
                         viewModel.deleteProject(project.id)
                         projectToDelete = null
                     }
                 ) {
-                    Text("Apagar", color = ProjectsRed, fontWeight = FontWeight.Bold)
+                    Text(language.t("common.delete"), color = ProjectsRed, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { projectToDelete = null }) {
-                    Text("Cancelar")
+                TextButton(onClick = rememberSoundClick { projectToDelete = null }) {
+                    Text(language.t("common.cancel"))
                 }
             }
         )
@@ -167,6 +171,8 @@ private fun ProjectsPage(
     onDeleteProject: (AdminProjectListItem) -> Unit,
     onEditProject: (AdminProjectListItem) -> Unit
 ) {
+    val language = currentAppSettings().language
+    val addProjectClick = rememberSoundClick(onAddProject)
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -175,20 +181,20 @@ private fun ProjectsPage(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Todos os Projetos",
+                    text = language.t("projects.title"),
                     color = ProjectsInk,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 24.sp
                 )
                 Text(
-                    text = "Visão geral de todos os projetos",
+                    text = language.t("projects.list"),
                     color = ProjectsMuted,
                     fontSize = 14.sp
                 )
             }
 
             Button(
-                onClick = onAddProject,
+                onClick = addProjectClick,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = ProjectsAccent,
                     contentColor = Color.White
@@ -196,7 +202,7 @@ private fun ProjectsPage(
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
-                    text = "Adicionar",
+                    text = language.t("projects.add"),
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )
@@ -217,7 +223,7 @@ private fun ProjectsPage(
         Spacer(modifier = Modifier.height(18.dp))
 
         Text(
-            text = "Lista de Projetos",
+            text = language.t("projects.list"),
             color = ProjectsInk,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 20.sp
@@ -270,22 +276,23 @@ private fun ProjectsPage(
 
 @Composable
 private fun ProjectStats(state: AdminProjectsState) {
+    val language = currentAppSettings().language
     ProjectStatCard(
-        title = "Concluídos",
+        title = language.t("common.completed"),
         value = state.completedCount.toString(),
         accent = ProjectsAccent,
         icon = ProjectStatIcon.Completed
     )
     Spacer(modifier = Modifier.height(10.dp))
     ProjectStatCard(
-        title = "Em progresso",
+        title = language.t("common.inProgress"),
         value = state.inProgressCount.toString(),
         accent = ProjectsGreen,
         icon = ProjectStatIcon.Trend
     )
     Spacer(modifier = Modifier.height(10.dp))
     ProjectStatCard(
-        title = "Atrasados",
+        title = language.t("common.delayed"),
         value = state.delayedCount.toString(),
         accent = ProjectsRed,
         icon = ProjectStatIcon.Clock
@@ -299,6 +306,7 @@ private fun ProjectStatCard(
     accent: Color,
     icon: ProjectStatIcon
 ) {
+    val language = currentAppSettings().language
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -345,6 +353,7 @@ private fun ProjectFilters(
     onStatusChange: (String) -> Unit,
     onCoordinatorChange: (String) -> Unit
 ) {
+    val language = currentAppSettings().language
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -357,7 +366,7 @@ private fun ProjectFilters(
                 onValueChange = onSearchChange,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                placeholder = { Text("Pesquisar projetos...") }
+                placeholder = { Text(language.t("projects.search")) }
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -388,6 +397,7 @@ private fun FilterDropdown(
     onOptionSelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val openClick = rememberSoundClick { expanded = true }
 
     Box(modifier = modifier) {
         Row(
@@ -396,7 +406,7 @@ private fun FilterDropdown(
                 .height(52.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
-                .clickable { expanded = true }
+                .clickable(onClick = openClick)
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
@@ -498,10 +508,10 @@ private fun ProjectListCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            ProjectInfoRow("Coordenador", project.coordinator)
+            ProjectInfoRow("Gestor", project.coordinator)
             ProjectInfoRow("Pessoas", project.memberCount.toString())
-            ProjectInfoRow("Início", project.startDate.toDisplayDate())
-            ProjectInfoRow("Prazo", project.dueDate.toDisplayDate())
+            ProjectInfoRow("Início", project.startDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
+            ProjectInfoRow("Prazo", project.dueDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
         }
     }
 }
@@ -530,12 +540,13 @@ private fun ActionIconButton(
     color: Color,
     onClick: () -> Unit
 ) {
+    val click = rememberSoundClick(onClick)
     Box(
         modifier = Modifier
             .size(34.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(color.copy(alpha = 0.12f))
-            .clickable(onClick = onClick),
+            .clickable(onClick = click),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -556,19 +567,23 @@ private fun EditProjectDialog(
     onDismiss: () -> Unit,
     onSave: (String, String, String, String, Int?) -> Unit
 ) {
+    val language = currentAppSettings().language
+    val datePattern = currentAppSettings().dateFormat.pattern
     var name by remember(project.id) { mutableStateOf(project.name) }
     var description by remember(project.id) { mutableStateOf(project.description) }
-    var startDate by remember(project.id) { mutableStateOf(project.startDate.toDisplayDate()) }
-    var endDate by remember(project.id) { mutableStateOf(project.dueDate.toDisplayDate()) }
+    var startDate by remember(project.id, datePattern) { mutableStateOf(project.startDate.toDisplayDate(datePattern)) }
+    var endDate by remember(project.id, datePattern) { mutableStateOf(project.dueDate.toDisplayDate(datePattern)) }
     var selectedManagerId by remember(project.id) { mutableStateOf(project.managerId) }
     var managerDropdownOpen by remember { mutableStateOf(false) }
+    val saveClick = rememberSoundClick { onSave(name, description, startDate, endDate, selectedManagerId) }
+    val dismissClick = rememberSoundClick(onDismiss)
 
     val selectedManagerName = managers.firstOrNull { it.id == selectedManagerId }?.name
         ?: "Seleciona um gestor"
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Editar projeto") },
+        title = { Text(language.t("projects.editTitle")) },
         text = {
             Column {
                 OutlinedTextField(
@@ -576,7 +591,7 @@ private fun EditProjectDialog(
                     onValueChange = { name = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    label = { Text("Nome") }
+                    label = { Text(language.t("projects.name")) }
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -587,13 +602,13 @@ private fun EditProjectDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(110.dp),
-                    label = { Text("Descrição") }
+                    label = { Text(language.t("projects.description")) }
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
                 ProjectDatePickerField(
-                    label = "Data de início",
+                    label = language.t("addProject.startDate"),
                     value = startDate,
                     onDateSelected = { selectedDate ->
                         startDate = selectedDate
@@ -610,7 +625,7 @@ private fun EditProjectDialog(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 ProjectDatePickerField(
-                    label = "Data de fim",
+                    label = language.t("addProject.endDate"),
                     value = endDate,
                     minDate = startDate.toProjectLocalDateOrNull(),
                     onDateSelected = { selectedDate ->
@@ -666,14 +681,14 @@ private fun EditProjectDialog(
         confirmButton = {
             TextButton(
                 enabled = !isSaving,
-                onClick = { onSave(name, description, startDate, endDate, selectedManagerId) }
+                onClick = saveClick
             ) {
-                Text("Guardar", color = ProjectsAccent, fontWeight = FontWeight.Bold)
+                Text(language.t("common.save"), color = ProjectsAccent, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss, enabled = !isSaving) {
-                Text("Cancelar")
+            TextButton(onClick = dismissClick, enabled = !isSaving) {
+                Text(language.t("common.cancel"))
             }
         }
     )
@@ -688,6 +703,8 @@ private fun ProjectDatePickerField(
     onDateSelected: (String) -> Unit
 ) {
     var isDialogOpen by remember { mutableStateOf(false) }
+    val language = currentAppSettings().language
+    val openClick = rememberSoundClick { isDialogOpen = true }
 
     val selectedDate = value.toProjectLocalDateOrNull()
     val selectedDateMillis = selectedDate?.toEpochMillis()
@@ -709,10 +726,10 @@ private fun ProjectDatePickerField(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { isDialogOpen = true }
+            .clickable(onClick = openClick)
     ) {
         OutlinedTextField(
-            value = value.toDisplayDate(),
+            value = value.toDisplayDate(currentAppSettings().dateFormat.pattern),
             onValueChange = {},
             modifier = Modifier.fillMaxWidth(),
             readOnly = true,
@@ -744,12 +761,12 @@ private fun ProjectDatePickerField(
                         isDialogOpen = false
                     }
                 ) {
-                    Text("Confirmar", color = ProjectsAccent, fontWeight = FontWeight.Bold)
+                    Text(language.t("common.confirm"), color = ProjectsAccent, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { isDialogOpen = false }) {
-                    Text("Cancelar")
+                TextButton(onClick = rememberSoundClick { isDialogOpen = false }) {
+                    Text(language.t("common.cancel"))
                 }
             }
         ) {
@@ -864,10 +881,10 @@ private fun String.toProjectLocalDateOrNull(): LocalDate? {
     }
 }
 
-private fun String.toDisplayDate(): String {
+private fun String.toDisplayDate(pattern: String = "dd/MM/yyyy"): String {
     val date = toProjectLocalDateOrNull() ?: return this
 
-    return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+    return date.format(DateTimeFormatter.ofPattern(pattern))
 }
 
 private fun LocalDate.toEpochMillis(): Long {

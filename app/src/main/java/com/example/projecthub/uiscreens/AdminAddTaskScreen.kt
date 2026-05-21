@@ -41,6 +41,9 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.projecthub.settings.currentAppSettings
+import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.settings.t
 import com.example.projecthub.viewmodel.AdminTaskProjectOption
 import com.example.projecthub.viewmodel.AdminTasksState
 import java.time.Instant
@@ -64,14 +67,19 @@ fun AdminAddTaskScreen(
     var startDate by remember { mutableStateOf("") }
     var endDate by remember { mutableStateOf("") }
     var activeDateField by remember { mutableStateOf<TaskDateField?>(null) }
+    val language = currentAppSettings().language
+    val backClick = rememberSoundClick(onBack)
+    val createClick = rememberSoundClick {
+        onCreate(title, description, selectedProject?.id, startDate, endDate)
+    }
 
     Column {
         TextButton(
-            onClick = onBack,
+            onClick = backClick,
             colors = ButtonDefaults.textButtonColors(contentColor = AddTaskInk)
         ) {
             Text(
-                text = "< Voltar às Tarefas",
+                text = language.t("addTask.back"),
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
             )
@@ -87,7 +95,7 @@ fun AdminAddTaskScreen(
         ) {
             Column(modifier = Modifier.padding(18.dp)) {
                 Text(
-                    text = "Adicionar Nova Tarefa",
+                    text = language.t("addTask.title"),
                     color = AddTaskInk,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 25.sp
@@ -95,7 +103,7 @@ fun AdminAddTaskScreen(
 
                 Spacer(modifier = Modifier.height(18.dp))
 
-                FormLabel("Título")
+                FormLabel(language.t("addTask.taskTitle"))
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
@@ -105,12 +113,12 @@ fun AdminAddTaskScreen(
                         capitalization = KeyboardCapitalization.Sentences,
                         keyboardType = KeyboardType.Text
                     ),
-                    placeholder = { Text("Ex: Preparar documentação") }
+                    placeholder = { Text(language.t("addTask.titlePlaceholder")) }
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FormLabel("Descrição")
+                FormLabel(language.t("projects.description"))
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
@@ -121,12 +129,12 @@ fun AdminAddTaskScreen(
                         capitalization = KeyboardCapitalization.Sentences,
                         keyboardType = KeyboardType.Text
                     ),
-                    placeholder = { Text("Descreve o objetivo da tarefa...") }
+                    placeholder = { Text(language.t("addTask.descriptionPlaceholder")) }
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FormLabel("Projeto")
+                FormLabel(language.t("teams.project"))
                 ProjectDropdown(
                     selectedProject = selectedProject,
                     projects = state.projects,
@@ -135,18 +143,18 @@ fun AdminAddTaskScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FormLabel("Data de Início")
+                FormLabel(language.t("addProject.startDate"))
                 TaskDatePickerField(
                     value = startDate,
-                    onClick = { activeDateField = TaskDateField.Start }
+                    onClick = rememberSoundClick { activeDateField = TaskDateField.Start }
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FormLabel("Data de Fim")
+                FormLabel(language.t("addProject.endDate"))
                 TaskDatePickerField(
                     value = endDate,
-                    onClick = { activeDateField = TaskDateField.End }
+                    onClick = rememberSoundClick { activeDateField = TaskDateField.End }
                 )
 
                 if (state.createErrorMessage != null) {
@@ -162,15 +170,7 @@ fun AdminAddTaskScreen(
                 Spacer(modifier = Modifier.height(18.dp))
 
                 Button(
-                    onClick = {
-                        onCreate(
-                            title,
-                            description,
-                            selectedProject?.id,
-                            startDate,
-                            endDate
-                        )
-                    },
+                    onClick = createClick,
                     enabled = !state.isCreating,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AddTaskAccent,
@@ -189,7 +189,7 @@ fun AdminAddTaskScreen(
                         )
                     } else {
                         Text(
-                            text = "Criar Tarefa",
+                            text = language.t("addTask.submit"),
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
                         )
@@ -199,7 +199,7 @@ fun AdminAddTaskScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Button(
-                    onClick = onBack,
+                    onClick = backClick,
                     enabled = !state.isCreating,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFE5E7EB),
@@ -211,7 +211,7 @@ fun AdminAddTaskScreen(
                         .height(52.dp)
                 ) {
                     Text(
-                        text = "Cancelar",
+                        text = language.t("common.cancel"),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
@@ -253,6 +253,8 @@ private fun ProjectDropdown(
     onProjectSelected: (AdminTaskProjectOption) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val language = currentAppSettings().language
+    val openClick = rememberSoundClick { expanded = true }
 
     Box {
         Row(
@@ -261,13 +263,13 @@ private fun ProjectDropdown(
                 .height(56.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
-                .clickable(enabled = projects.isNotEmpty()) { expanded = true }
+                .clickable(enabled = projects.isNotEmpty(), onClick = openClick)
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = selectedProject?.name ?: "Selecione um projeto",
+                text = selectedProject?.name ?: language.t("addTask.projectPlaceholder"),
                 color = if (selectedProject == null) AddTaskMuted else AddTaskInk,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp
@@ -313,13 +315,14 @@ private fun TaskDatePickerField(
     value: String,
     onClick: () -> Unit
 ) {
+    val click = rememberSoundClick(onClick)
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
             .clip(RoundedCornerShape(8.dp))
             .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
+            .clickable(onClick = click)
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -331,7 +334,7 @@ private fun TaskDatePickerField(
             fontSize = 15.sp
         )
         Text(
-            text = "Data",
+            text = currentAppSettings().language.t("settings.dateFormat"),
             color = AddTaskMuted,
             fontWeight = FontWeight.Bold,
             fontSize = 13.sp
@@ -345,6 +348,7 @@ private fun TaskDatePickerDialog(
     onDateSelected: (String) -> Unit
 ) {
     val datePickerState = rememberDatePickerState()
+    val language = currentAppSettings().language
 
     DatePickerDialog(
         onDismissRequest = onDismiss,
@@ -363,8 +367,8 @@ private fun TaskDatePickerDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+            TextButton(onClick = rememberSoundClick(onDismiss)) {
+                Text(language.t("common.cancel"))
             }
         }
     ) {

@@ -71,6 +71,7 @@ class AdminProjectsViewModel(
 
             val projectsResult = projetoRepository.getProjetos()
             val projectUsersResult = projetoUserRepository.getProjetoUsers()
+            val projectMemberCountsResult = projetoUserRepository.getProjectMemberCounts()
             val usersResult = runCatching { userRemoteDataSource.getUsers() }
 
             if (projectsResult.isFailure || projectUsersResult.isFailure || usersResult.isFailure) {
@@ -98,11 +99,15 @@ class AdminProjectsViewModel(
                 }
                 .sortedBy { it.name }
 
-            val projectMemberCounts = projectUsersResult.getOrDefault(emptyList())
+            val directProjectMemberCounts = projectUsersResult.getOrDefault(emptyList())
                 .groupingBy { it.projeto_id }
                 .eachCount()
+            val projectMemberCounts = projectMemberCountsResult
+                .getOrDefault(emptyMap())
+                .ifEmpty { directProjectMemberCounts }
             val projects = projectsResult.getOrDefault(emptyList())
-                .map { projeto -> projeto.toListItem(usersById, projectMemberCounts) }
+                .mapNotNull { projeto -> projeto.toListItem(usersById, projectMemberCounts) }
+                .sortedBy { it.name }
 
             state = state.copy(
                 projects = projects,
@@ -171,11 +176,7 @@ class AdminProjectsViewModel(
                 return@launch
             }
 
-            val status = if (startDate == today) {
-                "EM_PROGRESSO"
-            } else {
-                "PENDENTE"
-            }
+            val status = if (startDate == today) "EM_PROGRESSO" else "PENDENTE"
 
             state = state.copy(isCreating = true, createErrorMessage = null)
 
@@ -246,11 +247,7 @@ class AdminProjectsViewModel(
                 return@launch
             }
 
-            val status = if (startDate.isAfter(today)) {
-                "PENDENTE"
-            } else {
-                "EM_PROGRESSO"
-            }
+            val status = if (startDate.isAfter(today)) "PENDENTE" else "EM_PROGRESSO"
 
             state = state.copy(isCreating = true, createErrorMessage = null)
 
@@ -305,14 +302,15 @@ class AdminProjectsViewModel(
     private fun ProjetoDto.toListItem(
         usersById: Map<Int, String>,
         memberCounts: Map<Int, Int>
-    ): AdminProjectListItem {
+    ): AdminProjectListItem? {
+        val projectId = id ?: return null
         val dueDate = data_fim?.toLocalDateOrNull()
         val isCompleted = status.isCompletedStatus()
         val isInProgress = status.isInProgressStatus()
         val isDelayed = !isCompleted && dueDate != null && dueDate.isBefore(LocalDate.now())
 
         return AdminProjectListItem(
-            id = id ?: 0,
+            id = projectId,
             name = nome,
             description = descricao?.takeIf { it.isNotBlank() } ?: "Sem descrição",
             coordinator = gestor_id?.let { usersById[it] } ?: "Sem coordenador",
@@ -325,7 +323,7 @@ class AdminProjectsViewModel(
             },
             startDate = data_inicio?.take(10) ?: "-",
             dueDate = data_fim?.take(10) ?: "-",
-            memberCount = id?.let { memberCounts[it] } ?: 0,
+            memberCount = memberCounts[projectId] ?: 0,
             isCompleted = isCompleted,
             isDelayed = isDelayed,
             isInProgress = isInProgress
@@ -377,5 +375,3 @@ class AdminProjectsViewModel(
         }
     }
 }
-
-
