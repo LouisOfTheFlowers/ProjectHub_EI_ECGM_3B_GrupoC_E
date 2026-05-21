@@ -71,6 +71,7 @@ class AdminProjectsViewModel(
 
             val projectsResult = projetoRepository.getProjetos()
             val projectUsersResult = projetoUserRepository.getProjetoUsers()
+            val projectMemberCountsResult = projetoUserRepository.getProjectMemberCounts()
             val usersResult = runCatching { userRemoteDataSource.getUsers() }
 
             if (projectsResult.isFailure || projectUsersResult.isFailure || usersResult.isFailure) {
@@ -98,9 +99,12 @@ class AdminProjectsViewModel(
                 }
                 .sortedBy { it.name }
 
-            val projectMemberCounts = projectUsersResult.getOrDefault(emptyList())
+            val directProjectMemberCounts = projectUsersResult.getOrDefault(emptyList())
                 .groupingBy { it.projeto_id }
                 .eachCount()
+            val projectMemberCounts = projectMemberCountsResult
+                .getOrDefault(emptyMap())
+                .ifEmpty { directProjectMemberCounts }
             val projects = projectsResult.getOrDefault(emptyList())
                 .mapNotNull { projeto -> projeto.toListItem(usersById, projectMemberCounts) }
                 .sortedBy { it.name }
