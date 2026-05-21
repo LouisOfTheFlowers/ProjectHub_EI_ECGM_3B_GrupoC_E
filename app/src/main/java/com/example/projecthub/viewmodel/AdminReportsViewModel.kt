@@ -80,6 +80,7 @@ class AdminReportsViewModel(
         val projects: List<ProjetoDto>,
         val tasks: List<TarefaDto>,
         val projectUsers: List<ProjetoUserDto>,
+        val projectMemberCounts: Map<Int, Int>,
         val taskUsers: List<TarefaUserDto>,
         val records: List<RegistoTarefaDto>
     )
@@ -101,6 +102,7 @@ class AdminReportsViewModel(
             val projectsResult = projetoRepository.getProjetos()
             val tasksResult = tarefaRepository.getTarefas()
             val projectUsersResult = projetoUserRepository.getProjetoUsers()
+            val projectMemberCountsResult = projetoUserRepository.getProjectMemberCounts()
             val taskUsersResult = tarefaUserRepository.getTarefaUsers()
             val recordsResult = registoTarefaRepository.getRegistos()
 
@@ -119,11 +121,19 @@ class AdminReportsViewModel(
                 return@launch
             }
 
+            val projectUsers = projectUsersResult.getOrDefault(emptyList())
+            val directProjectMemberCounts = projectUsers
+                .groupingBy { it.projeto_id }
+                .eachCount()
+
             val loadedSource = ReportsSource(
                 users = usersResult.getOrDefault(emptyList()),
                 projects = projectsResult.getOrDefault(emptyList()),
                 tasks = tasksResult.getOrDefault(emptyList()),
-                projectUsers = projectUsersResult.getOrDefault(emptyList()),
+                projectUsers = projectUsers,
+                projectMemberCounts = projectMemberCountsResult
+                    .getOrDefault(emptyMap())
+                    .ifEmpty { directProjectMemberCounts },
                 taskUsers = taskUsersResult.getOrDefault(emptyList()),
                 records = recordsResult.getOrDefault(emptyList())
             )
@@ -276,7 +286,7 @@ class AdminReportsViewModel(
     private fun buildProjectsCsv(source: ReportsSource): String {
         val usersById = source.users.mapNotNull { user -> user.id?.let { it to user.nome } }.toMap()
         val tasksByProject = source.tasks.groupBy { it.projeto_id }
-        val memberCountsByProject = source.projectUsers.groupingBy { it.projeto_id }.eachCount()
+        val memberCountsByProject = source.projectMemberCounts
         val recordsByTask = source.records.groupBy { it.tarefa_id }
 
         val rows = source.projects
