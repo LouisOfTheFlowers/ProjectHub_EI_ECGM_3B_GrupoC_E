@@ -1,4 +1,4 @@
-﻿package com.example.projecthub.uiscreens
+package com.example.projecthub.uiscreens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -60,12 +61,13 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val ProjectsAccent = AuthAccent
-private val ProjectsInk = Color(0xFF111827)
-private val ProjectsMuted = Color(0xFF6B7280)
-private val ProjectsRed = Color(0xFFEF4444)
-private val ProjectsGreen = Color(0xFF22C55E)
+private val ProjectsInk = ProjectHubColors.Ink
+private val ProjectsMuted = ProjectHubColors.Muted
+private val ProjectsRed = ProjectHubColors.Danger
+private val ProjectsGreen = ProjectHubColors.Success
 
 @Composable
 fun AdminProjectsScreen(
@@ -405,7 +407,7 @@ private fun FilterDropdown(
                 .fillMaxWidth()
                 .height(52.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+                .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
                 .clickable(onClick = openClick)
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -500,7 +502,7 @@ private fun ProjectListCard(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        ActionIconButton("✏", ProjectsAccent, onEdit)
+                        ActionIconButton("?", ProjectsAccent, onEdit)
                         ActionIconButton("X", ProjectsRed, onDelete)
                     }
                 }
@@ -510,7 +512,7 @@ private fun ProjectListCard(
 
             ProjectInfoRow("Gestor", project.coordinator)
             ProjectInfoRow("Pessoas", project.memberCount.toString())
-            ProjectInfoRow("Início", project.startDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
+            ProjectInfoRow("Inicio", project.startDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
             ProjectInfoRow("Prazo", project.dueDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
         }
     }
@@ -522,14 +524,24 @@ private fun ProjectInfoRow(label: String, value: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, color = ProjectsMuted, fontSize = 13.sp)
+        Text(
+            text = label,
+            color = ProjectsMuted,
+            fontSize = 13.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
         Text(
             text = value,
             color = ProjectsInk,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 13.sp
+            fontSize = 13.sp,
+            maxLines = 1,
+            modifier = Modifier.padding(start = 12.dp)
         )
     }
 }
@@ -641,7 +653,7 @@ private fun EditProjectDialog(
                             .fillMaxWidth()
                             .height(52.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+                            .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
                             .clickable { managerDropdownOpen = true }
                             .padding(horizontal = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,

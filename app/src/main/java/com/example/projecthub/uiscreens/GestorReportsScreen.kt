@@ -50,14 +50,15 @@ import com.example.projecthub.viewmodel.GestorReportExportType
 import com.example.projecthub.viewmodel.GestorReportSummary
 import com.example.projecthub.viewmodel.GestorReportsState
 import com.example.projecthub.viewmodel.GestorReportsViewModel
+import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val GestorReportsAccent = AuthAccent
-private val GestorReportsInk = Color(0xFF111827)
-private val GestorReportsMuted = Color(0xFF6B7280)
-private val GestorReportsGreen = Color(0xFF16A34A)
-private val GestorReportsOrange = Color(0xFFF97316)
-private val GestorReportsRed = Color(0xFFDC2626)
-private val GestorReportsBlue = Color(0xFF2563EB)
+private val GestorReportsInk = ProjectHubColors.Ink
+private val GestorReportsMuted = ProjectHubColors.Muted
+private val GestorReportsGreen = ProjectHubColors.SuccessDark
+private val GestorReportsOrange = ProjectHubColors.Warning
+private val GestorReportsRed = ProjectHubColors.DangerDark
+private val GestorReportsBlue = ProjectHubColors.Info
 
 @Composable
 fun GestorReportsScreen(

@@ -22,10 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,15 +33,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.navigation.AppRoutes
 import com.example.projecthub.remote.supabase.models.UserDto
+import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.viewmodel.UtilizadorDashboardState
 import com.example.projecthub.viewmodel.UtilizadorDashboardViewModel
 
 private val UtilizadorAccent = AuthAccent
-private val UtilizadorGreen = Color(0xFF22C55E)
-private val UtilizadorBlue = Color(0xFF3B82F6)
-private val UtilizadorOrange = Color(0xFFF97316)
-private val UtilizadorRed = Color(0xFFEF4444)
+private val UtilizadorGreen = ProjectHubColors.Success
+private val UtilizadorBlue = ProjectHubColors.InfoLight
+private val UtilizadorOrange = ProjectHubColors.Warning
+private val UtilizadorRed = ProjectHubColors.Danger
 
 @Composable
 fun UtilizadorDashboardScreen(
@@ -53,36 +51,37 @@ fun UtilizadorDashboardScreen(
     currentUser: UserDto?,
     onUserUpdated: (UserDto) -> Unit,
     onLogout: () -> Unit,
+    selectedRoute: String = AppRoutes.UserDashboard,
+    onNavigate: (String) -> Unit = {},
     viewModel: UtilizadorDashboardViewModel = viewModel()
 ) {
     val state = viewModel.state
-    var currentSection by remember { mutableStateOf(UtilizadorSection.Dashboard) }
 
     LaunchedEffect(userId) {
         viewModel.loadDashboard(userId)
     }
 
     UtilizadorScaffold(
-        selectedSection = currentSection,
-        onNavigate = { currentSection = it },
+        selectedRoute = selectedRoute,
+        onNavigate = onNavigate,
         profilePhotoUri = currentUser?.foto,
         profileName = currentUser?.nome,
         onLogout = onLogout
     ) {
-        when (currentSection) {
-            UtilizadorSection.Dashboard -> {
+        when (selectedRoute) {
+            AppRoutes.UserDashboard -> {
                 UtilizadorDashboardHeader()
                 Spacer(modifier = Modifier.height(22.dp))
                 UtilizadorDashboardContent(state = state)
             }
 
-            UtilizadorSection.Tasks -> UtilizadorPlaceholderSection("Minhas Tarefas")
+            AppRoutes.UserTasks -> UtilizadorPlaceholderSection("Minhas Tarefas")
 
-            UtilizadorSection.Projects -> UtilizadorPlaceholderSection("Projetos Atribuidos")
+            AppRoutes.UserProjects -> UtilizadorPlaceholderSection("Projetos Atribuidos")
 
-            UtilizadorSection.Settings -> SettingsScreen()
+            AppRoutes.UserSettings -> SettingsScreen()
 
-            UtilizadorSection.Profile -> ProfileScreen(
+            AppRoutes.UserProfile -> ProfileScreen(
                 user = currentUser,
                 onUserUpdated = onUserUpdated,
                 onAccountDeleted = onLogout

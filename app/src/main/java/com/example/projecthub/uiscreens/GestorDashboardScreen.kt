@@ -22,10 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,13 +34,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.navigation.AppRoutes
 import com.example.projecthub.remote.supabase.models.UserDto
+import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.viewmodel.GestorDashboardState
 import com.example.projecthub.viewmodel.GestorDashboardViewModel
 
 private val GestorAccent = AuthAccent
-private val GestorOrange = Color(0xFFF97316)
-private val GestorRed = Color(0xFFEF4444)
+private val GestorOrange = ProjectHubColors.Warning
+private val GestorRed = ProjectHubColors.Danger
 
 @Composable
 fun GestorDashboardScreen(
@@ -52,40 +50,41 @@ fun GestorDashboardScreen(
     currentUser: UserDto?,
     onUserUpdated: (UserDto) -> Unit,
     onLogout: () -> Unit,
+    selectedRoute: String = AppRoutes.GestorDashboard,
+    onNavigate: (String) -> Unit = {},
     viewModel: GestorDashboardViewModel = viewModel()
 ) {
     val state = viewModel.state
-    var currentSection by remember { mutableStateOf(GestorSection.Dashboard) }
 
     LaunchedEffect(gestorId) {
         viewModel.loadDashboard(gestorId)
     }
 
     GestorScaffold(
-        selectedSection = currentSection,
-        onNavigate = { currentSection = it },
+        selectedRoute = selectedRoute,
+        onNavigate = onNavigate,
         profilePhotoUri = currentUser?.foto,
         profileName = currentUser?.nome,
         onLogout = onLogout
     ) {
-        when (currentSection) {
-            GestorSection.Dashboard -> {
+        when (selectedRoute) {
+            AppRoutes.GestorDashboard -> {
                 DashboardHeader()
                 Spacer(modifier = Modifier.height(22.dp))
                 DashboardContent(state = state)
             }
 
-            GestorSection.Projects -> GestorProjectsScreen(gestorId = gestorId)
+            AppRoutes.GestorProjects -> GestorProjectsScreen(gestorId = gestorId)
 
-            GestorSection.Tasks -> GestorTasksScreen(gestorId = gestorId)
+            AppRoutes.GestorTasks -> GestorTasksScreen(gestorId = gestorId)
 
-            GestorSection.Team -> GestorTeamScreen(gestorId = gestorId)
+            AppRoutes.GestorTeam -> GestorTeamScreen(gestorId = gestorId)
 
-            GestorSection.Reports -> GestorReportsScreen(gestorId = gestorId)
+            AppRoutes.GestorReports -> GestorReportsScreen(gestorId = gestorId)
 
-            GestorSection.Settings -> SettingsScreen()
+            AppRoutes.GestorSettings -> SettingsScreen()
 
-            GestorSection.Profile -> ProfileScreen(
+            AppRoutes.GestorProfile -> ProfileScreen(
                 user = currentUser,
                 onUserUpdated = onUserUpdated,
                 onAccountDeleted = onLogout

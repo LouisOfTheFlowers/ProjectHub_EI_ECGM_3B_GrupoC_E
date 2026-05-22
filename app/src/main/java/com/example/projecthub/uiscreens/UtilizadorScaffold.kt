@@ -41,21 +41,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.projecthub.R
-
-enum class UtilizadorSection {
-    Dashboard,
-    Tasks,
-    Projects,
-    Settings,
-    Profile
-}
+import com.example.projecthub.navigation.AppRoutes
+import com.example.projecthub.navigation.SidebarDestination
+import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val UtilizadorScaffoldAccent = AuthAccent
 
 @Composable
 fun UtilizadorScaffold(
-    selectedSection: UtilizadorSection,
-    onNavigate: (UtilizadorSection) -> Unit,
+    selectedRoute: String,
+    onNavigate: (String) -> Unit,
     profilePhotoUri: String?,
     profileName: String?,
     onLogout: () -> Unit,
@@ -78,7 +73,7 @@ fun UtilizadorScaffold(
                 onMenuClick = { isSidebarOpen = true },
                 profilePhotoUri = profilePhotoUri,
                 profileName = profileName,
-                onProfileClick = { onNavigate(UtilizadorSection.Profile) }
+                onProfileClick = { onNavigate(AppRoutes.UserProfile) }
             )
 
             Column(
@@ -95,7 +90,7 @@ fun UtilizadorScaffold(
         if (isSidebarOpen) {
             Row(modifier = Modifier.fillMaxSize()) {
                 UtilizadorSidebar(
-                    selectedSection = selectedSection,
+                    selectedSection = selectedRoute,
                     onNavigate = { section ->
                         onNavigate(section)
                         isSidebarOpen = false
@@ -163,15 +158,15 @@ private fun UtilizadorTopBar(
 
 @Composable
 private fun UtilizadorSidebar(
-    selectedSection: UtilizadorSection,
-    onNavigate: (UtilizadorSection) -> Unit,
+    selectedSection: String,
+    onNavigate: (String) -> Unit,
     onLogout: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .width(284.dp)
             .fillMaxHeight()
-            .background(Color(0xFF0F1724))
+            .background(ProjectHubColors.SidebarBackground)
             .statusBarsPadding()
             .padding(horizontal = 14.dp, vertical = 22.dp)
     ) {
@@ -202,7 +197,7 @@ private fun UtilizadorSidebar(
                 )
                 Text(
                     text = "Utilizador",
-                    color = Color(0xFF94A3B8),
+                    color = ProjectHubColors.SidebarMutedText,
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp
                 )
@@ -211,31 +206,21 @@ private fun UtilizadorSidebar(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        UtilizadorSidebarItem(
-            label = "Dashboard",
-            icon = UtilizadorSidebarIcon.Dashboard,
-            selected = selectedSection == UtilizadorSection.Dashboard,
-            onClick = { onNavigate(UtilizadorSection.Dashboard) }
-        )
-        UtilizadorSidebarItem(
-            label = "Minhas Tarefas",
-            icon = UtilizadorSidebarIcon.Tasks,
-            selected = selectedSection == UtilizadorSection.Tasks,
-            onClick = { onNavigate(UtilizadorSection.Tasks) }
-        )
-        UtilizadorSidebarItem(
-            label = "Projetos Atribuídos",
-            icon = UtilizadorSidebarIcon.Projects,
-            selected = selectedSection == UtilizadorSection.Projects,
-            onClick = { onNavigate(UtilizadorSection.Projects) }
-        )
-        UtilizadorSidebarItem(
-            label = "Definições",
-            icon = UtilizadorSidebarIcon.Settings,
-            selected = selectedSection == UtilizadorSection.Settings,
-            onClick = { onNavigate(UtilizadorSection.Settings) }
+        val destinations = listOf(
+            SidebarDestination(AppRoutes.UserDashboard, "Dashboard", UtilizadorSidebarIcon.Dashboard),
+            SidebarDestination(AppRoutes.UserTasks, "Minhas Tarefas", UtilizadorSidebarIcon.Tasks),
+            SidebarDestination(AppRoutes.UserProjects, "Projetos Atribuidos", UtilizadorSidebarIcon.Projects),
+            SidebarDestination(AppRoutes.UserSettings, "Definicoes", UtilizadorSidebarIcon.Settings)
         )
 
+        destinations.forEach { destination ->
+            UtilizadorSidebarItem(
+                label = destination.label,
+                icon = destination.icon,
+                selected = selectedSection == destination.route,
+                onClick = { onNavigate(destination.route) }
+            )
+        }
         Spacer(modifier = Modifier.weight(1f))
 
         UtilizadorSidebarItem(
@@ -258,7 +243,7 @@ private fun UtilizadorSidebarItem(
             .fillMaxWidth()
             .height(52.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(if (selected) Color(0xFF1E293B) else Color.Transparent)
+            .background(if (selected) ProjectHubColors.SidebarSelected else Color.Transparent)
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically

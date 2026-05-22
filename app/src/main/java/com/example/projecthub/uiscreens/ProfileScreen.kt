@@ -52,20 +52,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.R
 import com.example.projecthub.remote.supabase.models.UserDto
 import com.example.projecthub.settings.rememberSoundClick
-import com.example.projecthub.viewmodel.GestorProfileViewModel
+import com.example.projecthub.ui.theme.ProjectHubColors
+import com.example.projecthub.viewmodel.ProfileViewModel
 
 private val ProfileAccent = AuthAccent
-private val ProfileInk = Color(0xFF111827)
-private val ProfileMuted = Color(0xFF6B7280)
-private val ProfileGreen = Color(0xFF16A34A)
-private val ProfileRed = Color(0xFFDC2626)
+private val ProfileInk = ProjectHubColors.Ink
+private val ProfileMuted = ProjectHubColors.Muted
+private val ProfileGreen = ProjectHubColors.SuccessDark
+private val ProfileRed = ProjectHubColors.DangerDark
 
 @Composable
 fun ProfileScreen(
     user: UserDto?,
     onUserUpdated: (UserDto) -> Unit,
     onAccountDeleted: () -> Unit,
-    viewModel: GestorProfileViewModel = viewModel()
+    viewModel: ProfileViewModel = viewModel()
 ) {
     val state = viewModel.state
     val context = LocalContext.current

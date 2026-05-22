@@ -56,14 +56,15 @@ import com.example.projecthub.viewmodel.GestorTasksViewModel
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val GestorTasksAccent = AuthAccent
-private val GestorTasksInk = Color(0xFF111827)
-private val GestorTasksMuted = Color(0xFF6B7280)
-private val GestorTasksGreen = Color(0xFF22C55E)
-private val GestorTasksOrange = Color(0xFFF97316)
-private val GestorTasksRed = Color(0xFFEF4444)
-private val GestorTasksBlue = Color(0xFF2563EB)
+private val GestorTasksInk = ProjectHubColors.Ink
+private val GestorTasksMuted = ProjectHubColors.Muted
+private val GestorTasksGreen = ProjectHubColors.Success
+private val GestorTasksOrange = ProjectHubColors.Warning
+private val GestorTasksRed = ProjectHubColors.Danger
+private val GestorTasksBlue = ProjectHubColors.Info
 
 @Composable
 fun GestorTasksScreen(
@@ -252,8 +253,8 @@ private fun TaskFilters(
             focusedContainerColor = Color.White,
             unfocusedContainerColor = Color.White,
             disabledContainerColor = Color.White,
-            focusedIndicatorColor = Color(0xFFCBD5E1),
-            unfocusedIndicatorColor = Color(0xFFCBD5E1)
+            focusedIndicatorColor = ProjectHubColors.BorderSoft,
+            unfocusedIndicatorColor = ProjectHubColors.BorderSoft
         )
     )
 
@@ -277,7 +278,7 @@ private fun StatusDropdown(
                 .fillMaxWidth()
                 .height(52.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+                .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
                 .background(Color.White)
                 .clickable(onClick = rememberSoundClick { expanded = true })
                 .padding(horizontal = 12.dp),
@@ -409,7 +410,7 @@ private fun TaskRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFFF8FAFC))
+            .background(ProjectHubColors.SurfaceSoft)
             .padding(12.dp)
     ) {
         Row(
@@ -432,7 +433,7 @@ private fun TaskRow(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-        Text("Inicio: ${task.startDate}   Prazo: ${task.dueDate}", color = Color(0xFF334155), fontSize = 12.sp)
+        Text("Inicio: ${task.startDate}   Prazo: ${task.dueDate}", color = ProjectHubColors.Slate, fontSize = 12.sp)
         Spacer(modifier = Modifier.height(8.dp))
         Text("Associada a:", color = GestorTasksInk, fontWeight = FontWeight.Bold, fontSize = 13.sp)
         if (task.assignees.isEmpty()) {
@@ -601,7 +602,7 @@ private fun EditTaskDatePickerField(
             .fillMaxWidth()
             .height(52.dp)
             .clip(RoundedCornerShape(8.dp))
-            .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+            .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
             .clickable(onClick = rememberSoundClick(onClick))
             .padding(horizontal = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -763,7 +764,7 @@ private fun ProjectDropdown(
                 .fillMaxWidth()
                 .height(52.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+                .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
                 .clickable(onClick = rememberSoundClick { expanded = true })
                 .padding(horizontal = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -797,7 +798,7 @@ private fun UserCheckRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFFF8FAFC))
+            .background(ProjectHubColors.SurfaceSoft)
             .clickable(onClick = rememberSoundClick(onToggle))
             .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -808,7 +809,7 @@ private fun UserCheckRow(
                 .height(22.dp)
                 .clip(CircleShape)
                 .background(if (checked) GestorTasksAccent else Color.Transparent)
-                .border(1.dp, if (checked) GestorTasksAccent else Color(0xFFCBD5E1), CircleShape),
+                .border(1.dp, if (checked) GestorTasksAccent else ProjectHubColors.BorderSoft, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             if (checked) Text("✓", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)

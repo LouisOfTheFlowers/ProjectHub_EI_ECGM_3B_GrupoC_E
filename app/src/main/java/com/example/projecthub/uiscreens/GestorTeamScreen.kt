@@ -46,11 +46,12 @@ import com.example.projecthub.viewmodel.GestorTeamProjectOption
 import com.example.projecthub.viewmodel.GestorTeamState
 import com.example.projecthub.viewmodel.GestorTeamViewModel
 import java.util.Locale
+import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val TeamAccent = AuthAccent
-private val TeamGreen = Color(0xFF22C55E)
-private val TeamOrange = Color(0xFFF97316)
-private val TeamRed = Color(0xFFEF4444)
+private val TeamGreen = ProjectHubColors.Success
+private val TeamOrange = ProjectHubColors.Warning
+private val TeamRed = ProjectHubColors.Danger
 
 @Composable
 fun GestorTeamScreen(

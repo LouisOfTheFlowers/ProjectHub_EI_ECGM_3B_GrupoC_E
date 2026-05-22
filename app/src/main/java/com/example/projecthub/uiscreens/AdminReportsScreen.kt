@@ -49,14 +49,15 @@ import com.example.projecthub.viewmodel.AdminReportExportType
 import com.example.projecthub.viewmodel.AdminReportSummary
 import com.example.projecthub.viewmodel.AdminReportsState
 import com.example.projecthub.viewmodel.AdminReportsViewModel
+import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val ReportsAccent = AuthAccent
-private val ReportsInk = Color(0xFF111827)
-private val ReportsMuted = Color(0xFF6B7280)
-private val ReportsGreen = Color(0xFF16A34A)
-private val ReportsOrange = Color(0xFFF97316)
-private val ReportsRed = Color(0xFFDC2626)
-private val ReportsBlue = Color(0xFF2563EB)
+private val ReportsInk = ProjectHubColors.Ink
+private val ReportsMuted = ProjectHubColors.Muted
+private val ReportsGreen = ProjectHubColors.SuccessDark
+private val ReportsOrange = ProjectHubColors.Warning
+private val ReportsRed = ProjectHubColors.DangerDark
+private val ReportsBlue = ProjectHubColors.Info
 
 @Composable
 fun AdminReportsScreen(

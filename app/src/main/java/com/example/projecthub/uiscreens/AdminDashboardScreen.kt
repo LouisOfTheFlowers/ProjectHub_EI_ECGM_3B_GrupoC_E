@@ -21,10 +21,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,55 +33,58 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.navigation.AppRoutes
 import com.example.projecthub.remote.supabase.models.UserDto
 import com.example.projecthub.settings.AppLanguage
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
+import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.viewmodel.AdminDashboardState
 import com.example.projecthub.viewmodel.AdminDashboardViewModel
 
 private val AdminAccent = AuthAccent
-private val AdminInk = Color(0xFF111827)
-private val AdminMuted = Color(0xFF6B7280)
-private val AdminOrange = Color(0xFFF97316)
-private val AdminRed = Color(0xFFEF4444)
+private val AdminInk = ProjectHubColors.Ink
+private val AdminMuted = ProjectHubColors.Muted
+private val AdminOrange = ProjectHubColors.Warning
+private val AdminRed = ProjectHubColors.Danger
 
 @Composable
 fun AdminDashboardScreen(
     currentUser: UserDto?,
     onUserUpdated: (UserDto) -> Unit,
     onLogout: () -> Unit,
+    selectedRoute: String = AppRoutes.AdminDashboard,
+    onNavigate: (String) -> Unit = {},
     viewModel: AdminDashboardViewModel = viewModel()
 ) {
     val state = viewModel.state
-    var currentSection by remember { mutableStateOf(AdminSection.Dashboard) }
     val language = currentAppSettings().language
 
     AdminScaffold(
-        selectedSection = currentSection,
-        onNavigate = { currentSection = it },
+        selectedRoute = selectedRoute,
+        onNavigate = onNavigate,
         profilePhotoUri = currentUser?.foto,
         profileName = currentUser?.nome,
         onLogout = onLogout
     ) {
-        when (currentSection) {
-            AdminSection.Dashboard -> {
+        when (selectedRoute) {
+            AppRoutes.AdminDashboard -> {
                 DashboardHeader(language = language)
                 Spacer(modifier = Modifier.height(22.dp))
                 DashboardContent(state = state, language = language)
             }
 
-            AdminSection.Projects -> AdminProjectsScreen()
+            AppRoutes.AdminProjects -> AdminProjectsScreen()
 
-            AdminSection.Tasks -> AdminTasksScreen()
+            AppRoutes.AdminTasks -> AdminTasksScreen()
 
-            AdminSection.Teams -> AdminTeamsScreen()
+            AppRoutes.AdminTeams -> AdminTeamsScreen()
 
-            AdminSection.Reports -> AdminReportsScreen()
+            AppRoutes.AdminReports -> AdminReportsScreen()
 
-            AdminSection.Settings -> SettingsScreen()
+            AppRoutes.AdminSettings -> SettingsScreen()
 
-            AdminSection.Profile -> ProfileScreen(
+            AppRoutes.AdminProfile -> ProfileScreen(
                 user = currentUser,
                 onUserUpdated = onUserUpdated,
                 onAccountDeleted = onLogout

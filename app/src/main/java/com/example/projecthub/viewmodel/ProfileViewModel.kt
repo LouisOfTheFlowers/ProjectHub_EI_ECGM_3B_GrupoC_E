@@ -10,7 +10,7 @@ import com.example.projecthub.remote.supabase.UserRemoteDataSource
 import com.example.projecthub.remote.supabase.models.UserDto
 import kotlinx.coroutines.launch
 
-data class GestorProfileState(
+data class ProfileState(
     val user: UserDto? = null,
     val isSaving: Boolean = false,
     val isSendingEmailCode: Boolean = false,
@@ -20,12 +20,12 @@ data class GestorProfileState(
     val errorMessage: String? = null
 )
 
-class GestorProfileViewModel(
+class ProfileViewModel(
     private val authRemoteDataSource: AuthRemoteDataSource = AuthRemoteDataSource(),
     private val userRemoteDataSource: UserRemoteDataSource = UserRemoteDataSource()
 ) : ViewModel() {
 
-    var state by mutableStateOf(GestorProfileState())
+    var state by mutableStateOf(ProfileState())
         private set
 
     fun setUser(user: UserDto?) {

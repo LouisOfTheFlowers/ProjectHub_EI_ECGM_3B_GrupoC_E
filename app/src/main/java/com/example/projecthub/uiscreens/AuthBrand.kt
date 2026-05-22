@@ -19,11 +19,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.projecthub.R
+import com.example.projecthub.ui.theme.ProjectHubColors
 
-internal val AuthBackground = Color(0xFFE8F9FC)
-internal val AuthAccent = Color(0xFF0A7C91)
-internal val AuthAccentSoft = Color(0xFF48B765)
-internal val AuthText = Color(0xFF12323A)
+internal val AuthBackground = ProjectHubColors.LightBackground
+internal val AuthAccent = ProjectHubColors.Accent
+internal val AuthAccentSoft = ProjectHubColors.AccentSoft
+internal val AuthText = ProjectHubColors.LightInk
 
 @Composable
 internal fun AuthHeader(subtitle: String) {
@@ -58,10 +59,10 @@ internal fun authTextFieldColors(): TextFieldColors {
         focusedBorderColor = AuthAccent,
         focusedLabelColor = AuthAccent,
         cursorColor = AuthAccent,
-        unfocusedBorderColor = Color(0xFF80AEB7),
-        unfocusedLabelColor = Color(0xFF557A83),
-        focusedPlaceholderColor = Color(0xFF557A83),
-        unfocusedPlaceholderColor = Color(0xFF557A83)
+        unfocusedBorderColor = ProjectHubColors.BorderSoft,
+        unfocusedLabelColor = ProjectHubColors.Muted,
+        focusedPlaceholderColor = ProjectHubColors.Muted,
+        unfocusedPlaceholderColor = ProjectHubColors.Muted
     )
 }
 
@@ -89,7 +90,7 @@ internal fun authButtonColors(): ButtonColors {
     return ButtonDefaults.buttonColors(
         containerColor = AuthAccent,
         contentColor = Color.White,
-        disabledContainerColor = Color(0xFF9FCBD1),
+        disabledContainerColor = ProjectHubColors.BorderSoft,
         disabledContentColor = Color.White
     )
 }

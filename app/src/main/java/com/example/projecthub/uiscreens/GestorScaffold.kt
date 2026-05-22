@@ -41,23 +41,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.projecthub.R
-
-enum class GestorSection {
-    Dashboard,
-    Projects,
-    Tasks,
-    Team,
-    Reports,
-    Settings,
-    Profile
-}
+import com.example.projecthub.navigation.AppRoutes
+import com.example.projecthub.navigation.SidebarDestination
+import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val GestorScaffoldAccent = AuthAccent
 
 @Composable
 fun GestorScaffold(
-    selectedSection: GestorSection,
-    onNavigate: (GestorSection) -> Unit,
+    selectedRoute: String,
+    onNavigate: (String) -> Unit,
     profilePhotoUri: String?,
     profileName: String?,
     onLogout: () -> Unit,
@@ -81,7 +74,7 @@ fun GestorScaffold(
                 onMenuClick = openSidebar,
                 profilePhotoUri = profilePhotoUri,
                 profileName = profileName,
-                onProfileClick = { onNavigate(GestorSection.Profile) }
+                onProfileClick = { onNavigate(AppRoutes.GestorProfile) }
             )
 
             Column(
@@ -97,7 +90,7 @@ fun GestorScaffold(
 
         if (isSidebarOpen) {
             GestorSidebarOverlay(
-                selectedSection = selectedSection,
+                selectedSection = selectedRoute,
                 onDismiss = { isSidebarOpen = false },
                 onNavigate = { section ->
                     onNavigate(section)
@@ -157,9 +150,9 @@ private fun GestorTopBar(
 
 @Composable
 private fun GestorSidebarOverlay(
-    selectedSection: GestorSection,
+    selectedSection: String,
     onDismiss: () -> Unit,
-    onNavigate: (GestorSection) -> Unit,
+    onNavigate: (String) -> Unit,
     onLogout: () -> Unit
 ) {
     Row(modifier = Modifier.fillMaxSize()) {
@@ -181,15 +174,15 @@ private fun GestorSidebarOverlay(
 
 @Composable
 private fun GestorSidebar(
-    selectedSection: GestorSection,
-    onNavigate: (GestorSection) -> Unit,
+    selectedSection: String,
+    onNavigate: (String) -> Unit,
     onLogout: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .width(284.dp)
             .fillMaxHeight()
-            .background(Color(0xFF0F1724))
+            .background(ProjectHubColors.SidebarBackground)
             .statusBarsPadding()
             .padding(horizontal = 14.dp, vertical = 22.dp)
     ) {
@@ -220,7 +213,7 @@ private fun GestorSidebar(
                 )
                 Text(
                     text = "Gestor",
-                    color = Color(0xFF94A3B8),
+                    color = ProjectHubColors.SidebarMutedText,
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp
                 )
@@ -229,43 +222,23 @@ private fun GestorSidebar(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        GestorSidebarItem(
-            label = "Dashboard",
-            icon = GestorSidebarIcon.Dashboard,
-            selected = selectedSection == GestorSection.Dashboard,
-            onClick = { onNavigate(GestorSection.Dashboard) }
-        )
-        GestorSidebarItem(
-            label = "Meus Projetos",
-            icon = GestorSidebarIcon.Projects,
-            selected = selectedSection == GestorSection.Projects,
-            onClick = { onNavigate(GestorSection.Projects) }
-        )
-        GestorSidebarItem(
-            label = "Gestão de Tarefas",
-            icon = GestorSidebarIcon.Tasks,
-            selected = selectedSection == GestorSection.Tasks,
-            onClick = { onNavigate(GestorSection.Tasks) }
-        )
-        GestorSidebarItem(
-            label = "Minha Equipa",
-            icon = GestorSidebarIcon.Team,
-            selected = selectedSection == GestorSection.Team,
-            onClick = { onNavigate(GestorSection.Team) }
-        )
-        GestorSidebarItem(
-            label = "Relatórios de Projeto",
-            icon = GestorSidebarIcon.Reports,
-            selected = selectedSection == GestorSection.Reports,
-            onClick = { onNavigate(GestorSection.Reports) }
-        )
-        GestorSidebarItem(
-            label = "Definições",
-            icon = GestorSidebarIcon.Settings,
-            selected = selectedSection == GestorSection.Settings,
-            onClick = { onNavigate(GestorSection.Settings) }
+        val destinations = listOf(
+            SidebarDestination(AppRoutes.GestorDashboard, "Dashboard", GestorSidebarIcon.Dashboard),
+            SidebarDestination(AppRoutes.GestorProjects, "Meus Projetos", GestorSidebarIcon.Projects),
+            SidebarDestination(AppRoutes.GestorTasks, "Gestao de Tarefas", GestorSidebarIcon.Tasks),
+            SidebarDestination(AppRoutes.GestorTeam, "Minha Equipa", GestorSidebarIcon.Team),
+            SidebarDestination(AppRoutes.GestorReports, "Relatorios de Projeto", GestorSidebarIcon.Reports),
+            SidebarDestination(AppRoutes.GestorSettings, "Definicoes", GestorSidebarIcon.Settings)
         )
 
+        destinations.forEach { destination ->
+            GestorSidebarItem(
+                label = destination.label,
+                icon = destination.icon,
+                selected = selectedSection == destination.route,
+                onClick = { onNavigate(destination.route) }
+            )
+        }
         Spacer(modifier = Modifier.weight(1f))
 
         GestorSidebarItem(
@@ -288,7 +261,7 @@ private fun GestorSidebarItem(
             .fillMaxWidth()
             .height(52.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(if (selected) Color(0xFF1E293B) else Color.Transparent)
+            .background(if (selected) ProjectHubColors.SidebarSelected else Color.Transparent)
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
