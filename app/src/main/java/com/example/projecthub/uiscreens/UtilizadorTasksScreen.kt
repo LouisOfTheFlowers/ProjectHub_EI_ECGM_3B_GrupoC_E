@@ -1,10 +1,8 @@
 package com.example.projecthub.uiscreens
 
 import android.content.Intent
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -49,6 +46,7 @@ import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.viewmodel.UtilizadorDashboardState
 import com.example.projecthub.viewmodel.UtilizadorTaskObservation
 import com.example.projecthub.viewmodel.UtilizadorTaskItem
+import coil.compose.AsyncImage
 import java.text.Normalizer
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -56,21 +54,51 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun UtilizadorTasksSection(
     state: UtilizadorDashboardState,
+    taskObservationsId: Int?,
+    onOpenObservations: (Int) -> Unit,
+    onBack: () -> Unit,
     onAddObservation: (Int?, String, String?) -> Unit,
     onCompleteTask: (Int?, String, String, String) -> Unit
 ) {
-    var selectedObservationTask by remember { mutableStateOf<UtilizadorTaskItem?>(null) }
     var addObservationTask by remember { mutableStateOf<TarefaDto?>(null) }
     var completeTask by remember { mutableStateOf<TarefaDto?>(null) }
 
-    selectedObservationTask?.let { item ->
-        val currentItem = state.tasks.firstOrNull { it.task.id == item.task.id } ?: item
-        TaskObservationsPage(
-            item = currentItem,
-            isSaving = state.isSaving,
-            onBack = { selectedObservationTask = null },
-            onAddObservation = { addObservationTask = currentItem.task }
-        )
+    if (taskObservationsId != null) {
+        val item = state.tasks.firstOrNull { it.task.id == taskObservationsId }
+        when {
+            state.isLoading || (state.tasks.isEmpty() && state.errorMessage == null) -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = AuthAccent)
+                }
+            }
+
+            item != null -> TaskObservationsPage(
+                item = item,
+                isSaving = state.isSaving,
+                onBack = onBack,
+                onAddObservation = { addObservationTask = item.task }
+            )
+
+            else -> Column {
+                OutlinedButton(
+                    onClick = rememberSoundClick(onBack),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("< Voltar às tarefas", color = AuthAccent, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(18.dp))
+                TaskMessageCard(
+                    title = "Tarefa nao encontrada",
+                    detail = "Nao foi possivel encontrar esta tarefa nas tuas tarefas atribuidas."
+                )
+            }
+        }
+
         addObservationTask?.let { task ->
             AddObservationDialog(
                 task = task,
@@ -133,7 +161,7 @@ fun UtilizadorTasksSection(
                         UserTaskCard(
                             item = item,
                             isSaving = state.isSaving,
-                            onOpenObservations = { selectedObservationTask = item },
+                            onOpenObservations = { item.task.id?.let(onOpenObservations) },
                             onComplete = { completeTask = item.task }
                         )
                     }
@@ -347,42 +375,17 @@ private fun ObservationCard(observation: UtilizadorTaskObservation) {
                 TaskMeta(label = "Fotos", value = observation.photos.size.toString(), modifier = Modifier.weight(1f))
             }
             observation.photos.firstOrNull()?.let { photo ->
-                val bitmap = rememberObservationImageBitmap(photo.foto_url)
                 Spacer(modifier = Modifier.height(8.dp))
-                if (bitmap != null) {
-                    Image(
-                        bitmap = bitmap,
-                        contentDescription = "Foto da observacao",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(150.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                    )
-                } else {
-                    Text(
-                        text = "Foto anexada",
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.62f),
-                        fontSize = 12.sp
-                    )
-                }
+                AsyncImage(
+                    model = photo.foto_url,
+                    contentDescription = "Foto da observacao",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                )
             }
-        }
-    }
-}
-
-@Composable
-private fun rememberObservationImageBitmap(photoUri: String?): androidx.compose.ui.graphics.ImageBitmap? {
-    val context = LocalContext.current
-    return remember(photoUri) {
-        if (photoUri.isNullOrBlank()) {
-            null
-        } else {
-            runCatching {
-                context.contentResolver.openInputStream(Uri.parse(photoUri))?.use { input ->
-                    android.graphics.BitmapFactory.decodeStream(input)?.asImageBitmap()
-                }
-            }.getOrNull()
         }
     }
 }

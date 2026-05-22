@@ -14,6 +14,17 @@ import androidx.compose.runtime.setValue
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+<<<<<<< Updated upstream
+=======
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.projecthub.navigation.AppRoutes
+>>>>>>> Stashed changes
 import com.example.projecthub.settings.AppNotificationHelper
 import com.example.projecthub.settings.AppSettingsProvider
 import com.example.projecthub.settings.AppThemeMode
@@ -83,6 +94,98 @@ class MainActivity : ComponentActivity() {
                                 AdminDashboardScreen(onLogout = logout)
                             }
                         }
+<<<<<<< Updated upstream
+=======
+
+                        composable(AppRoutes.Register) {
+                            RegisterScreen(
+                                authViewModel = authViewModel,
+                                onGoToLogin = {
+                                    navController.navigate(AppRoutes.Login) {
+                                        popUpTo(AppRoutes.Register) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                }
+                            )
+                        }
+
+                        adminRoute(
+                            route = AppRoutes.AdminDashboard,
+                            selectedRoute = AppRoutes.AdminDashboard,
+                            authViewModel = authViewModel,
+                            navController = navController
+                        )
+                        adminRoute(AppRoutes.AdminProjects, AppRoutes.AdminProjects, authViewModel, navController)
+                        adminRoute(AppRoutes.AdminTasks, AppRoutes.AdminTasks, authViewModel, navController)
+                        adminRoute(AppRoutes.AdminTeams, AppRoutes.AdminTeams, authViewModel, navController)
+                        adminRoute(AppRoutes.AdminReports, AppRoutes.AdminReports, authViewModel, navController)
+                        adminRoute(AppRoutes.AdminSettings, AppRoutes.AdminSettings, authViewModel, navController)
+                        adminRoute(AppRoutes.AdminProfile, AppRoutes.AdminProfile, authViewModel, navController)
+
+                        gestorRoute(
+                            route = AppRoutes.GestorDashboard,
+                            selectedRoute = AppRoutes.GestorDashboard,
+                            authViewModel = authViewModel,
+                            navController = navController
+                        )
+                        gestorRoute(AppRoutes.GestorProjects, AppRoutes.GestorProjects, authViewModel, navController)
+                        gestorRoute(AppRoutes.GestorTasks, AppRoutes.GestorTasks, authViewModel, navController)
+                        gestorRoute(AppRoutes.GestorTeam, AppRoutes.GestorTeam, authViewModel, navController)
+                        gestorRoute(AppRoutes.GestorReports, AppRoutes.GestorReports, authViewModel, navController)
+                        gestorRoute(AppRoutes.GestorSettings, AppRoutes.GestorSettings, authViewModel, navController)
+                        gestorRoute(AppRoutes.GestorProfile, AppRoutes.GestorProfile, authViewModel, navController)
+
+                        userRoute(
+                            route = AppRoutes.UserDashboard,
+                            selectedRoute = AppRoutes.UserDashboard,
+                            authViewModel = authViewModel,
+                            navController = navController
+                        )
+                        userRoute(AppRoutes.UserTasks, AppRoutes.UserTasks, authViewModel, navController)
+                        userRoute(AppRoutes.UserProjects, AppRoutes.UserProjects, authViewModel, navController)
+                        userRoute(AppRoutes.UserSettings, AppRoutes.UserSettings, authViewModel, navController)
+                        userRoute(AppRoutes.UserProfile, AppRoutes.UserProfile, authViewModel, navController)
+
+                        composable(
+                            route = AppRoutes.UserTaskObservations,
+                            arguments = listOf(navArgument("taskId") { type = NavType.IntType })
+                        ) { backStackEntry ->
+                            UtilizadorDashboardScreen(
+                                userId = authViewModel.currentUser?.id,
+                                currentUser = authViewModel.currentUser,
+                                onUserUpdated = authViewModel::updateCurrentUser,
+                                onLogout = { logoutAndGoToLogin(authViewModel, navController) },
+                                selectedRoute = AppRoutes.UserTasks,
+                                taskObservationsId = backStackEntry.arguments?.getInt("taskId"),
+                                onNavigate = { section ->
+                                    navController.navigate(section) {
+                                        launchSingleTop = true
+                                    }
+                                },
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
+
+                        composable(
+                            route = AppRoutes.UserProjectHistory,
+                            arguments = listOf(navArgument("projectId") { type = NavType.IntType })
+                        ) { backStackEntry ->
+                            UtilizadorDashboardScreen(
+                                userId = authViewModel.currentUser?.id,
+                                currentUser = authViewModel.currentUser,
+                                onUserUpdated = authViewModel::updateCurrentUser,
+                                onLogout = { logoutAndGoToLogin(authViewModel, navController) },
+                                selectedRoute = AppRoutes.UserProjects,
+                                projectHistoryId = backStackEntry.arguments?.getInt("projectId"),
+                                onNavigate = { section ->
+                                    navController.navigate(section) {
+                                        launchSingleTop = true
+                                    }
+                                },
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
+>>>>>>> Stashed changes
                     }
                 }
             }
