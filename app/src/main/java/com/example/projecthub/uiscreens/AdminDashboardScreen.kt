@@ -83,9 +83,9 @@ fun AdminDashboardScreen(
 
             AdminSection.Reports -> AdminReportsScreen()
 
-            AdminSection.Settings -> AdminSettingsScreen()
+            AdminSection.Settings -> SettingsScreen()
 
-            AdminSection.Profile -> GestorProfileScreen(
+            AdminSection.Profile -> ProfileScreen(
                 user = currentUser,
                 onUserUpdated = onUserUpdated,
                 onAccountDeleted = onLogout

@@ -22,6 +22,7 @@ import com.example.projecthub.uiscreens.AdminDashboardScreen
 import com.example.projecthub.uiscreens.GestorDashboardScreen
 import com.example.projecthub.uiscreens.LoginScreen
 import com.example.projecthub.uiscreens.RegisterScreen
+import com.example.projecthub.uiscreens.UtilizadorDashboardScreen
 import com.example.projecthub.viewmodel.AdminSettingsViewModel
 import com.example.projecthub.viewmodel.AuthViewModel
 
@@ -74,19 +75,32 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
-                            if (authViewModel.currentUser?.role?.equals("GESTOR", ignoreCase = true) == true) {
-                                GestorDashboardScreen(
-                                    gestorId = authViewModel.currentUser?.id,
-                                    currentUser = authViewModel.currentUser,
-                                    onUserUpdated = authViewModel::updateCurrentUser,
-                                    onLogout = logout
-                                )
-                            } else {
-                                AdminDashboardScreen(
-                                    currentUser = authViewModel.currentUser,
-                                    onUserUpdated = authViewModel::updateCurrentUser,
-                                    onLogout = logout
-                                )
+                            when {
+                                authViewModel.currentUser?.role?.equals("GESTOR", ignoreCase = true) == true -> {
+                                    GestorDashboardScreen(
+                                        gestorId = authViewModel.currentUser?.id,
+                                        currentUser = authViewModel.currentUser,
+                                        onUserUpdated = authViewModel::updateCurrentUser,
+                                        onLogout = logout
+                                    )
+                                }
+
+                                authViewModel.currentUser?.role?.equals("UTILIZADOR", ignoreCase = true) == true -> {
+                                    UtilizadorDashboardScreen(
+                                        userId = authViewModel.currentUser?.id,
+                                        currentUser = authViewModel.currentUser,
+                                        onUserUpdated = authViewModel::updateCurrentUser,
+                                        onLogout = logout
+                                    )
+                                }
+
+                                else -> {
+                                    AdminDashboardScreen(
+                                        currentUser = authViewModel.currentUser,
+                                        onUserUpdated = authViewModel::updateCurrentUser,
+                                        onLogout = logout
+                                    )
+                                }
                             }
                         }
                     }

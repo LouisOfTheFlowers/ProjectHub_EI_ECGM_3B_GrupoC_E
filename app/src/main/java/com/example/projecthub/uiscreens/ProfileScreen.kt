@@ -61,7 +61,7 @@ private val ProfileGreen = Color(0xFF16A34A)
 private val ProfileRed = Color(0xFFDC2626)
 
 @Composable
-fun GestorProfileScreen(
+fun ProfileScreen(
     user: UserDto?,
     onUserUpdated: (UserDto) -> Unit,
     onAccountDeleted: () -> Unit,
@@ -124,7 +124,7 @@ fun GestorProfileScreen(
             },
             title = {
                 Text(
-                    text = "Alteracao concluida",
+                    text = "Alteração concluída",
                     fontWeight = FontWeight.ExtraBold
                 )
             },
@@ -194,7 +194,10 @@ fun GestorProfileScreen(
                         viewModel.updatePassword(oldPassword, newPassword, confirmPassword)
                     },
                     enabled = !state.isSaving,
-                    colors = ButtonDefaults.buttonColors(containerColor = ProfileAccent),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ProfileAccent,
+                        contentColor = Color.White
+                    ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
@@ -249,11 +252,11 @@ fun GestorProfileScreen(
                     ) {
                         Text(
                             text = if (state.emailCodeSent) {
-                                "Reenviar codigo"
+                                "Reenviar código"
                             } else if (state.isSendingEmailCode) {
                                 "A enviar..."
                             } else {
-                                "Enviar codigo para o email atual"
+                                "Enviar código para o email atual"
                             },
                             fontWeight = FontWeight.Bold
                         )
@@ -262,7 +265,7 @@ fun GestorProfileScreen(
                     OutlinedTextField(
                         value = emailCode,
                         onValueChange = { emailCode = it },
-                        label = { Text("Codigo recebido") },
+                        label = { Text("Código recebido") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -282,7 +285,10 @@ fun GestorProfileScreen(
                         viewModel.updateEmail(emailInput, emailCode, onUserUpdated)
                     },
                     enabled = !state.isSaving && state.emailCodeSent,
-                    colors = ButtonDefaults.buttonColors(containerColor = ProfileAccent),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ProfileAccent,
+                        contentColor = Color.White
+                    ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
@@ -321,13 +327,16 @@ fun GestorProfileScreen(
                 )
             },
             text = {
-                Text("Tens a certeza que queres eliminar a tua conta? Esta acao remove a conta do sistema e termina a sessao.")
+                Text("Tens a certeza que queres eliminar a tua conta? Esta ação remove a conta do sistema e termina a sessão.")
             },
             confirmButton = {
                 Button(
                     onClick = rememberSoundClick { viewModel.deleteAccount(onAccountDeleted) },
                     enabled = !state.isDeleting,
-                    colors = ButtonDefaults.buttonColors(containerColor = ProfileRed),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ProfileRed,
+                        contentColor = Color.White
+                    ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
@@ -356,7 +365,7 @@ fun GestorProfileScreen(
             fontSize = 24.sp
         )
         Text(
-            text = "Informacoes basicas do teu perfil.",
+            text = "Informações básicas do teu perfil.",
             color = ProfileMuted,
             fontSize = 14.sp
         )
@@ -364,7 +373,7 @@ fun GestorProfileScreen(
         Spacer(modifier = Modifier.height(18.dp))
 
         if (currentUser == null) {
-            ProfileMessageCard("Nao foi possivel carregar a tua conta.", ProfileRed)
+            ProfileMessageCard("Não foi possível carregar a tua conta.", ProfileRed)
             return@Column
         }
 
@@ -465,7 +474,10 @@ fun GestorProfileScreen(
                 onClick = rememberSoundClick { isEditingEmail = true },
                 enabled = !state.isSaving && !state.isDeleting,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = ProfileAccent),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ProfileAccent,
+                    contentColor = Color.White
+                ),
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text("Alterar email", fontWeight = FontWeight.Bold)
@@ -485,7 +497,10 @@ fun GestorProfileScreen(
                 onClick = rememberSoundClick { isEditingPassword = true },
                 enabled = !state.isSaving && !state.isDeleting,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = ProfileAccent),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ProfileAccent,
+                    contentColor = Color.White
+                ),
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text("Alterar palavra-passe", fontWeight = FontWeight.Bold)
@@ -496,7 +511,7 @@ fun GestorProfileScreen(
 
         AccountActionCard(title = "Eliminar conta") {
             Text(
-                text = "Esta acao remove a tua conta e termina a sessao.",
+                text = "Esta ação remove a tua conta e termina a sessão.",
                 color = ProfileMuted,
                 fontSize = 13.sp
             )

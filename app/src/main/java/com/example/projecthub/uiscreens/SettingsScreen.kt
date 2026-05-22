@@ -54,7 +54,7 @@ import java.time.format.DateTimeFormatter
 private val SettingsAccent = AuthAccent
 
 @Composable
-fun AdminSettingsScreen(
+fun SettingsScreen(
     viewModel: AdminSettingsViewModel = viewModel()
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()

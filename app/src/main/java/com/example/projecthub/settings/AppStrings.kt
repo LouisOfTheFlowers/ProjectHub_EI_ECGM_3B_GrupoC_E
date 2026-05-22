@@ -30,7 +30,7 @@ private val portugueseStrings = mapOf(
     "sidebar.tasks" to "Todas as Tarefas",
     "sidebar.teams" to "Gestão de Equipas",
     "sidebar.reports" to "Relatórios Executivos",
-    "sidebar.settings" to "Definições Globais",
+    "sidebar.settings" to "Definições",
     "sidebar.logout" to "Sair",
     "dashboard.title" to "Admin Dashboard",
     "dashboard.state" to "Estado da Dashboard",

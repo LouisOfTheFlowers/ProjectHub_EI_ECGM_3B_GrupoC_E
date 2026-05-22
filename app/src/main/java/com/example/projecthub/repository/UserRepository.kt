@@ -41,6 +41,7 @@ class UserRepository(
                 }
 
                 authRemoteDataSource.login(email, password)
+                ensurePublicProfileIfAuthenticated(nome, username)
             }
 
             Result.success(Unit)
@@ -97,5 +98,10 @@ class UserRepository(
         return errorCode == AuthErrorCode.EmailExists ||
             errorCode == AuthErrorCode.UserAlreadyExists ||
             error.contains("already", ignoreCase = true)
+    }
+
+    private suspend fun ensurePublicProfileIfAuthenticated(nome: String, username: String) {
+        if (authRemoteDataSource.currentJwt().isNullOrBlank()) return
+        userRemoteDataSource.ensureOwnProfile(nome, username)
     }
 }
