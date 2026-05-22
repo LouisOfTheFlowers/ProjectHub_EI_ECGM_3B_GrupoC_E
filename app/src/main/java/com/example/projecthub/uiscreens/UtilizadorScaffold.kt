@@ -45,10 +45,10 @@ import com.example.projecthub.navigation.AppRoutes
 import com.example.projecthub.navigation.SidebarDestination
 import com.example.projecthub.ui.theme.ProjectHubColors
 
-private val GestorScaffoldAccent = AuthAccent
+private val UtilizadorScaffoldAccent = AuthAccent
 
 @Composable
-fun GestorScaffold(
+fun UtilizadorScaffold(
     selectedRoute: String,
     onNavigate: (String) -> Unit,
     profilePhotoUri: String?,
@@ -57,7 +57,6 @@ fun GestorScaffold(
     content: @Composable () -> Unit
 ) {
     var isSidebarOpen by remember { mutableStateOf(false) }
-    val openSidebar = { isSidebarOpen = true }
 
     Box(
         modifier = Modifier
@@ -67,14 +66,14 @@ fun GestorScaffold(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .border(5.dp, GestorScaffoldAccent)
+                .border(5.dp, UtilizadorScaffoldAccent)
                 .background(MaterialTheme.colorScheme.surface)
         ) {
-            GestorTopBar(
-                onMenuClick = openSidebar,
+            UtilizadorTopBar(
+                onMenuClick = { isSidebarOpen = true },
                 profilePhotoUri = profilePhotoUri,
                 profileName = profileName,
-                onProfileClick = { onNavigate(AppRoutes.GestorProfile) }
+                onProfileClick = { onNavigate(AppRoutes.UserProfile) }
             )
 
             Column(
@@ -89,21 +88,30 @@ fun GestorScaffold(
         }
 
         if (isSidebarOpen) {
-            GestorSidebarOverlay(
-                selectedSection = selectedRoute,
-                onDismiss = { isSidebarOpen = false },
-                onNavigate = { section ->
-                    onNavigate(section)
-                    isSidebarOpen = false
-                },
-                onLogout = onLogout
-            )
+            Row(modifier = Modifier.fillMaxSize()) {
+                UtilizadorSidebar(
+                    selectedSection = selectedRoute,
+                    onNavigate = { section ->
+                        onNavigate(section)
+                        isSidebarOpen = false
+                    },
+                    onLogout = onLogout
+                )
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .background(Color.Black.copy(alpha = 0.35f))
+                        .clickable { isSidebarOpen = false }
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun GestorTopBar(
+private fun UtilizadorTopBar(
     onMenuClick: () -> Unit,
     profilePhotoUri: String?,
     profileName: String?,
@@ -112,7 +120,7 @@ private fun GestorTopBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(GestorScaffoldAccent)
+            .background(UtilizadorScaffoldAccent)
             .statusBarsPadding()
             .height(62.dp)
             .padding(horizontal = 18.dp),
@@ -126,7 +134,7 @@ private fun GestorTopBar(
                 .clickable(onClick = onMenuClick),
             contentAlignment = Alignment.Center
         ) {
-            GestorMenuIcon(color = Color.White)
+            UtilizadorMenuIcon(color = Color.White)
         }
 
         Text(
@@ -149,31 +157,7 @@ private fun GestorTopBar(
 }
 
 @Composable
-private fun GestorSidebarOverlay(
-    selectedSection: String,
-    onDismiss: () -> Unit,
-    onNavigate: (String) -> Unit,
-    onLogout: () -> Unit
-) {
-    Row(modifier = Modifier.fillMaxSize()) {
-        GestorSidebar(
-            selectedSection = selectedSection,
-            onNavigate = onNavigate,
-            onLogout = onLogout
-        )
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .background(Color.Black.copy(alpha = 0.35f))
-                .clickable(onClick = onDismiss)
-        )
-    }
-}
-
-@Composable
-private fun GestorSidebar(
+private fun UtilizadorSidebar(
     selectedSection: String,
     onNavigate: (String) -> Unit,
     onLogout: () -> Unit
@@ -212,7 +196,7 @@ private fun GestorSidebar(
                     fontSize = 20.sp
                 )
                 Text(
-                    text = "Gestor",
+                    text = "Utilizador",
                     color = ProjectHubColors.SidebarMutedText,
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp
@@ -223,16 +207,14 @@ private fun GestorSidebar(
         Spacer(modifier = Modifier.height(24.dp))
 
         val destinations = listOf(
-            SidebarDestination(AppRoutes.GestorDashboard, "Dashboard", GestorSidebarIcon.Dashboard),
-            SidebarDestination(AppRoutes.GestorProjects, "Meus Projetos", GestorSidebarIcon.Projects),
-            SidebarDestination(AppRoutes.GestorTasks, "Gestao de Tarefas", GestorSidebarIcon.Tasks),
-            SidebarDestination(AppRoutes.GestorTeam, "Minha Equipa", GestorSidebarIcon.Team),
-            SidebarDestination(AppRoutes.GestorReports, "Relatorios de Projeto", GestorSidebarIcon.Reports),
-            SidebarDestination(AppRoutes.GestorSettings, "Definicoes", GestorSidebarIcon.Settings)
+            SidebarDestination(AppRoutes.UserDashboard, "Dashboard", UtilizadorSidebarIcon.Dashboard),
+            SidebarDestination(AppRoutes.UserTasks, "Minhas Tarefas", UtilizadorSidebarIcon.Tasks),
+            SidebarDestination(AppRoutes.UserProjects, "Projetos Atribuidos", UtilizadorSidebarIcon.Projects),
+            SidebarDestination(AppRoutes.UserSettings, "Definicoes", UtilizadorSidebarIcon.Settings)
         )
 
         destinations.forEach { destination ->
-            GestorSidebarItem(
+            UtilizadorSidebarItem(
                 label = destination.label,
                 icon = destination.icon,
                 selected = selectedSection == destination.route,
@@ -241,18 +223,18 @@ private fun GestorSidebar(
         }
         Spacer(modifier = Modifier.weight(1f))
 
-        GestorSidebarItem(
+        UtilizadorSidebarItem(
             label = "Sair",
-            icon = GestorSidebarIcon.Logout,
+            icon = UtilizadorSidebarIcon.Logout,
             onClick = onLogout
         )
     }
 }
 
 @Composable
-private fun GestorSidebarItem(
+private fun UtilizadorSidebarItem(
     label: String,
-    icon: GestorSidebarIcon,
+    icon: UtilizadorSidebarIcon,
     selected: Boolean = false,
     onClick: () -> Unit = {}
 ) {
@@ -266,7 +248,7 @@ private fun GestorSidebarItem(
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        GestorSidebarItemIcon(icon = icon, color = Color.White)
+        UtilizadorSidebarItemIcon(icon = icon, color = Color.White)
         Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = label,
@@ -279,26 +261,24 @@ private fun GestorSidebarItem(
     Spacer(modifier = Modifier.height(8.dp))
 }
 
-private enum class GestorSidebarIcon {
+private enum class UtilizadorSidebarIcon {
     Dashboard,
-    Projects,
     Tasks,
-    Team,
-    Reports,
+    Projects,
     Settings,
     Logout
 }
 
 @Composable
-private fun GestorSidebarItemIcon(
-    icon: GestorSidebarIcon,
+private fun UtilizadorSidebarItemIcon(
+    icon: UtilizadorSidebarIcon,
     color: Color
 ) {
     Canvas(modifier = Modifier.size(24.dp)) {
         val stroke = Stroke(width = 2.2.dp.toPx(), cap = StrokeCap.Round)
 
         when (icon) {
-            GestorSidebarIcon.Dashboard -> {
+            UtilizadorSidebarIcon.Dashboard -> {
                 val cell = size.width * 0.26f
                 listOf(
                     Offset(size.width * 0.18f, size.height * 0.18f),
@@ -316,7 +296,14 @@ private fun GestorSidebarItemIcon(
                 }
             }
 
-            GestorSidebarIcon.Projects -> {
+            UtilizadorSidebarIcon.Tasks -> {
+                listOf(0.28f, 0.5f, 0.72f).forEach { y ->
+                    drawCircle(color = color, radius = 1.8.dp.toPx(), center = Offset(size.width * 0.2f, size.height * y))
+                    drawLine(color = color, start = Offset(size.width * 0.34f, size.height * y), end = Offset(size.width * 0.82f, size.height * y), strokeWidth = stroke.width, cap = StrokeCap.Round)
+                }
+            }
+
+            UtilizadorSidebarIcon.Projects -> {
                 drawRoundRect(
                     color = color,
                     topLeft = Offset(size.width * 0.14f, size.height * 0.28f),
@@ -328,29 +315,7 @@ private fun GestorSidebarItemIcon(
                 drawLine(color = color, start = Offset(size.width * 0.34f, size.height * 0.16f), end = Offset(size.width * 0.5f, size.height * 0.16f), strokeWidth = stroke.width, cap = StrokeCap.Round)
             }
 
-            GestorSidebarIcon.Tasks -> {
-                listOf(0.28f, 0.5f, 0.72f).forEach { y ->
-                    drawCircle(color = color, radius = 1.8.dp.toPx(), center = Offset(size.width * 0.2f, size.height * y))
-                    drawLine(color = color, start = Offset(size.width * 0.34f, size.height * y), end = Offset(size.width * 0.82f, size.height * y), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                }
-            }
-
-            GestorSidebarIcon.Team -> {
-                drawCircle(color = color, radius = size.width * 0.12f, center = Offset(size.width * 0.42f, size.height * 0.34f), style = stroke)
-                drawCircle(color = color, radius = size.width * 0.1f, center = Offset(size.width * 0.68f, size.height * 0.42f), style = stroke)
-                drawArc(color = color, startAngle = 200f, sweepAngle = 140f, useCenter = false, topLeft = Offset(size.width * 0.22f, size.height * 0.5f), size = Size(size.width * 0.38f, size.height * 0.28f), style = stroke)
-                drawArc(color = color, startAngle = 215f, sweepAngle = 110f, useCenter = false, topLeft = Offset(size.width * 0.54f, size.height * 0.58f), size = Size(size.width * 0.3f, size.height * 0.2f), style = stroke)
-            }
-
-            GestorSidebarIcon.Reports -> {
-                listOf(0.26f, 0.48f, 0.7f).forEachIndexed { index, x ->
-                    val barHeight = listOf(0.28f, 0.48f, 0.66f)[index]
-                    drawLine(color = color, start = Offset(size.width * x, size.height * 0.82f), end = Offset(size.width * x, size.height * (0.82f - barHeight)), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                }
-                drawLine(color = color, start = Offset(size.width * 0.14f, size.height * 0.84f), end = Offset(size.width * 0.86f, size.height * 0.84f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-
-            GestorSidebarIcon.Settings -> {
+            UtilizadorSidebarIcon.Settings -> {
                 drawCircle(color = color, radius = size.width * 0.18f, center = Offset(size.width * 0.5f, size.height * 0.5f), style = stroke)
                 listOf(0f, 60f, 120f, 180f, 240f, 300f).forEach { degrees ->
                     val radians = Math.toRadians(degrees.toDouble())
@@ -366,7 +331,7 @@ private fun GestorSidebarItemIcon(
                 }
             }
 
-            GestorSidebarIcon.Logout -> {
+            UtilizadorSidebarIcon.Logout -> {
                 drawLine(color = color, start = Offset(size.width * 0.2f, size.height * 0.2f), end = Offset(size.width * 0.2f, size.height * 0.8f), strokeWidth = stroke.width, cap = StrokeCap.Round)
                 drawLine(color = color, start = Offset(size.width * 0.2f, size.height * 0.2f), end = Offset(size.width * 0.48f, size.height * 0.2f), strokeWidth = stroke.width, cap = StrokeCap.Round)
                 drawLine(color = color, start = Offset(size.width * 0.2f, size.height * 0.8f), end = Offset(size.width * 0.48f, size.height * 0.8f), strokeWidth = stroke.width, cap = StrokeCap.Round)
@@ -379,7 +344,7 @@ private fun GestorSidebarItemIcon(
 }
 
 @Composable
-private fun GestorMenuIcon(
+private fun UtilizadorMenuIcon(
     modifier: Modifier = Modifier,
     color: Color
 ) {

@@ -108,6 +108,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun updateCurrentUser(user: UserDto) {
+        currentUser = user
+    }
+
     private fun authErrorMessage(error: Throwable?, fallback: String): String {
         if (error is AuthWeakPasswordException) {
             return "A palavra-passe é fraca. Usa pelo menos 8 caracteres com letras e números."

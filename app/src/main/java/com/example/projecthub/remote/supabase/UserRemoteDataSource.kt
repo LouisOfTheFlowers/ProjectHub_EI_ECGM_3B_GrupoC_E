@@ -15,6 +15,20 @@ class UserRemoteDataSource {
         val userId: Int
     )
 
+    @Serializable
+    private data class UpdateOwnEmailParams(
+        @SerialName("p_new_email")
+        val newEmail: String
+    )
+
+    @Serializable
+    private data class EnsureProfileParams(
+        @SerialName("p_nome")
+        val nome: String,
+        @SerialName("p_username")
+        val username: String
+    )
+
     suspend fun getUsers(): List<UserDto> {
         return SupabaseClientProvider.client
             .from("users")
@@ -26,6 +40,12 @@ class UserRemoteDataSource {
         SupabaseClientProvider.client
             .from("users")
             .insert(user)
+    }
+
+    suspend fun ensureOwnProfile(nome: String, username: String) {
+        SupabaseClientProvider.client
+            .postgrest
+            .rpc("user_ensure_own_profile", EnsureProfileParams(nome, username))
     }
 
     suspend fun getUserByEmail(email: String): UserDto? {
@@ -54,9 +74,31 @@ class UserRemoteDataSource {
             }
     }
 
+    suspend fun updateUserPhoto(userId: Int, photoUri: String?) {
+        SupabaseClientProvider.client
+            .from("users")
+            .update(mapOf("foto" to photoUri)) {
+                filter {
+                    eq("id", userId)
+                }
+            }
+    }
+
+    suspend fun updateOwnEmail(newEmail: String) {
+        SupabaseClientProvider.client
+            .postgrest
+            .rpc("user_update_own_email", UpdateOwnEmailParams(newEmail))
+    }
+
     suspend fun deleteUser(userId: Int) {
         SupabaseClientProvider.client
             .postgrest
             .rpc("admin_delete_user", DeleteUserParams(userId))
+    }
+
+    suspend fun deleteOwnAccount() {
+        SupabaseClientProvider.client
+            .postgrest
+            .rpc("user_delete_own_account")
     }
 }

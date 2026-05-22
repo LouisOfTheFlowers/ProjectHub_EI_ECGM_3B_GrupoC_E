@@ -41,26 +41,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.projecthub.R
+import com.example.projecthub.navigation.AppRoutes
+import com.example.projecthub.navigation.SidebarDestination
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
-
-enum class AdminSection {
-    Dashboard,
-    Projects,
-    Tasks,
-    Teams,
-    Reports,
-    Settings
-}
+import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val AdminScaffoldAccent = AuthAccent
-private val AdminScaffoldSurface = Color(0xFFF7F7FB)
 
 @Composable
 fun AdminScaffold(
-    selectedSection: AdminSection,
-    onNavigate: (AdminSection) -> Unit,
+    selectedRoute: String,
+    onNavigate: (String) -> Unit,
+    profilePhotoUri: String?,
+    profileName: String?,
     onLogout: () -> Unit,
     content: @Composable () -> Unit
 ) {
@@ -78,7 +73,12 @@ fun AdminScaffold(
                 .border(5.dp, AdminScaffoldAccent)
                 .background(MaterialTheme.colorScheme.surface)
         ) {
-            AdminTopBar(onMenuClick = openSidebar)
+            AdminTopBar(
+                onMenuClick = { isSidebarOpen = true },
+                profilePhotoUri = profilePhotoUri,
+                profileName = profileName,
+                onProfileClick = { onNavigate(AppRoutes.AdminProfile) }
+            )
 
             Column(
                 modifier = Modifier
@@ -93,7 +93,7 @@ fun AdminScaffold(
 
         if (isSidebarOpen) {
             SidebarOverlay(
-                selectedSection = selectedSection,
+                selectedSection = selectedRoute,
                 onDismiss = { isSidebarOpen = false },
                 onNavigate = { section ->
                     onNavigate(section)
@@ -106,7 +106,12 @@ fun AdminScaffold(
 }
 
 @Composable
-private fun AdminTopBar(onMenuClick: () -> Unit) {
+private fun AdminTopBar(
+    onMenuClick: () -> Unit,
+    profilePhotoUri: String?,
+    profileName: String?,
+    onProfileClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -134,14 +139,13 @@ private fun AdminTopBar(onMenuClick: () -> Unit) {
             fontSize = 21.sp
         )
 
-        Image(
-            painter = painterResource(id = R.drawable.projecthub_logo),
-            contentDescription = "Project Hub",
+        TopBarProfilePhoto(
+            photoUri = profilePhotoUri,
+            name = profileName,
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .size(40.dp)
-                .clip(CircleShape)
-                .background(Color.White)
+                .clickable(onClick = onProfileClick)
                 .padding(4.dp)
         )
     }
@@ -149,9 +153,9 @@ private fun AdminTopBar(onMenuClick: () -> Unit) {
 
 @Composable
 private fun SidebarOverlay(
-    selectedSection: AdminSection,
+    selectedSection: String,
     onDismiss: () -> Unit,
-    onNavigate: (AdminSection) -> Unit,
+    onNavigate: (String) -> Unit,
     onLogout: () -> Unit
 ) {
     val dismiss = rememberSoundClick(onDismiss)
@@ -174,16 +178,24 @@ private fun SidebarOverlay(
 
 @Composable
 private fun AdminSidebar(
-    selectedSection: AdminSection,
-    onNavigate: (AdminSection) -> Unit,
+    selectedSection: String,
+    onNavigate: (String) -> Unit,
     onLogout: () -> Unit
 ) {
     val language = currentAppSettings().language
+    val destinations = listOf(
+        SidebarDestination(AppRoutes.AdminDashboard, language.t("sidebar.dashboard"), SidebarIcon.Dashboard),
+        SidebarDestination(AppRoutes.AdminProjects, language.t("sidebar.projects"), SidebarIcon.Projects),
+        SidebarDestination(AppRoutes.AdminTasks, language.t("sidebar.tasks"), SidebarIcon.Tasks),
+        SidebarDestination(AppRoutes.AdminTeams, language.t("sidebar.teams"), SidebarIcon.Teams),
+        SidebarDestination(AppRoutes.AdminReports, language.t("sidebar.reports"), SidebarIcon.Reports),
+        SidebarDestination(AppRoutes.AdminSettings, language.t("sidebar.settings"), SidebarIcon.Settings)
+    )
     Column(
         modifier = Modifier
             .width(284.dp)
             .fillMaxHeight()
-            .background(Color(0xFF0F1724))
+            .background(ProjectHubColors.SidebarBackground)
             .statusBarsPadding()
             .padding(horizontal = 14.dp, vertical = 22.dp)
     ) {
@@ -214,7 +226,7 @@ private fun AdminSidebar(
                 )
                 Text(
                     text = "Admin",
-                    color = Color(0xFF94A3B8),
+                    color = ProjectHubColors.SidebarMutedText,
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp
                 )
@@ -223,42 +235,14 @@ private fun AdminSidebar(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        SidebarItem(
-            language.t("sidebar.dashboard"),
-            SidebarIcon.Dashboard,
-            selected = selectedSection == AdminSection.Dashboard,
-            onClick = { onNavigate(AdminSection.Dashboard) }
-        )
-        SidebarItem(
-            language.t("sidebar.projects"),
-            SidebarIcon.Projects,
-            selected = selectedSection == AdminSection.Projects,
-            onClick = { onNavigate(AdminSection.Projects) }
-        )
-        SidebarItem(
-            language.t("sidebar.tasks"),
-            SidebarIcon.Tasks,
-            selected = selectedSection == AdminSection.Tasks,
-            onClick = { onNavigate(AdminSection.Tasks) }
-        )
-        SidebarItem(
-            language.t("sidebar.teams"),
-            SidebarIcon.Teams,
-            selected = selectedSection == AdminSection.Teams,
-            onClick = { onNavigate(AdminSection.Teams) }
-        )
-        SidebarItem(
-            language.t("sidebar.reports"),
-            SidebarIcon.Reports,
-            selected = selectedSection == AdminSection.Reports,
-            onClick = { onNavigate(AdminSection.Reports) }
-        )
-        SidebarItem(
-            language.t("sidebar.settings"),
-            SidebarIcon.Settings,
-            selected = selectedSection == AdminSection.Settings,
-            onClick = { onNavigate(AdminSection.Settings) }
-        )
+        destinations.forEach { destination ->
+            SidebarItem(
+                destination.label,
+                destination.icon,
+                selected = selectedSection == destination.route,
+                onClick = { onNavigate(destination.route) }
+            )
+        }
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -279,7 +263,7 @@ private fun SidebarItem(
             .fillMaxWidth()
             .height(52.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(if (selected) Color(0xFF1E293B) else Color.Transparent)
+            .background(if (selected) ProjectHubColors.SidebarSelected else Color.Transparent)
             .clickable(onClick = click)
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
