@@ -96,6 +96,45 @@ class RegistoTarefaRepository(
         }
     }
 
+    suspend fun createRegistoReturning(
+        tarefaId: Int,
+        userId: Int,
+        data: String,
+        local: String?,
+        taxaConclusao: Int,
+        tempoGasto: Float?
+    ): Result<RegistoTarefaDto> {
+        return try {
+            if (data.isBlank()) {
+                return Result.failure(Exception("A data do registo não pode estar vazia."))
+            }
+
+            if (taxaConclusao < 0 || taxaConclusao > 100) {
+                return Result.failure(Exception("A taxa de conclusão deve estar entre 0 e 100."))
+            }
+
+            if (tempoGasto != null && tempoGasto < 0f) {
+                return Result.failure(Exception("O tempo gasto não pode ser negativo."))
+            }
+
+            val registo = RegistoTarefaDto(
+                id = null,
+                tarefa_id = tarefaId,
+                user_id = userId,
+                data = data,
+                local = local?.trim(),
+                taxa_conclusao = taxaConclusao,
+                tempo_gasto = tempoGasto,
+                created_at = null
+            )
+
+            Result.success(registoTarefaRemoteDataSource.createRegistoReturning(registo))
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun updateRegisto(
         registoId: Int,
         tarefaId: Int,

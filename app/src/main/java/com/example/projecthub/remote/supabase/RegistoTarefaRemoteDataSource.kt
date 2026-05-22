@@ -71,6 +71,15 @@ class RegistoTarefaRemoteDataSource {
             .insert(registo)
     }
 
+    suspend fun createRegistoReturning(registo: RegistoTarefaDto): RegistoTarefaDto {
+        return SupabaseClientProvider.client
+            .from("registos_tarefa")
+            .insert(registo) {
+                select()
+            }
+            .decodeSingle<RegistoTarefaDto>()
+    }
+
     suspend fun updateRegisto(
         registoId: Int,
         registo: RegistoTarefaDto

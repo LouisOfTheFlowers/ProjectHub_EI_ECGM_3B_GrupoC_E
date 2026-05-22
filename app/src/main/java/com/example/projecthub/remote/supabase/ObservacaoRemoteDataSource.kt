@@ -45,6 +45,15 @@ class ObservacaoRemoteDataSource {
             .insert(observacao)
     }
 
+    suspend fun createObservacaoReturning(observacao: ObservacaoDto): ObservacaoDto {
+        return SupabaseClientProvider.client
+            .from("observacoes")
+            .insert(observacao) {
+                select()
+            }
+            .decodeSingle<ObservacaoDto>()
+    }
+
     suspend fun updateObservacao(
         observacaoId: Int,
         observacao: ObservacaoDto

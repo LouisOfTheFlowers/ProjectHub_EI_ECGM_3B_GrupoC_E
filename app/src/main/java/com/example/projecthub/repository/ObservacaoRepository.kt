@@ -56,6 +56,29 @@ class ObservacaoRepository(
         }
     }
 
+    suspend fun createObservacaoReturning(
+        registoId: Int,
+        texto: String
+    ): Result<ObservacaoDto> {
+        return try {
+            if (texto.isBlank()) {
+                return Result.failure(Exception("A observação não pode estar vazia."))
+            }
+
+            val observacao = ObservacaoDto(
+                id = null,
+                registo_id = registoId,
+                texto = texto.trim(),
+                created_at = null
+            )
+
+            Result.success(observacaoRemoteDataSource.createObservacaoReturning(observacao))
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun updateObservacao(
         observacaoId: Int,
         registoId: Int,
