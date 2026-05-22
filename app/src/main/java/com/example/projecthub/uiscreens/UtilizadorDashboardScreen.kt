@@ -75,9 +75,28 @@ fun UtilizadorDashboardScreen(
                 UtilizadorDashboardContent(state = state)
             }
 
-            AppRoutes.UserTasks -> UtilizadorPlaceholderSection("Minhas Tarefas")
+            AppRoutes.UserTasks -> UtilizadorTasksSection(
+                state = state,
+                onAddObservation = { taskId, text, photoUri ->
+                    viewModel.addObservation(
+                        userId = userId,
+                        taskId = taskId,
+                        text = text,
+                        photoUri = photoUri
+                    )
+                },
+                onCompleteTask = { taskId, date, location, hours ->
+                    viewModel.completeTask(
+                        userId = userId,
+                        taskId = taskId,
+                        completionDate = date,
+                        location = location,
+                        spentHours = hours
+                    )
+                }
+            )
 
-            AppRoutes.UserProjects -> UtilizadorPlaceholderSection("Projetos Atribuidos")
+            AppRoutes.UserProjects -> UtilizadorProjectsSection(state = state)
 
             AppRoutes.UserSettings -> SettingsScreen()
 
