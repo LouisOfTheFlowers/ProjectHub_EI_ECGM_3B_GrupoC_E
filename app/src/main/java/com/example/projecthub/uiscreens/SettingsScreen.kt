@@ -47,15 +47,15 @@ import com.example.projecthub.settings.AppNotificationHelper
 import com.example.projecthub.settings.AppSoundPlayer
 import com.example.projecthub.settings.AppThemeMode
 import com.example.projecthub.settings.t
-import com.example.projecthub.viewmodel.AdminSettingsViewModel
+import com.example.projecthub.viewmodel.SettingsViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 private val SettingsAccent = AuthAccent
 
 @Composable
-fun AdminSettingsScreen(
-    viewModel: AdminSettingsViewModel = viewModel()
+fun SettingsScreen(
+    viewModel: SettingsViewModel = viewModel()
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val language = settings.language

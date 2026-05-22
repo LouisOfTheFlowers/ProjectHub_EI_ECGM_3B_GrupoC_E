@@ -43,17 +43,19 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.viewmodel.GestorTaskProjectOption
 import com.example.projecthub.viewmodel.GestorTaskUserOption
 import com.example.projecthub.viewmodel.GestorTasksState
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val GestorAddTaskAccent = AuthAccent
-private val GestorAddTaskInk = Color(0xFF111827)
-private val GestorAddTaskMuted = Color(0xFF6B7280)
-private val GestorAddTaskRed = Color(0xFFEF4444)
+private val GestorAddTaskInk = ProjectHubColors.Ink
+private val GestorAddTaskMuted = ProjectHubColors.Muted
+private val GestorAddTaskRed = ProjectHubColors.Danger
 
 @Composable
 fun GestorAddTaskScreen(
@@ -215,7 +217,7 @@ fun GestorAddTaskScreen(
                     onClick = backClick,
                     enabled = !state.isCreating,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE5E7EB),
+                        containerColor = ProjectHubColors.Disabled,
                         contentColor = GestorAddTaskInk
                     ),
                     shape = RoundedCornerShape(8.dp),
@@ -270,7 +272,7 @@ private fun GestorProjectDropdown(
                 .fillMaxWidth()
                 .height(56.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+                .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
                 .clickable(enabled = projects.isNotEmpty(), onClick = openClick)
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -336,7 +338,7 @@ private fun UserMultiSelect(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(8.dp))
-                            .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+                            .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
                             .clickable(onClick = rememberSoundClick { onToggleUser(user.id) })
                             .padding(horizontal = 12.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -349,7 +351,7 @@ private fun UserMultiSelect(
                                 .background(if (user.id in selectedUserIds) GestorAddTaskAccent else Color.Transparent)
                                 .border(
                                     1.dp,
-                                    if (user.id in selectedUserIds) GestorAddTaskAccent else Color(0xFFCBD5E1),
+                                    if (user.id in selectedUserIds) GestorAddTaskAccent else ProjectHubColors.BorderSoft,
                                     CircleShape
                                 ),
                             contentAlignment = Alignment.Center
@@ -374,8 +376,8 @@ private fun DisabledBox(text: String) {
             .fillMaxWidth()
             .height(56.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFFF3F4F6))
-            .border(1.dp, Color(0xFFE5E7EB), RoundedCornerShape(8.dp))
+            .background(ProjectHubColors.DisabledSoft)
+            .border(1.dp, ProjectHubColors.Disabled, RoundedCornerShape(8.dp))
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -399,7 +401,7 @@ private fun GestorTaskDatePickerField(
             .fillMaxWidth()
             .height(56.dp)
             .clip(RoundedCornerShape(8.dp))
-            .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+            .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
             .clickable(onClick = click)
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,

@@ -46,18 +46,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.viewmodel.GestorProjectListItem
 import com.example.projecthub.viewmodel.GestorProjectsState
 import com.example.projecthub.viewmodel.GestorProjectsViewModel
 import com.example.projecthub.viewmodel.GestorUserOption
+import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val GestorProjectsAccent = AuthAccent
-private val GestorProjectsInk = Color(0xFF111827)
-private val GestorProjectsMuted = Color(0xFF6B7280)
-private val GestorProjectsBlue = Color(0xFF2563EB)
-private val GestorProjectsGreen = Color(0xFF22C55E)
-private val GestorProjectsGray = Color(0xFF94A3B8)
-private val GestorProjectsRed = Color(0xFFEF4444)
+private val GestorProjectsInk = ProjectHubColors.Ink
+private val GestorProjectsMuted = ProjectHubColors.Muted
+private val GestorProjectsBlue = ProjectHubColors.Info
+private val GestorProjectsGreen = ProjectHubColors.Success
+private val GestorProjectsGray = ProjectHubColors.SidebarMutedText
+private val GestorProjectsRed = ProjectHubColors.Danger
 
 private val GestorProjectStatuses = listOf(
     "Todos os Status",
@@ -178,8 +180,8 @@ private fun ProjectFilters(
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
                 disabledContainerColor = Color.White,
-                focusedIndicatorColor = Color(0xFFCBD5E1),
-                unfocusedIndicatorColor = Color(0xFFCBD5E1)
+                focusedIndicatorColor = ProjectHubColors.BorderSoft,
+                unfocusedIndicatorColor = ProjectHubColors.BorderSoft
             )
         )
 
@@ -206,7 +208,7 @@ private fun StatusDropdown(
                 .fillMaxWidth()
                 .height(52.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+                .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
                 .background(Color.White)
                 .clickable(onClick = openClick)
                 .padding(horizontal = 14.dp),
@@ -343,7 +345,7 @@ private fun ProjectCard(
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = project.description,
-                        color = Color(0xFF475569),
+                        color = ProjectHubColors.SlateMuted,
                         fontSize = 14.sp
                     )
                 }
@@ -429,7 +431,7 @@ private fun DetailItem(
         Spacer(modifier = Modifier.height(3.dp))
         Text(
             text = value,
-            color = Color(0xFF334155),
+            color = ProjectHubColors.Slate,
             fontSize = 14.sp
         )
     }
@@ -506,7 +508,7 @@ private fun ProjectMembers(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFFF8FAFC))
+                        .background(ProjectHubColors.SurfaceSoft)
                         .padding(horizontal = 14.dp, vertical = 12.dp)
                 ) {
                     Row(
@@ -640,7 +642,7 @@ private fun StarSelector(
         (0..5).forEach { value ->
             Text(
                 text = if (value == 0) "0" else if (value <= rating) "★" else "☆",
-                color = if (value == 0) GestorProjectsMuted else if (value <= rating) Color(0xFFF59E0B) else Color(0xFFD1D5DB),
+                color = if (value == 0) GestorProjectsMuted else if (value <= rating) ProjectHubColors.Rating else ProjectHubColors.Border,
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = if (value == 0) 15.sp else 26.sp,
                 modifier = Modifier
@@ -657,7 +659,7 @@ private fun StarRatingText(rating: Int) {
     val clamped = rating.coerceIn(0, 5)
     Text(
         text = "${"★".repeat(clamped)}${"☆".repeat(5 - clamped)} $clamped/5",
-        color = Color(0xFFF59E0B),
+        color = ProjectHubColors.Rating,
         fontWeight = FontWeight.Bold,
         fontSize = 13.sp
     )
@@ -762,7 +764,7 @@ private fun UserDropdown(
                 .fillMaxWidth()
                 .height(52.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+                .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
                 .clickable(onClick = rememberSoundClick { expanded = true })
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,

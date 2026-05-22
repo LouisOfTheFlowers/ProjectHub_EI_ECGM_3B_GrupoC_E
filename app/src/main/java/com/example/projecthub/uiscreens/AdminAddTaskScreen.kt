@@ -49,11 +49,12 @@ import com.example.projecthub.viewmodel.AdminTasksState
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val AddTaskAccent = AuthAccent
-private val AddTaskInk = Color(0xFF111827)
-private val AddTaskMuted = Color(0xFF6B7280)
-private val AddTaskRed = Color(0xFFEF4444)
+private val AddTaskInk = ProjectHubColors.Ink
+private val AddTaskMuted = ProjectHubColors.Muted
+private val AddTaskRed = ProjectHubColors.Danger
 
 @Composable
 fun AdminAddTaskScreen(
@@ -202,7 +203,7 @@ fun AdminAddTaskScreen(
                     onClick = backClick,
                     enabled = !state.isCreating,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE5E7EB),
+                        containerColor = ProjectHubColors.Disabled,
                         contentColor = AddTaskInk
                     ),
                     shape = RoundedCornerShape(8.dp),
@@ -262,7 +263,7 @@ private fun ProjectDropdown(
                 .fillMaxWidth()
                 .height(56.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+                .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
                 .clickable(enabled = projects.isNotEmpty(), onClick = openClick)
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -321,7 +322,7 @@ private fun TaskDatePickerField(
             .fillMaxWidth()
             .height(56.dp)
             .clip(RoundedCornerShape(8.dp))
-            .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+            .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
             .clickable(onClick = click)
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,

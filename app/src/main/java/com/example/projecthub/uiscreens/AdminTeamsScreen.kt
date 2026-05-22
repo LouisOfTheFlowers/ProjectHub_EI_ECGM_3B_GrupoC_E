@@ -49,13 +49,14 @@ import com.example.projecthub.viewmodel.AdminTeamUserItem
 import com.example.projecthub.viewmodel.AdminTeamEditableRoles
 import com.example.projecthub.viewmodel.AdminTeamsState
 import com.example.projecthub.viewmodel.AdminTeamsViewModel
+import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val TeamsAccent = AuthAccent
-private val TeamsInk = Color(0xFF111827)
-private val TeamsMuted = Color(0xFF6B7280)
-private val TeamsGreen = Color(0xFF16A34A)
-private val TeamsOrange = Color(0xFFF97316)
-private val TeamsRed = Color(0xFFDC2626)
+private val TeamsInk = ProjectHubColors.Ink
+private val TeamsMuted = ProjectHubColors.Muted
+private val TeamsGreen = ProjectHubColors.SuccessDark
+private val TeamsOrange = ProjectHubColors.Warning
+private val TeamsRed = ProjectHubColors.DangerDark
 
 @Composable
 fun AdminTeamsScreen(

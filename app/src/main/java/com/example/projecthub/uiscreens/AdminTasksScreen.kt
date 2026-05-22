@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -53,13 +54,14 @@ import com.example.projecthub.viewmodel.AdminTasksViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val TasksAccent = AuthAccent
-private val TasksInk = Color(0xFF111827)
-private val TasksMuted = Color(0xFF6B7280)
-private val TasksGreen = Color(0xFF22C55E)
-private val TasksOrange = Color(0xFFF97316)
-private val TasksRed = Color(0xFFEF4444)
+private val TasksInk = ProjectHubColors.Ink
+private val TasksMuted = ProjectHubColors.Muted
+private val TasksGreen = ProjectHubColors.Success
+private val TasksOrange = ProjectHubColors.Warning
+private val TasksRed = ProjectHubColors.Danger
 
 @Composable
 fun AdminTasksScreen(
@@ -246,7 +248,7 @@ private fun StatusDropdown(
                 .fillMaxWidth()
                 .height(52.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+                .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
                 .clickable(onClick = openClick)
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -319,7 +321,7 @@ private fun TaskProjectList(
 
         state.projectGroups.isEmpty() -> {
             Text(
-                text = "Ainda não existem projetos para listar tarefas.",
+                text = "Ainda nÃ£o existem projetos para listar tarefas.",
                 color = TasksMuted,
                 fontSize = 15.sp
             )
@@ -382,7 +384,7 @@ private fun ProjectTaskSection(
                         fontSize = 17.sp
                     )
                     Text(
-                        text = "${group.visibleTasks.size} visíveis · ${group.pendingTasks} pendentes · ${group.completedTasks} completadas",
+                        text = "${group.visibleTasks.size} visÃ­veis Â· ${group.pendingTasks} pendentes Â· ${group.completedTasks} completadas",
                         color = TasksMuted,
                         fontSize = 12.sp
                     )
@@ -431,7 +433,7 @@ private fun TaskCard(task: AdminTaskListItem) {
             .fillMaxWidth()
             .padding(start = 14.dp, end = 14.dp, bottom = 12.dp),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFBFC)),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.SurfaceSubtle),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -470,7 +472,7 @@ private fun TaskCard(task: AdminTaskListItem) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            TaskInfoRow("Início", task.startDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
+            TaskInfoRow("Inicio", task.startDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
             TaskInfoRow("Prazo", task.dueDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
         }
     }
@@ -527,14 +529,24 @@ private fun TaskInfoRow(label: String, value: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, color = TasksMuted, fontSize = 13.sp)
+        Text(
+            text = label,
+            color = TasksMuted,
+            fontSize = 13.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
         Text(
             text = value,
             color = TasksInk,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 13.sp
+            fontSize = 13.sp,
+            maxLines = 1,
+            modifier = Modifier.padding(start = 12.dp)
         )
     }
 }
