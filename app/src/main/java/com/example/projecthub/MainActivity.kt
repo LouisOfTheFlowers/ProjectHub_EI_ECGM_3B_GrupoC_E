@@ -13,9 +13,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.projecthub.navigation.AppRoutes
 import com.example.projecthub.settings.AppNotificationHelper
 import com.example.projecthub.settings.AppSettingsProvider
@@ -128,6 +130,46 @@ class MainActivity : ComponentActivity() {
                         userRoute(AppRoutes.UserProjects, AppRoutes.UserProjects, authViewModel, navController)
                         userRoute(AppRoutes.UserSettings, AppRoutes.UserSettings, authViewModel, navController)
                         userRoute(AppRoutes.UserProfile, AppRoutes.UserProfile, authViewModel, navController)
+
+                        composable(
+                            route = AppRoutes.UserTaskObservations,
+                            arguments = listOf(navArgument("taskId") { type = NavType.IntType })
+                        ) { backStackEntry ->
+                            UtilizadorDashboardScreen(
+                                userId = authViewModel.currentUser?.id,
+                                currentUser = authViewModel.currentUser,
+                                onUserUpdated = authViewModel::updateCurrentUser,
+                                onLogout = { logoutAndGoToLogin(authViewModel, navController) },
+                                selectedRoute = AppRoutes.UserTasks,
+                                taskObservationsId = backStackEntry.arguments?.getInt("taskId"),
+                                onNavigate = { section ->
+                                    navController.navigate(section) {
+                                        launchSingleTop = true
+                                    }
+                                },
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
+
+                        composable(
+                            route = AppRoutes.UserProjectHistory,
+                            arguments = listOf(navArgument("projectId") { type = NavType.IntType })
+                        ) { backStackEntry ->
+                            UtilizadorDashboardScreen(
+                                userId = authViewModel.currentUser?.id,
+                                currentUser = authViewModel.currentUser,
+                                onUserUpdated = authViewModel::updateCurrentUser,
+                                onLogout = { logoutAndGoToLogin(authViewModel, navController) },
+                                selectedRoute = AppRoutes.UserProjects,
+                                projectHistoryId = backStackEntry.arguments?.getInt("projectId"),
+                                onNavigate = { section ->
+                                    navController.navigate(section) {
+                                        launchSingleTop = true
+                                    }
+                                },
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
                     }
                 }
             }

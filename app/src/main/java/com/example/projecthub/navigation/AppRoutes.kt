@@ -25,6 +25,16 @@ object AppRoutes {
     const val UserProjects = "user/projects"
     const val UserSettings = "user/settings"
     const val UserProfile = "user/profile"
+    const val UserTaskObservations = "user/tasks/{taskId}/observations"
+    const val UserProjectHistory = "user/projects/{projectId}/history"
+
+    fun userTaskObservations(taskId: Int): String {
+        return "user/tasks/$taskId/observations"
+    }
+
+    fun userProjectHistory(projectId: Int): String {
+        return "user/projects/$projectId/history"
+    }
 
     fun homeForRole(role: String?): String {
         return when {
@@ -34,4 +44,3 @@ object AppRoutes {
         }
     }
 }
-

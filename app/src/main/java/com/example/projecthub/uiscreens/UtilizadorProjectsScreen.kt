@@ -19,10 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,15 +37,44 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun UtilizadorProjectsSection(
-    state: UtilizadorDashboardState
+    state: UtilizadorDashboardState,
+    projectHistoryId: Int?,
+    onOpenHistory: (Int) -> Unit,
+    onBack: () -> Unit
 ) {
-    var selectedProject by remember { mutableStateOf<UtilizadorProjectItem?>(null) }
+    if (projectHistoryId != null) {
+        val item = state.projects.firstOrNull { it.project.id == projectHistoryId }
+        when {
+            state.isLoading || (state.projects.isEmpty() && state.errorMessage == null) -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = AuthAccent)
+                }
+            }
 
-    selectedProject?.let { item ->
-        ProjectTaskHistoryPage(
-            item = item,
-            onBack = { selectedProject = null }
-        )
+            item != null -> ProjectTaskHistoryPage(
+                item = item,
+                onBack = onBack
+            )
+
+            else -> Column {
+                OutlinedButton(
+                    onClick = rememberSoundClick(onBack),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("< Voltar aos projetos", color = AuthAccent, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(18.dp))
+                ProjectMessageCard(
+                    title = "Projeto nao encontrado",
+                    detail = "Nao foi possivel encontrar este projeto nos teus projetos atribuidos."
+                )
+            }
+        }
         return
     }
 
@@ -100,7 +125,7 @@ fun UtilizadorProjectsSection(
                     state.projects.forEach { item ->
                         UserProjectCard(
                             item = item,
-                            onClick = { selectedProject = item }
+                            onClick = { item.project.id?.let(onOpenHistory) }
                         )
                     }
                 }

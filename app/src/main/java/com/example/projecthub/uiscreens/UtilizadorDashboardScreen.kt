@@ -52,7 +52,10 @@ fun UtilizadorDashboardScreen(
     onUserUpdated: (UserDto) -> Unit,
     onLogout: () -> Unit,
     selectedRoute: String = AppRoutes.UserDashboard,
+    taskObservationsId: Int? = null,
+    projectHistoryId: Int? = null,
     onNavigate: (String) -> Unit = {},
+    onBack: () -> Unit = {},
     viewModel: UtilizadorDashboardViewModel = viewModel()
 ) {
     val state = viewModel.state
@@ -77,6 +80,11 @@ fun UtilizadorDashboardScreen(
 
             AppRoutes.UserTasks -> UtilizadorTasksSection(
                 state = state,
+                taskObservationsId = taskObservationsId,
+                onOpenObservations = { taskId ->
+                    onNavigate(AppRoutes.userTaskObservations(taskId))
+                },
+                onBack = onBack,
                 onAddObservation = { taskId, text, photoUri ->
                     viewModel.addObservation(
                         userId = userId,
@@ -96,7 +104,14 @@ fun UtilizadorDashboardScreen(
                 }
             )
 
-            AppRoutes.UserProjects -> UtilizadorProjectsSection(state = state)
+            AppRoutes.UserProjects -> UtilizadorProjectsSection(
+                state = state,
+                projectHistoryId = projectHistoryId,
+                onOpenHistory = { projectId ->
+                    onNavigate(AppRoutes.userProjectHistory(projectId))
+                },
+                onBack = onBack
+            )
 
             AppRoutes.UserSettings -> SettingsScreen()
 
