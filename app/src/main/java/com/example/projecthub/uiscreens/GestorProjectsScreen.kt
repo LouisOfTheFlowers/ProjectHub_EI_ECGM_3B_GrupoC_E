@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -47,6 +48,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.viewmodel.GestorProjectInfoObservation
+import com.example.projecthub.viewmodel.GestorProjectInfoState
+import com.example.projecthub.viewmodel.GestorProjectInfoTask
 import com.example.projecthub.viewmodel.GestorProjectListItem
 import com.example.projecthub.viewmodel.GestorProjectsState
 import com.example.projecthub.viewmodel.GestorProjectsViewModel
@@ -76,9 +80,25 @@ fun GestorProjectsScreen(
     val state = viewModel.state
     var projectToAssociate by remember { mutableStateOf<GestorProjectListItem?>(null) }
     var projectToComplete by remember { mutableStateOf<GestorProjectListItem?>(null) }
+    var projectToView by remember { mutableStateOf<GestorProjectListItem?>(null) }
 
     LaunchedEffect(gestorId) {
         viewModel.loadProjects(gestorId)
+    }
+
+    projectToView?.let { project ->
+        LaunchedEffect(project.id) {
+            viewModel.loadProjectInfo(project)
+        }
+
+        ProjectInfoPage(
+            state = state.detailState,
+            onBack = {
+                viewModel.clearProjectInfo()
+                projectToView = null
+            }
+        )
+        return
     }
 
     Column {
@@ -114,6 +134,10 @@ fun GestorProjectsScreen(
             onCompleteProject = { project ->
                 viewModel.clearMessages()
                 projectToComplete = project
+            },
+            onMoreInfo = { project ->
+                viewModel.clearMessages()
+                projectToView = project
             }
         )
     }
@@ -258,7 +282,8 @@ private fun ProjectList(
     state: GestorProjectsState,
     onToggleProject: (Int) -> Unit,
     onAssociateUser: (GestorProjectListItem) -> Unit,
-    onCompleteProject: (GestorProjectListItem) -> Unit
+    onCompleteProject: (GestorProjectListItem) -> Unit,
+    onMoreInfo: (GestorProjectListItem) -> Unit
 ) {
     when {
         state.isLoading -> {
@@ -304,7 +329,8 @@ private fun ProjectList(
                             project = project,
                             onToggleProject = onToggleProject,
                             onAssociateUser = onAssociateUser,
-                        onCompleteProject = onCompleteProject
+                            onCompleteProject = onCompleteProject,
+                            onMoreInfo = onMoreInfo
                     )
                 }
             }
@@ -317,7 +343,8 @@ private fun ProjectCard(
     project: GestorProjectListItem,
     onToggleProject: (Int) -> Unit,
     onAssociateUser: (GestorProjectListItem) -> Unit,
-    onCompleteProject: (GestorProjectListItem) -> Unit
+    onCompleteProject: (GestorProjectListItem) -> Unit,
+    onMoreInfo: (GestorProjectListItem) -> Unit
 ) {
     val toggleClick = rememberSoundClick { onToggleProject(project.id) }
 
@@ -352,19 +379,38 @@ private fun ProjectCard(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    StatusPill(project.statusLabel)
-                    if (!project.isCompleted) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        CompleteIconButton(onClick = { onCompleteProject(project) })
+                Column(horizontalAlignment = Alignment.End) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Button(
+                            onClick = rememberSoundClick { onMoreInfo(project) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = GestorProjectsAccent,
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+                            modifier = Modifier.height(34.dp)
+                        ) {
+                            Text("Mais info", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = if (project.isExpanded) "^" else "v",
+                            color = GestorProjectsMuted,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 18.sp
+                        )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = if (project.isExpanded) "^" else "v",
-                        color = GestorProjectsMuted,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 18.sp
-                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        StatusPill(project.statusLabel)
+                        if (!project.isCompleted) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            CompleteIconButton(onClick = { onCompleteProject(project) })
+                        }
+                    }
                 }
             }
 
@@ -377,6 +423,301 @@ private fun ProjectCard(
                     onAssociateUser = onAssociateUser
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun ProjectInfoPage(
+    state: GestorProjectInfoState,
+    onBack: () -> Unit
+) {
+    Column {
+        TextButton(onClick = rememberSoundClick(onBack)) {
+            Text("< Voltar aos Projetos", color = GestorProjectsAccent, fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        when {
+            state.isLoading -> Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = GestorProjectsAccent)
+            }
+
+            state.errorMessage != null -> InfoMessageCard(
+                title = "Detalhes do projeto",
+                detail = state.errorMessage
+            )
+
+            state.project == null -> InfoMessageCard(
+                title = "Projeto nao encontrado",
+                detail = "Nao foi possivel encontrar os detalhes deste projeto."
+            )
+
+            else -> {
+                val project = state.project
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = project.name,
+                            color = GestorProjectsInk,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 24.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Detalhes, participantes, tarefas e observacoes",
+                            color = GestorProjectsMuted,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    StatusPill(project.statusLabel)
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = project.description,
+                            color = ProjectHubColors.SlateMuted,
+                            fontSize = 14.sp
+                        )
+                        Spacer(modifier = Modifier.height(14.dp))
+                        ProjectDetails(project = project)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+                ProjectInfoParticipants(state = state)
+                Spacer(modifier = Modifier.height(14.dp))
+                ProjectInfoTasks(tasks = state.tasks)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProjectInfoParticipants(state: GestorProjectInfoState) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Participantes",
+                color = GestorProjectsInk,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 18.sp
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+
+            if (state.participants.isEmpty()) {
+                Text("Sem participantes associados.", color = GestorProjectsMuted, fontSize = 14.sp)
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    state.participants.forEach { participant ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(ProjectHubColors.SurfaceSoft)
+                                .padding(horizontal = 12.dp, vertical = 10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = participant.name,
+                                    color = GestorProjectsInk,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                                participant.rating?.let { StarRatingText(rating = it) }
+                            }
+                            Text(participant.email, color = GestorProjectsMuted, fontSize = 12.sp)
+                            participant.comment?.takeIf { it.isNotBlank() }?.let { comment ->
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(comment, color = ProjectHubColors.Slate, fontSize = 12.sp)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProjectInfoTasks(tasks: List<GestorProjectInfoTask>) {
+    Text(
+        text = "Tarefas",
+        color = GestorProjectsInk,
+        fontWeight = FontWeight.ExtraBold,
+        fontSize = 18.sp
+    )
+    Spacer(modifier = Modifier.height(10.dp))
+
+    if (tasks.isEmpty()) {
+        InfoMessageCard(
+            title = "Sem tarefas",
+            detail = "Este projeto ainda nao tem tarefas registadas."
+        )
+    } else {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            tasks.forEach { task ->
+                ProjectInfoTaskCard(task = task)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProjectInfoTaskCard(task: GestorProjectInfoTask) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(task.title, color = GestorProjectsInk, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(task.description, color = GestorProjectsMuted, fontSize = 13.sp)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                InfoTaskStatusPill(task.statusLabel)
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                DetailItem(label = "Inicio", value = task.startDate, modifier = Modifier.weight(1f))
+                DetailItem(label = "Prazo", value = task.dueDate, modifier = Modifier.weight(1f))
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = "Responsaveis: ${task.assignees.takeIf { it.isNotEmpty() }?.joinToString() ?: "Sem utilizadores"}",
+                color = ProjectHubColors.Slate,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = "Observacoes",
+                color = GestorProjectsInk,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (task.observations.isEmpty()) {
+                Text("Sem observacoes nesta tarefa.", color = GestorProjectsMuted, fontSize = 13.sp)
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    task.observations.forEach { observation ->
+                        ProjectObservationRow(observation = observation)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProjectObservationRow(observation: GestorProjectInfoObservation) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(ProjectHubColors.SurfaceSoft)
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text = observation.text,
+            color = GestorProjectsInk,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 13.sp
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = "${observation.userName} | ${observation.date} | ${observation.completionPercent}%",
+            color = GestorProjectsMuted,
+            fontSize = 12.sp
+        )
+        observation.spentHours?.let { hours ->
+            Text(
+                text = "Tempo gasto: $hours h",
+                color = GestorProjectsMuted,
+                fontSize = 12.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun InfoTaskStatusPill(status: String) {
+    val color = when (status) {
+        "Concluida" -> GestorProjectsGreen
+        "Atrasada" -> GestorProjectsRed
+        "Em progresso" -> GestorProjectsBlue
+        else -> GestorProjectsGray
+    }
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(color.copy(alpha = 0.14f))
+            .padding(horizontal = 9.dp, vertical = 5.dp)
+    ) {
+        Text(status, color = color, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+    }
+}
+
+@Composable
+private fun InfoMessageCard(
+    title: String,
+    detail: String
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(title, color = GestorProjectsInk, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(detail, color = GestorProjectsMuted, fontSize = 13.sp)
         }
     }
 }

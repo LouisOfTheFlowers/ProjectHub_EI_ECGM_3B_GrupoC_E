@@ -6,8 +6,10 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projecthub.remote.supabase.models.TarefaDto
+import com.example.projecthub.repository.ObservacaoRepository
 import com.example.projecthub.repository.ProjetoRepository
 import com.example.projecthub.repository.ProjetoUserRepository
+import com.example.projecthub.repository.RegistoTarefaRepository
 import com.example.projecthub.repository.TarefaRepository
 import com.example.projecthub.repository.TarefaUserRepository
 import com.example.projecthub.remote.supabase.UserRemoteDataSource
@@ -55,6 +57,23 @@ data class GestorTaskListItem(
     val isDelayed: Boolean
 )
 
+data class GestorTaskInfoObservation(
+    val id: Int?,
+    val text: String,
+    val userName: String,
+    val date: String,
+    val completionPercent: Int,
+    val spentHours: Float?
+)
+
+data class GestorTaskInfoState(
+    val task: GestorTaskListItem? = null,
+    val observations: List<GestorTaskInfoObservation> = emptyList(),
+    val recordsCount: Int = 0,
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
+)
+
 data class GestorProjectTaskGroup(
     val projectId: Int,
     val projectName: String,
@@ -80,7 +99,8 @@ data class GestorTasksState(
     val isLoading: Boolean = true,
     val isCreating: Boolean = false,
     val createErrorMessage: String? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val detailState: GestorTaskInfoState = GestorTaskInfoState()
 )
 
 class GestorTasksViewModel(
@@ -88,6 +108,8 @@ class GestorTasksViewModel(
     private val tarefaRepository: TarefaRepository = TarefaRepository(),
     private val projetoUserRepository: ProjetoUserRepository = ProjetoUserRepository(),
     private val tarefaUserRepository: TarefaUserRepository = TarefaUserRepository(),
+    private val registoTarefaRepository: RegistoTarefaRepository = RegistoTarefaRepository(),
+    private val observacaoRepository: ObservacaoRepository = ObservacaoRepository(),
     private val userRemoteDataSource: UserRemoteDataSource = UserRemoteDataSource()
 ) : ViewModel() {
 
@@ -199,6 +221,68 @@ class GestorTasksViewModel(
     fun updateSearchQuery(query: String) {
         state = state.copy(searchQuery = query)
         applyFilters()
+    }
+
+    fun loadTaskInfo(task: GestorTaskListItem) {
+        viewModelScope.launch {
+            state = state.copy(
+                detailState = GestorTaskInfoState(
+                    task = task,
+                    isLoading = true
+                )
+            )
+
+            val recordsResult = registoTarefaRepository.getRegistosByTarefa(task.id)
+            val observationsResult = observacaoRepository.getObservacoes()
+            val usersResult = runCatching { userRemoteDataSource.getUsers() }
+
+            if (recordsResult.isFailure || observationsResult.isFailure || usersResult.isFailure) {
+                state = state.copy(
+                    detailState = GestorTaskInfoState(
+                        task = task,
+                        isLoading = false,
+                        errorMessage = "Nao foi possivel carregar os detalhes da tarefa."
+                    )
+                )
+                return@launch
+            }
+
+            val usersById = usersResult.getOrDefault(emptyList())
+                .mapNotNull { user -> user.id?.let { it to user } }
+                .toMap()
+            val records = recordsResult.getOrDefault(emptyList())
+            val recordsById = records.mapNotNull { record -> record.id?.let { it to record } }.toMap()
+            val observations = observationsResult
+                .getOrDefault(emptyList())
+                .mapNotNull { observation ->
+                    val record = recordsById[observation.registo_id] ?: return@mapNotNull null
+                    val user = usersById[record.user_id]
+                    val userName = user?.nome?.ifBlank { user.username } ?: "Utilizador ${record.user_id}"
+
+                    GestorTaskInfoObservation(
+                        id = observation.id,
+                        text = observation.texto,
+                        userName = userName,
+                        date = (observation.created_at ?: record.created_at ?: record.data).toUiDateText(),
+                        completionPercent = record.taxa_conclusao,
+                        spentHours = record.tempo_gasto
+                    )
+                }
+                .sortedByDescending { it.date }
+
+            state = state.copy(
+                detailState = GestorTaskInfoState(
+                    task = task,
+                    observations = observations,
+                    recordsCount = records.size,
+                    isLoading = false
+                )
+            )
+        }
+    }
+
+    fun clearTaskInfo() {
+        state = state.copy(detailState = GestorTaskInfoState())
     }
 
     fun clearCreateError() {
@@ -481,5 +565,10 @@ class GestorTasksViewModel(
         }.getOrElse {
             runCatching { LocalDate.parse(trimmed) }.getOrNull()
         }
+    }
+
+    private fun String?.toUiDateText(): String {
+        val date = this?.take(10)?.toLocalDateOrNull() ?: return "-"
+        return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
     }
 }
