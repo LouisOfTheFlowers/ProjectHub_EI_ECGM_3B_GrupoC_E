@@ -22,7 +22,7 @@ enum class GestorTaskStatusFilter(val label: String) {
     All("Todas"),
     Pending("Pendentes"),
     InProgress("Em progresso"),
-    Completed("Concluidas")
+    Completed("Concluídas")
 }
 
 data class GestorTaskProjectOption(
@@ -519,7 +519,7 @@ class GestorTasksViewModel(
             title = titulo,
             description = descricao?.takeIf { it.isNotBlank() } ?: "Sem descricao",
             statusLabel = when {
-                isCompleted -> "Concluida"
+                isCompleted -> "Concluída"
                 isDelayed -> "Atrasada"
                 isInProgress -> "Em progresso"
                 else -> "Pendente"

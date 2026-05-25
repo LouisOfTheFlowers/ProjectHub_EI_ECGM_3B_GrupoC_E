@@ -71,52 +71,25 @@ fun AdminAddProjectScreen(
     var selectedManager by remember { mutableStateOf<AdminProjectManager?>(null) }
     var activeDateField by remember { mutableStateOf<DateField?>(null) }
     val language = currentAppSettings().language
-    val backClick = rememberSoundClick(onBack)
-    val createClick = rememberSoundClick {
-        onCreate(name.text, description.text, startDate, endDate, selectedManager?.id)
-    }
-
     Column {
-        TextButton(
-            onClick = backClick,
-            colors = ButtonDefaults.textButtonColors(contentColor = ProjectHubColors.Ink)
-        ) {
-            Text(
-                text = language.t("addProject.back"),
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-        }
+        AppBackButton(
+            text = language.t("addProject.back"),
+            onClick = onBack
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-        ) {
-            Column(modifier = Modifier.padding(18.dp)) {
-                Text(
-                    text = language.t("addProject.title"),
-                    color = ProjectHubColors.Ink,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 25.sp
-                )
-
-                Spacer(modifier = Modifier.height(18.dp))
-
-                FormLabel(language.t("addProject.name"))
-                OutlinedTextField(
+        AppFormCard(title = language.t("addProject.title")) {
+                AppFormLabel(language.t("addProject.name"))
+                AppTextField(
                     value = name,
                     onValueChange = { name = it },
-                    modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Words,
                         keyboardType = KeyboardType.Text
                     ),
-                    placeholder = { Text(language.t("addProject.namePlaceholder")) }
+                    placeholder = language.t("addProject.namePlaceholder")
                 )
                 AccentCharacterRow(
                     onInsert = { character -> name = name.insertText(character) }
@@ -124,8 +97,8 @@ fun AdminAddProjectScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FormLabel(language.t("projects.description"))
-                OutlinedTextField(
+                AppFormLabel(language.t("projects.description"))
+                AppTextField(
                     value = description,
                     onValueChange = { description = it },
                     modifier = Modifier
@@ -135,7 +108,7 @@ fun AdminAddProjectScreen(
                         capitalization = KeyboardCapitalization.Sentences,
                         keyboardType = KeyboardType.Text
                     ),
-                    placeholder = { Text(language.t("addProject.descriptionPlaceholder")) }
+                    placeholder = language.t("addProject.descriptionPlaceholder")
                 )
                 AccentCharacterRow(
                     onInsert = { character -> description = description.insertText(character) }
@@ -143,7 +116,7 @@ fun AdminAddProjectScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FormLabel(language.t("addProject.startDate"))
+                AppFormLabel(language.t("addProject.startDate"))
                 DatePickerField(
                     value = startDate,
                     onClick = rememberSoundClick { activeDateField = DateField.Start }
@@ -151,7 +124,7 @@ fun AdminAddProjectScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FormLabel(language.t("addProject.endDate"))
+                AppFormLabel(language.t("addProject.endDate"))
                 DatePickerField(
                     value = endDate,
                     onClick = rememberSoundClick { activeDateField = DateField.End }
@@ -159,7 +132,7 @@ fun AdminAddProjectScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FormLabel(language.t("addProject.manager"))
+                AppFormLabel(language.t("addProject.manager"))
                 ManagerDropdown(
                     selectedManager = selectedManager,
                     managers = state.managers,
@@ -178,54 +151,23 @@ fun AdminAddProjectScreen(
 
                 Spacer(modifier = Modifier.height(18.dp))
 
-                Button(
-                    onClick = createClick,
+                AppPrimaryButton(
+                    text = language.t("addProject.submit"),
+                    onClick = {
+                        onCreate(name.text, description.text, startDate, endDate, selectedManager?.id)
+                    },
                     enabled = !state.isCreating,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AddProjectAccent,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                ) {
-                    if (state.isCreating) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp,
-                            color = Color.White
-                        )
-                    } else {
-                        Text(
-                            text = language.t("addProject.submit"),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
-                    }
-                }
+                    isLoading = state.isCreating,
+                    containerColor = AddProjectAccent
+                )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Button(
-                    onClick = backClick,
-                    enabled = !state.isCreating,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = ProjectHubColors.Disabled,
-                        contentColor = ProjectHubColors.Ink
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                ) {
-                    Text(
-                        text = language.t("common.cancel"),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
-                }
-            }
+                AppSecondaryButton(
+                    text = language.t("common.cancel"),
+                    onClick = onBack,
+                    enabled = !state.isCreating
+                )
         }
     }
 

@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -80,14 +82,15 @@ fun AdminScaffold(
                 onProfileClick = { onNavigate(AppRoutes.AdminProfile) }
             )
 
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp, vertical = 22.dp)
+                    .background(MaterialTheme.colorScheme.background),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 22.dp)
             ) {
-                content()
+                item {
+                    content()
+                }
             }
         }
 
@@ -183,6 +186,7 @@ private fun AdminSidebar(
     onLogout: () -> Unit
 ) {
     val language = currentAppSettings().language
+    val isLandscape = isLandscapeLayout()
     val destinations = listOf(
         SidebarDestination(AppRoutes.AdminDashboard, language.t("sidebar.dashboard"), SidebarIcon.Dashboard),
         SidebarDestination(AppRoutes.AdminProjects, language.t("sidebar.projects"), SidebarIcon.Projects),
@@ -197,7 +201,8 @@ private fun AdminSidebar(
             .fillMaxHeight()
             .background(ProjectHubColors.SidebarBackground)
             .statusBarsPadding()
-            .padding(horizontal = 14.dp, vertical = 22.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 14.dp, vertical = if (isLandscape) 12.dp else 22.dp)
     ) {
         Row(
             modifier = Modifier
@@ -233,7 +238,7 @@ private fun AdminSidebar(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(if (isLandscape) 12.dp else 24.dp))
 
         destinations.forEach { destination ->
             SidebarItem(
@@ -244,7 +249,7 @@ private fun AdminSidebar(
             )
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(if (isLandscape) 12.dp else 24.dp))
 
         SidebarItem(language.t("sidebar.logout"), SidebarIcon.Logout, onClick = onLogout)
     }
@@ -258,10 +263,11 @@ private fun SidebarItem(
     onClick: () -> Unit = {}
 ) {
     val click = rememberSoundClick(onClick)
+    val itemHeight = if (isLandscapeLayout()) 46.dp else 52.dp
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp)
+            .height(itemHeight)
             .clip(RoundedCornerShape(10.dp))
             .background(if (selected) ProjectHubColors.SidebarSelected else Color.Transparent)
             .clickable(onClick = click)
@@ -278,7 +284,7 @@ private fun SidebarItem(
         )
     }
 
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(if (isLandscapeLayout()) 4.dp else 8.dp))
 }
 
 private enum class SidebarIcon {

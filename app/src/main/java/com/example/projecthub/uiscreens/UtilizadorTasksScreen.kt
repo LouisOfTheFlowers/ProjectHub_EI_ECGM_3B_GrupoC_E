@@ -88,12 +88,10 @@ fun UtilizadorTasksSection(
             )
 
             else -> Column {
-                OutlinedButton(
-                    onClick = rememberSoundClick(onBack),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(language.t("user.tasks.back"), color = AuthAccent, fontWeight = FontWeight.Bold)
-                }
+                AppBackButton(
+                    text = language.t("user.tasks.back"),
+                    onClick = onBack
+                )
                 Spacer(modifier = Modifier.height(18.dp))
                 TaskMessageCard(
                     title = language.t("user.tasks.notFoundTitle"),
@@ -257,13 +255,11 @@ private fun UserTaskCard(
                 )
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(
-                        onClick = rememberSoundClick(onOpenObservations),
-                        enabled = !isSaving,
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(language.t("user.tasks.observations"))
-                    }
+                    AppOutlinedActionButton(
+                        text = language.t("user.tasks.observations"),
+                        onClick = onOpenObservations,
+                        enabled = !isSaving
+                    )
 
                     Button(
                         onClick = rememberSoundClick(onComplete),
@@ -293,13 +289,11 @@ private fun TaskObservationsPage(
     val task = item.task
 
     Column {
-        OutlinedButton(
-            onClick = rememberSoundClick(onBack),
-            enabled = !isSaving,
-            shape = RoundedCornerShape(8.dp)
-        ) {
-            Text(language.t("user.tasks.back"), color = AuthAccent, fontWeight = FontWeight.Bold)
-        }
+        AppBackButton(
+            text = language.t("user.tasks.back"),
+            onClick = onBack,
+            enabled = !isSaving
+        )
 
         Spacer(modifier = Modifier.height(18.dp))
 
@@ -438,10 +432,10 @@ private fun AddObservationDialog(
                     fontSize = 13.sp
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(
+                AppTextField(
                     value = text,
                     onValueChange = { text = it },
-                    label = { Text(language.t("user.tasks.observationText")) },
+                    label = language.t("user.tasks.observationText"),
                     minLines = 3,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -466,25 +460,18 @@ private fun AddObservationDialog(
             }
         },
         confirmButton = {
-            Button(
-                onClick = rememberSoundClick { onSave(text, photoUri) },
-                enabled = !isSaving && text.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AuthAccent,
-                    contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(if (isSaving) language.t("common.saving") else language.t("common.save"))
-            }
+            AppDialogConfirmButton(
+                text = if (isSaving) language.t("common.saving") else language.t("common.save"),
+                onClick = { onSave(text, photoUri) },
+                enabled = !isSaving && text.isNotBlank()
+            )
         },
         dismissButton = {
-            TextButton(
-                onClick = rememberSoundClick(onDismiss),
+            AppDialogCancelButton(
+                text = language.t("common.cancel"),
+                onClick = onDismiss,
                 enabled = !isSaving
-            ) {
-                Text(language.t("common.cancel"), color = AuthAccent)
-            }
+            )
         }
     )
 }
@@ -517,53 +504,46 @@ private fun CompleteTaskDialog(
                     fontSize = 13.sp
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(
+                AppTextField(
                     value = date,
                     onValueChange = { date = it },
-                    label = { Text(language.t("user.tasks.completionDate")) },
-                    placeholder = { Text(language.t("user.tasks.datePlaceholder")) },
+                    label = language.t("user.tasks.completionDate"),
+                    placeholder = language.t("user.tasks.datePlaceholder"),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
+                AppTextField(
                     value = location,
                     onValueChange = { location = it },
-                    label = { Text(language.t("user.tasks.completionLocation")) },
+                    label = language.t("user.tasks.completionLocation"),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
+                AppTextField(
                     value = hours,
                     onValueChange = { hours = it },
-                    label = { Text(language.t("user.tasks.spentHours")) },
-                    placeholder = { Text(language.t("user.tasks.hoursExample")) },
+                    label = language.t("user.tasks.spentHours"),
+                    placeholder = language.t("user.tasks.hoursExample"),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         },
         confirmButton = {
-            Button(
-                onClick = rememberSoundClick { onSave(date, location, hours) },
-                enabled = !isSaving && date.isNotBlank() && location.isNotBlank() && hours.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = ProjectHubColors.Success,
-                    contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(if (isSaving) language.t("common.completing") else language.t("user.tasks.complete"))
-            }
+            AppDialogConfirmButton(
+                text = if (isSaving) language.t("common.completing") else language.t("user.tasks.complete"),
+                onClick = { onSave(date, location, hours) },
+                enabled = !isSaving && date.isNotBlank() && location.isNotBlank() && hours.isNotBlank()
+            )
         },
         dismissButton = {
-            TextButton(
-                onClick = rememberSoundClick(onDismiss),
+            AppDialogCancelButton(
+                text = language.t("common.cancel"),
+                onClick = onDismiss,
                 enabled = !isSaving
-            ) {
-                Text(language.t("common.cancel"), color = AuthAccent)
-            }
+            )
         }
     )
 }
@@ -593,33 +573,7 @@ private fun TaskMeta(
 
 @Composable
 private fun StatusPill(status: String) {
-    val color = when {
-        status.isCompletedStatus() -> ProjectHubColors.Success
-        status.normalizedStatus() == "PENDENTE" -> ProjectHubColors.Warning
-        else -> ProjectHubColors.InfoLight
-    }
-
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(color.copy(alpha = 0.14f))
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(7.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(modifier = Modifier.size(6.dp))
-        Text(
-            text = status,
-            color = color,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.ExtraBold
-        )
-    }
+    AppStatusChip(text = status)
 }
 
 @Composable

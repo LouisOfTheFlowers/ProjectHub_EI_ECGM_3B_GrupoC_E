@@ -230,6 +230,11 @@ class ProfileViewModel(
             return
         }
 
+        if (currentUser.role.equals("ADMIN", ignoreCase = true)) {
+            state = state.copy(errorMessage = "A conta de administrador nao pode ser eliminada.")
+            return
+        }
+
         viewModelScope.launch {
             state = state.copy(isDeleting = true, message = null, errorMessage = null)
 

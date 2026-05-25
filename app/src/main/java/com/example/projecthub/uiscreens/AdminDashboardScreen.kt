@@ -113,6 +113,8 @@ private fun DashboardContent(
     state: AdminDashboardState,
     language: AppLanguage
 ) {
+    val isLandscape = isLandscapeLayout()
+
     when {
         state.isLoading -> {
             Box(
@@ -136,29 +138,42 @@ private fun DashboardContent(
         }
 
         else -> {
-            MetricCard(
-                label = language.t("dashboard.activeUsers"),
-                value = state.activeUsers.toString(),
-                accent = AdminOrange,
-                detail = language.t("dashboard.activeUsersDetail"),
-                icon = DashboardIcon.Users
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            MetricCard(
-                label = language.t("dashboard.completedProjects"),
-                value = state.completedProjects.toString(),
-                accent = AdminAccent,
-                detail = language.t("dashboard.completedProjectsDetail"),
-                icon = DashboardIcon.Completed
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            MetricCard(
-                label = language.t("dashboard.pendingProjects"),
-                value = state.pendingProjects.toString(),
-                accent = AdminRed,
-                detail = language.t("dashboard.pendingProjectsDetail"),
-                icon = DashboardIcon.Pending
-            )
+            val cards: @Composable (Modifier) -> Unit = { modifier ->
+                MetricCard(
+                    label = language.t("dashboard.activeUsers"),
+                    value = state.activeUsers.toString(),
+                    accent = AdminOrange,
+                    detail = language.t("dashboard.activeUsersDetail"),
+                    icon = DashboardIcon.Users,
+                    modifier = modifier
+                )
+                if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
+                MetricCard(
+                    label = language.t("dashboard.completedProjects"),
+                    value = state.completedProjects.toString(),
+                    accent = AdminAccent,
+                    detail = language.t("dashboard.completedProjectsDetail"),
+                    icon = DashboardIcon.Completed,
+                    modifier = modifier
+                )
+                if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
+                MetricCard(
+                    label = language.t("dashboard.pendingProjects"),
+                    value = state.pendingProjects.toString(),
+                    accent = AdminRed,
+                    detail = language.t("dashboard.pendingProjectsDetail"),
+                    icon = DashboardIcon.Pending,
+                    modifier = modifier
+                )
+            }
+
+            if (isLandscape) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    cards(Modifier.weight(1f))
+                }
+            } else {
+                cards(Modifier.fillMaxWidth())
+            }
         }
     }
 }
@@ -176,11 +191,11 @@ private fun MetricCard(
     value: String,
     accent: Color,
     detail: String,
-    icon: DashboardIcon
+    icon: DashboardIcon,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
             .height(108.dp),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),

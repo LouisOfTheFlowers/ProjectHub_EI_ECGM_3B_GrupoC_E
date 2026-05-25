@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -78,14 +80,15 @@ fun UtilizadorScaffold(
                 onProfileClick = { onNavigate(AppRoutes.UserProfile) }
             )
 
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp, vertical = 22.dp)
+                    .background(MaterialTheme.colorScheme.background),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 22.dp)
             ) {
-                content()
+                item {
+                    content()
+                }
             }
         }
 
@@ -164,13 +167,16 @@ private fun UtilizadorSidebar(
     onNavigate: (String) -> Unit,
     onLogout: () -> Unit
 ) {
+    val language = currentAppSettings().language
+    val isLandscape = isLandscapeLayout()
     Column(
         modifier = Modifier
             .width(284.dp)
             .fillMaxHeight()
             .background(ProjectHubColors.SidebarBackground)
             .statusBarsPadding()
-            .padding(horizontal = 14.dp, vertical = 22.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 14.dp, vertical = if (isLandscape) 12.dp else 22.dp)
     ) {
         Row(
             modifier = Modifier
@@ -198,7 +204,7 @@ private fun UtilizadorSidebar(
                     fontSize = 20.sp
                 )
                 Text(
-                    text = currentAppSettings().language.t("role.user"),
+                    text = language.t("role.user"),
                     color = ProjectHubColors.SidebarMutedText,
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp
@@ -206,13 +212,13 @@ private fun UtilizadorSidebar(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(if (isLandscape) 12.dp else 24.dp))
 
         val destinations = listOf(
-            SidebarDestination(AppRoutes.UserDashboard, currentAppSettings().language.t("sidebar.dashboard"), UtilizadorSidebarIcon.Dashboard),
-            SidebarDestination(AppRoutes.UserTasks, currentAppSettings().language.t("user.tasks.title"), UtilizadorSidebarIcon.Tasks),
-            SidebarDestination(AppRoutes.UserProjects, currentAppSettings().language.t("user.projects.title"), UtilizadorSidebarIcon.Projects),
-            SidebarDestination(AppRoutes.UserSettings, currentAppSettings().language.t("sidebar.settings"), UtilizadorSidebarIcon.Settings)
+            SidebarDestination(AppRoutes.UserDashboard, language.t("sidebar.dashboard"), UtilizadorSidebarIcon.Dashboard),
+            SidebarDestination(AppRoutes.UserTasks, language.t("user.tasks.title"), UtilizadorSidebarIcon.Tasks),
+            SidebarDestination(AppRoutes.UserProjects, language.t("user.projects.title"), UtilizadorSidebarIcon.Projects),
+            SidebarDestination(AppRoutes.UserSettings, language.t("sidebar.settings"), UtilizadorSidebarIcon.Settings)
         )
 
         destinations.forEach { destination ->
@@ -223,10 +229,10 @@ private fun UtilizadorSidebar(
                 onClick = { onNavigate(destination.route) }
             )
         }
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(if (isLandscape) 12.dp else 24.dp))
 
         UtilizadorSidebarItem(
-            label = currentAppSettings().language.t("sidebar.logout"),
+            label = language.t("sidebar.logout"),
             icon = UtilizadorSidebarIcon.Logout,
             onClick = onLogout
         )
@@ -240,10 +246,11 @@ private fun UtilizadorSidebarItem(
     selected: Boolean = false,
     onClick: () -> Unit = {}
 ) {
+    val itemHeight = if (isLandscapeLayout()) 46.dp else 52.dp
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp)
+            .height(itemHeight)
             .clip(RoundedCornerShape(10.dp))
             .background(if (selected) ProjectHubColors.SidebarSelected else Color.Transparent)
             .clickable(onClick = onClick)
@@ -260,7 +267,7 @@ private fun UtilizadorSidebarItem(
         )
     }
 
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(if (isLandscapeLayout()) 4.dp else 8.dp))
 }
 
 private enum class UtilizadorSidebarIcon {

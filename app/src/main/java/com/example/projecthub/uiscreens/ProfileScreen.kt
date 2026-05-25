@@ -81,6 +81,7 @@ fun ProfileScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var successDialogMessage by remember { mutableStateOf<String?>(null) }
     val currentUser = state.user
+    val isAdminUser = currentUser?.role.equals("ADMIN", ignoreCase = true)
 
     LaunchedEffect(user?.id, user?.foto) {
         viewModel.setUser(user)
@@ -161,7 +162,7 @@ fun ProfileScreen(
                 )
             },
             text = {
-                Column {
+                Column(modifier = Modifier.responsiveDialogBody()) {
                     OutlinedTextField(
                         value = oldPassword,
                         onValueChange = { oldPassword = it },
@@ -239,7 +240,7 @@ fun ProfileScreen(
                 )
             },
             text = {
-                Column {
+                Column(modifier = Modifier.responsiveDialogBody()) {
                     Text(
                         text = language.t("profile.currentEmail").format(currentUser.email),
                         color = ProjectHubColors.Muted,
@@ -315,7 +316,7 @@ fun ProfileScreen(
         )
     }
 
-    if (isConfirmingDelete) {
+    if (isConfirmingDelete && !isAdminUser) {
         AlertDialog(
             onDismissRequest = {
                 if (!state.isDeleting) {
@@ -511,24 +512,26 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        AccountActionCard(title = language.t("profile.deleteAccount")) {
-            Text(
-                text = language.t("profile.deleteHint"),
-                color = ProjectHubColors.Muted,
-                fontSize = 13.sp
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-
-            TextButton(
-                onClick = rememberSoundClick { isConfirmingDelete = true },
-                enabled = !state.isSaving && !state.isDeleting,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+        if (!isAdminUser) {
+            AccountActionCard(title = language.t("profile.deleteAccount")) {
                 Text(
-                    text = language.t("profile.deleteAccount"),
-                    color = ProfileRed,
-                    fontWeight = FontWeight.ExtraBold
+                    text = language.t("profile.deleteHint"),
+                    color = ProjectHubColors.Muted,
+                    fontSize = 13.sp
                 )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                TextButton(
+                    onClick = rememberSoundClick { isConfirmingDelete = true },
+                    enabled = !state.isSaving && !state.isDeleting,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = language.t("profile.deleteAccount"),
+                        color = ProfileRed,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
             }
         }
     }

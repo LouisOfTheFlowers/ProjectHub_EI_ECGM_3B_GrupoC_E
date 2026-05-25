@@ -15,7 +15,7 @@ import java.time.LocalDate
 enum class AdminTaskStatusFilter(val label: String) {
     All("Todas"),
     Pending("Pendentes"),
-    Completed("Completadas")
+    Completed("Concluídas")
 }
 
 data class AdminTaskProjectOption(

@@ -66,7 +66,7 @@ private val GestorProjectsRed = ProjectHubColors.Danger
 
 private val GestorProjectStatuses = listOf(
     "Todos os Status",
-    "Em Progresso",
+    "Em progresso",
     "Pendentes",
     "Concluídos"
 )
@@ -428,9 +428,12 @@ private fun ProjectCard(
                         StatusPill(project.statusLabel)
 
                         if (!project.isCompleted) {
+                            val canCompleteProject = project.totalTasks == project.completedTasks
+
                             Spacer(modifier = Modifier.width(8.dp))
 
                             CompleteIconButton(
+                                enabled = canCompleteProject,
                                 onClick = {
                                     onCompleteProject(project)
                                 }
@@ -462,13 +465,10 @@ private fun ProjectInfoPage(
     onBack: () -> Unit
 ) {
     Column {
-        TextButton(onClick = rememberSoundClick(onBack)) {
-            Text(
-                text = currentAppSettings().language.t("manager.projects.back"),
-                color = GestorProjectsAccent,
-                fontWeight = FontWeight.Bold
-            )
-        }
+        AppBackButton(
+            text = currentAppSettings().language.t("manager.projects.back"),
+            onClick = onBack
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -796,16 +796,10 @@ private fun ProjectTaskObservationsPage(
     }
 
     Column {
-        TextButton(
-            onClick = rememberSoundClick(onBack),
-            colors = ButtonDefaults.textButtonColors(contentColor = ProjectHubColors.Ink)
-        ) {
-            Text(
-                text = currentAppSettings().language.t("manager.projects.backProject"),
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-        }
+        AppBackButton(
+            text = currentAppSettings().language.t("manager.projects.backProject"),
+            onClick = onBack
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -854,16 +848,10 @@ private fun ProjectObservationDetailPage(
     onBack: () -> Unit
 ) {
     Column {
-        TextButton(
-            onClick = rememberSoundClick(onBack),
-            colors = ButtonDefaults.textButtonColors(contentColor = ProjectHubColors.Ink)
-        ) {
-            Text(
-                text = currentAppSettings().language.t("tasks.backObservations"),
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-        }
+        AppBackButton(
+            text = currentAppSettings().language.t("tasks.backObservations"),
+            onClick = onBack
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -1017,26 +1005,7 @@ private fun ProjectObservationRow(
 private fun InfoTaskStatusPill(
     status: String
 ) {
-    val color = when (status) {
-        "Concluída" -> GestorProjectsGreen
-        "Atrasada" -> GestorProjectsRed
-        "Em progresso" -> GestorProjectsBlue
-        else -> ProjectHubColors.SidebarMutedText
-    }
-
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(color.copy(alpha = 0.14f))
-            .padding(horizontal = 9.dp, vertical = 5.dp)
-    ) {
-        Text(
-            text = status,
-            color = color,
-            fontWeight = FontWeight.Bold,
-            fontSize = 11.sp
-        )
-    }
+    AppStatusChip(text = status)
 }
 
 @Composable
@@ -1256,23 +1225,15 @@ private fun ProjectMembers(
 
 @Composable
 private fun CompleteIconButton(
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .size(34.dp)
-            .clip(CircleShape)
-            .background(GestorProjectsGreen)
-            .clickable(onClick = rememberSoundClick(onClick)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "✓",
-            color = Color.White,
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 18.sp
-        )
-    }
+    AppActionIconButton(
+        icon = "✓",
+        color = GestorProjectsGreen,
+        onClick = onClick,
+        enabled = enabled
+    )
 }
 
 @Composable
@@ -1427,26 +1388,7 @@ private fun StarRatingText(
 private fun StatusPill(
     status: String
 ) {
-    val color = when (status) {
-        "Concluído" -> GestorProjectsGreen
-        "Em Progresso" -> GestorProjectsBlue
-        "Pendente" -> ProjectHubColors.SidebarMutedText
-        else -> ProjectHubColors.Muted
-    }
-
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(color.copy(alpha = 0.14f))
-            .padding(horizontal = 13.dp, vertical = 7.dp)
-    ) {
-        Text(
-            text = status,
-            color = color,
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.sp
-        )
-    }
+    AppStatusChip(text = status)
 }
 
 @Composable
@@ -1670,3 +1612,4 @@ private fun TeamIcon(
         )
     }
 }
+

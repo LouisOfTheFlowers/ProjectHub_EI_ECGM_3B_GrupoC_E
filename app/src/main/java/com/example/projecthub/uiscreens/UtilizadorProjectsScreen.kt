@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.projecthub.remote.supabase.models.TarefaDto
@@ -65,12 +66,10 @@ fun UtilizadorProjectsSection(
             )
 
             else -> Column {
-                OutlinedButton(
-                    onClick = rememberSoundClick(onBack),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(language.t("user.projects.back"), color = AuthAccent, fontWeight = FontWeight.Bold)
-                }
+                AppBackButton(
+                    text = language.t("user.projects.back"),
+                    onClick = onBack
+                )
                 Spacer(modifier = Modifier.height(18.dp))
                 ProjectMessageCard(
                     title = language.t("user.projects.notFoundTitle"),
@@ -145,6 +144,7 @@ private fun UserProjectCard(
 ) {
     val language = currentAppSettings().language
     val project = item.project
+    val isLandscape = isLandscapeLayout()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -191,45 +191,70 @@ private fun UserProjectCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    ProjectMetric(
-                        label = language.t("common.completed"),
-                        value = item.completedTasks.toString(),
-                        color = ProjectHubColors.Success,
-                        modifier = Modifier.weight(1f)
-                    )
-                    ProjectMetric(
-                        label = language.t("user.projects.late"),
-                        value = item.lateTasks.toString(),
-                        color = ProjectHubColors.Danger,
-                        modifier = Modifier.weight(1f)
-                    )
-                    ProjectMetric(
-                        label = language.t("common.progress"),
-                        value = projectProgress(item),
-                        color = AuthAccent,
-                        modifier = Modifier.weight(1f)
-                    )
+            if (isLandscape) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        ProjectMetric(
+                            label = language.t("common.completed"),
+                            value = item.completedTasks.toString(),
+                            color = ProjectHubColors.Success,
+                            modifier = Modifier.weight(1f)
+                        )
+                        ProjectMetric(
+                            label = language.t("user.projects.late"),
+                            value = item.lateTasks.toString(),
+                            color = ProjectHubColors.Danger,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        ProjectMetric(
+                            label = language.t("common.progress"),
+                            value = projectProgress(item),
+                            color = AuthAccent,
+                            modifier = Modifier.weight(1f)
+                        )
+                        HistoryButton(
+                            text = language.t("user.projects.viewHistory"),
+                            onClick = onClick,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
-
-                OutlinedButton(
-                    onClick = rememberSoundClick(onClick),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.padding(start = 12.dp)
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        ProjectMetric(
+                            label = language.t("common.completed"),
+                            value = item.completedTasks.toString(),
+                            color = ProjectHubColors.Success,
+                            modifier = Modifier.weight(1f)
+                        )
+                        ProjectMetric(
+                            label = language.t("user.projects.late"),
+                            value = item.lateTasks.toString(),
+                            color = ProjectHubColors.Danger,
+                            modifier = Modifier.weight(1f)
+                        )
+                        ProjectMetric(
+                            label = language.t("common.progress"),
+                            value = projectProgress(item),
+                            color = AuthAccent,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    HistoryButton(
                         text = language.t("user.projects.viewHistory"),
-                        color = AuthAccent,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        onClick = onClick,
+                        modifier = Modifier.padding(start = 12.dp)
                     )
                 }
             }
@@ -244,12 +269,10 @@ private fun ProjectTaskHistoryPage(
 ) {
     val language = currentAppSettings().language
     Column {
-        OutlinedButton(
-            onClick = rememberSoundClick(onBack),
-            shape = RoundedCornerShape(8.dp)
-        ) {
-            Text(language.t("user.projects.back"), color = AuthAccent, fontWeight = FontWeight.Bold)
-        }
+        AppBackButton(
+            text = language.t("user.projects.back"),
+            onClick = onBack
+        )
 
         Spacer(modifier = Modifier.height(18.dp))
 
@@ -403,7 +426,9 @@ private fun ProjectMetric(
                 text = label,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 fontSize = 10.sp,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = value,
@@ -416,34 +441,21 @@ private fun ProjectMetric(
 }
 
 @Composable
-private fun ProjectStatusPill(status: String) {
-    val color = when {
-        status.isCompletedStatus() -> ProjectHubColors.Success
-        status.normalizedStatus() == "PENDENTE" -> ProjectHubColors.Warning
-        else -> ProjectHubColors.InfoLight
-    }
+private fun HistoryButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AppOutlinedActionButton(
+        text = text,
+        onClick = onClick,
+        modifier = modifier.height(50.dp)
+    )
+}
 
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(color.copy(alpha = 0.14f))
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(7.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(modifier = Modifier.size(6.dp))
-        Text(
-            text = status,
-            color = color,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.ExtraBold
-        )
-    }
+@Composable
+private fun ProjectStatusPill(status: String) {
+    AppStatusChip(text = status)
 }
 
 @Composable

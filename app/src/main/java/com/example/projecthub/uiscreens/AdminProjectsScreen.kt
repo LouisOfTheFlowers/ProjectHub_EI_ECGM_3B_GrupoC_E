@@ -500,7 +500,7 @@ private fun ProjectListCard(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        ActionIconButton("?", ProjectsAccent, onEdit)
+                        ActionIconButton("✎", ProjectsAccent, onEdit)
                         ActionIconButton("X", ProjectsRed, onDelete)
                     }
                 }
@@ -550,22 +550,11 @@ private fun ActionIconButton(
     color: Color,
     onClick: () -> Unit
 ) {
-    val click = rememberSoundClick(onClick)
-    Box(
-        modifier = Modifier
-            .size(34.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(color.copy(alpha = 0.12f))
-            .clickable(onClick = click),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = icon,
-            color = color,
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp
-        )
-    }
+    AppActionIconButton(
+        icon = icon,
+        color = color,
+        onClick = onClick
+    )
 }
 
 @Composable
@@ -595,7 +584,7 @@ private fun EditProjectDialog(
         onDismissRequest = onDismiss,
         title = { Text(language.t("projects.editTitle")) },
         text = {
-            Column {
+            Column(modifier = Modifier.responsiveDialogBody()) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },

@@ -308,15 +308,11 @@ private fun TaskFilters(
     onSearchChange: (String) -> Unit,
     onStatusChange: (GestorTaskStatusFilter) -> Unit
 ) {
-    OutlinedTextField(
+    AppSearchField(
         value = state.searchQuery,
         onValueChange = onSearchChange,
+        placeholder = currentAppSettings().language.t("tasks.searchManager"),
         modifier = Modifier.fillMaxWidth(),
-        singleLine = true,
-        placeholder = {
-            Text(currentAppSettings().language.t("tasks.searchManager"))
-        },
-        shape = RoundedCornerShape(8.dp),
         colors = TextFieldDefaults.colors(
             focusedContainerColor = ProjectHubColors.LightSurface,
             unfocusedContainerColor = ProjectHubColors.LightSurface,
@@ -577,7 +573,7 @@ private fun TaskRow(
                 }
 
                 TaskActionIcon(
-                    icon = "✏",
+                    icon = "✎",
                     color = GestorTasksAccent
                 ) {
                     onEditTask(task)
@@ -643,12 +639,10 @@ private fun GestorTaskInfoPage(
     val language = currentAppSettings().language
 
     Column {
-        TextButton(
-            onClick = rememberSoundClick(onBack),
-            colors = ButtonDefaults.textButtonColors(contentColor = ProjectHubColors.Ink)
-        ) {
-            Text(language.t("user.tasks.back"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        }
+        AppBackButton(
+            text = language.t("user.tasks.back"),
+            onClick = onBack
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -747,12 +741,10 @@ private fun GestorTaskObservationsPage(
     val language = currentAppSettings().language
 
     Column {
-        TextButton(
-            onClick = rememberSoundClick(onBack),
-            colors = ButtonDefaults.textButtonColors(contentColor = ProjectHubColors.Ink)
-        ) {
-            Text(language.t("user.tasks.back"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        }
+        AppBackButton(
+            text = language.t("user.tasks.back"),
+            onClick = onBack
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -937,26 +929,7 @@ private fun TaskActionIcon(
 
 @Composable
 private fun StatusPill(status: String) {
-    val color = when (status) {
-        "Concluída" -> GestorTasksGreen
-        "Em progresso" -> GestorTasksBlue
-        "Atrasada" -> GestorTasksRed
-        else -> GestorTasksOrange
-    }
-
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(color.copy(alpha = 0.14f))
-            .padding(horizontal = 9.dp, vertical = 5.dp)
-    ) {
-        Text(
-            text = status,
-            color = color,
-            fontWeight = FontWeight.Bold,
-            fontSize = 11.sp
-        )
-    }
+    AppStatusChip(text = status)
 }
 
 @Composable
@@ -983,24 +956,20 @@ private fun EditGestorTaskDialog(
             Text(currentAppSettings().language.t("tasks.editTitle"))
         },
         text = {
-            Column {
-                OutlinedTextField(
+            Column(modifier = Modifier.responsiveDialogBody()) {
+                AppTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = {
-                        Text(currentAppSettings().language.t("tasks.titleField"))
-                    },
+                    label = currentAppSettings().language.t("tasks.titleField"),
                     singleLine = true
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                OutlinedTextField(
+                AppTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = {
-                        Text(currentAppSettings().language.t("tasks.descriptionField"))
-                    }
+                    label = currentAppSettings().language.t("tasks.descriptionField")
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1068,9 +1037,10 @@ private fun EditGestorTaskDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            AppDialogConfirmButton(
+                text = if (isSaving) "A guardar..." else "Guardar",
                 enabled = !isSaving,
-                onClick = rememberSoundClick {
+                onClick = {
                     onSave(
                         title,
                         description,
@@ -1080,18 +1050,13 @@ private fun EditGestorTaskDialog(
                         selectedUserIds
                     )
                 }
-            ) {
-                Text(
-                    text = if (isSaving) "A guardar..." else "Guardar",
-                    color = GestorTasksAccent,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            )
         },
         dismissButton = {
-            TextButton(onClick = rememberSoundClick(onDismiss)) {
-                Text(currentAppSettings().language.t("common.cancel"))
-            }
+            AppDialogCancelButton(
+                text = currentAppSettings().language.t("common.cancel"),
+                onClick = onDismiss
+            )
         }
     )
 
@@ -1242,24 +1207,20 @@ private fun AddGestorTaskDialog(
             Text(currentAppSettings().language.t("tasks.newTitle"))
         },
         text = {
-            Column {
-                OutlinedTextField(
+            Column(modifier = Modifier.responsiveDialogBody()) {
+                AppTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = {
-                        Text(currentAppSettings().language.t("tasks.titleField"))
-                    },
+                    label = currentAppSettings().language.t("tasks.titleField"),
                     singleLine = true
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                OutlinedTextField(
+                AppTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = {
-                        Text(currentAppSettings().language.t("tasks.descriptionField"))
-                    }
+                    label = currentAppSettings().language.t("tasks.descriptionField")
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1275,23 +1236,19 @@ private fun AddGestorTaskDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                OutlinedTextField(
+                AppTextField(
                     value = startDate,
                     onValueChange = { startDate = it },
-                    label = {
-                        Text("${currentAppSettings().language.t("common.start")} dd/mm/aaaa")
-                    },
+                    label = "${currentAppSettings().language.t("common.start")} dd/mm/aaaa",
                     singleLine = true
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                OutlinedTextField(
+                AppTextField(
                     value = endDate,
                     onValueChange = { endDate = it },
-                    label = {
-                        Text("${currentAppSettings().language.t("common.deadline")} dd/mm/aaaa")
-                    },
+                    label = "${currentAppSettings().language.t("common.deadline")} dd/mm/aaaa",
                     singleLine = true
                 )
 
@@ -1340,9 +1297,14 @@ private fun AddGestorTaskDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            AppDialogConfirmButton(
+                text = if (isSaving) {
+                    currentAppSettings().language.t("common.creating")
+                } else {
+                    currentAppSettings().language.t("common.create")
+                },
                 enabled = !isSaving,
-                onClick = rememberSoundClick {
+                onClick = {
                     onCreate(
                         title,
                         description,
@@ -1352,22 +1314,13 @@ private fun AddGestorTaskDialog(
                         selectedUserIds
                     )
                 }
-            ) {
-                Text(
-                    text = if (isSaving) {
-                        currentAppSettings().language.t("common.creating")
-                    } else {
-                        currentAppSettings().language.t("common.create")
-                    },
-                    color = GestorTasksAccent,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            )
         },
         dismissButton = {
-            TextButton(onClick = rememberSoundClick(onDismiss)) {
-                Text(currentAppSettings().language.t("common.cancel"))
-            }
+            AppDialogCancelButton(
+                text = currentAppSettings().language.t("common.cancel"),
+                onClick = onDismiss
+            )
         }
     )
 }

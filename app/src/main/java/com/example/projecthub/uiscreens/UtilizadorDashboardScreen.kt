@@ -148,6 +148,8 @@ private fun UtilizadorDashboardHeader() {
 @Composable
 private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
     val language = currentAppSettings().language
+    val isLandscape = isLandscapeLayout()
+
     when {
         state.isLoading -> {
             Box(
@@ -171,37 +173,51 @@ private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
         }
 
         else -> {
-            UserMetricCard(
-                label = language.t("common.inProgress"),
-                value = state.inProgressTasks.toString(),
-                accent = UtilizadorBlue,
-                detail = language.t("user.dashboard.progressDetail"),
-                icon = UserDashboardIcon.Progress
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            UserMetricCard(
-                label = language.t("common.completed"),
-                value = state.completedTasks.toString(),
-                accent = UtilizadorGreen,
-                detail = language.t("user.dashboard.completedDetail"),
-                icon = UserDashboardIcon.Completed
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            UserMetricCard(
-                label = language.t("common.pending"),
-                value = state.pendingTasks.toString(),
-                accent = UtilizadorOrange,
-                detail = language.t("user.dashboard.pendingDetail"),
-                icon = UserDashboardIcon.Pending
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            UserMetricCard(
-                label = language.t("common.delayed"),
-                value = state.lateTasks.toString(),
-                accent = UtilizadorRed,
-                detail = language.t("user.dashboard.lateDetail"),
-                icon = UserDashboardIcon.Late
-            )
+            val cards: @Composable (Modifier) -> Unit = { modifier ->
+                UserMetricCard(
+                    label = language.t("common.inProgress"),
+                    value = state.inProgressTasks.toString(),
+                    accent = UtilizadorBlue,
+                    detail = language.t("user.dashboard.progressDetail"),
+                    icon = UserDashboardIcon.Progress,
+                    modifier = modifier
+                )
+                if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
+                UserMetricCard(
+                    label = language.t("common.completed"),
+                    value = state.completedTasks.toString(),
+                    accent = UtilizadorGreen,
+                    detail = language.t("user.dashboard.completedDetail"),
+                    icon = UserDashboardIcon.Completed,
+                    modifier = modifier
+                )
+                if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
+                UserMetricCard(
+                    label = language.t("common.pending"),
+                    value = state.pendingTasks.toString(),
+                    accent = UtilizadorOrange,
+                    detail = language.t("user.dashboard.pendingDetail"),
+                    icon = UserDashboardIcon.Pending,
+                    modifier = modifier
+                )
+                if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
+                UserMetricCard(
+                    label = language.t("common.delayed"),
+                    value = state.lateTasks.toString(),
+                    accent = UtilizadorRed,
+                    detail = language.t("user.dashboard.lateDetail"),
+                    icon = UserDashboardIcon.Late,
+                    modifier = modifier
+                )
+            }
+
+            if (isLandscape) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    cards(Modifier.weight(1f))
+                }
+            } else {
+                cards(Modifier.fillMaxWidth())
+            }
         }
     }
 }
@@ -230,11 +246,11 @@ private fun UserMetricCard(
     value: String,
     accent: Color,
     detail: String,
-    icon: UserDashboardIcon
+    icon: UserDashboardIcon,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
             .height(108.dp),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),

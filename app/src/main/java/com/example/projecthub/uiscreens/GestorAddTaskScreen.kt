@@ -73,54 +73,31 @@ fun GestorAddTaskScreen(
     var activeDateField by remember { mutableStateOf<GestorTaskDateField?>(null) }
     val availableUsers = state.users.filter { selectedProject?.id in it.projectIds }
 
-    val backClick = rememberSoundClick(onBack)
-    val createClick = rememberSoundClick {
-        onCreate(title, description, selectedProject?.id, startDate, endDate, selectedUserIds)
-    }
-
     Column {
-        TextButton(
-            onClick = backClick,
-            colors = ButtonDefaults.textButtonColors(contentColor = ProjectHubColors.Ink)
-        ) {
-            Text(language.t("addTask.back"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        }
+        AppBackButton(
+            text = language.t("addTask.back"),
+            onClick = onBack
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-        ) {
-            Column(modifier = Modifier.padding(18.dp)) {
-                Text(
-                    text = language.t("addTask.title"),
-                    color = ProjectHubColors.Ink,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 25.sp
-                )
-
-                Spacer(modifier = Modifier.height(18.dp))
-
-                FormLabel("Título")
-                OutlinedTextField(
+        AppFormCard(title = language.t("addTask.title")) {
+                AppFormLabel("Título")
+                AppTextField(
                     value = title,
                     onValueChange = { title = it },
-                    modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences,
                         keyboardType = KeyboardType.Text
                     ),
-                    placeholder = { Text(language.t("addTask.titlePlaceholder")) }
+                    placeholder = language.t("addTask.titlePlaceholder")
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FormLabel("Descrição")
-                OutlinedTextField(
+                AppFormLabel("Descrição")
+                AppTextField(
                     value = description,
                     onValueChange = { description = it },
                     modifier = Modifier
@@ -130,12 +107,12 @@ fun GestorAddTaskScreen(
                         capitalization = KeyboardCapitalization.Sentences,
                         keyboardType = KeyboardType.Text
                     ),
-                    placeholder = { Text(language.t("addTask.descriptionPlaceholder")) }
+                    placeholder = language.t("addTask.descriptionPlaceholder")
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FormLabel("Projeto")
+                AppFormLabel("Projeto")
                 GestorProjectDropdown(
                     selectedProject = selectedProject,
                     projects = state.projects,
@@ -147,7 +124,7 @@ fun GestorAddTaskScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FormLabel("Utilizadores")
+                AppFormLabel("Utilizadores")
                 UserMultiSelect(
                     users = availableUsers,
                     selectedUserIds = selectedUserIds,
@@ -163,7 +140,7 @@ fun GestorAddTaskScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FormLabel("Data de Início")
+                AppFormLabel("Data de Início")
                 GestorTaskDatePickerField(
                     value = startDate,
                     onClick = rememberSoundClick { activeDateField = GestorTaskDateField.Start }
@@ -171,7 +148,7 @@ fun GestorAddTaskScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FormLabel("Data de Fim (Prazo)")
+                AppFormLabel("Data de Fim (Prazo)")
                 GestorTaskDatePickerField(
                     value = endDate,
                     onClick = rememberSoundClick { activeDateField = GestorTaskDateField.End }
@@ -189,46 +166,23 @@ fun GestorAddTaskScreen(
 
                 Spacer(modifier = Modifier.height(18.dp))
 
-                Button(
-                    onClick = createClick,
+                AppPrimaryButton(
+                    text = language.t("addTask.submit"),
+                    onClick = {
+                        onCreate(title, description, selectedProject?.id, startDate, endDate, selectedUserIds)
+                    },
                     enabled = !state.isCreating,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = GestorAddTaskAccent,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                ) {
-                    if (state.isCreating) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp,
-                            color = Color.White
-                        )
-                    } else {
-                        Text(language.t("addTask.submit"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    }
-                }
+                    isLoading = state.isCreating,
+                    containerColor = GestorAddTaskAccent
+                )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Button(
-                    onClick = backClick,
-                    enabled = !state.isCreating,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = ProjectHubColors.Disabled,
-                        contentColor = ProjectHubColors.Ink
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                ) {
-                    Text(language.t("common.cancel"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                }
-            }
+                AppSecondaryButton(
+                    text = language.t("common.cancel"),
+                    onClick = onBack,
+                    enabled = !state.isCreating
+                )
         }
     }
 

@@ -3,6 +3,8 @@ package com.example.projecthub.repository
 import com.example.projecthub.remote.supabase.TarefaRemoteDataSource
 import com.example.projecthub.remote.supabase.models.TarefaDto
 
+private const val TASK_TITLE_MAX_LENGTH = 80
+
 class TarefaRepository(
     private val tarefaRemoteDataSource: TarefaRemoteDataSource = TarefaRemoteDataSource()
 ) {
@@ -66,6 +68,9 @@ class TarefaRepository(
             if (titulo.isBlank()) {
                 return Result.failure(Exception("O título da tarefa não pode estar vazio."))
             }
+            if (titulo.trim().length > TASK_TITLE_MAX_LENGTH) {
+                return Result.failure(Exception("O titulo da tarefa tem demasiados caracteres. Usa no maximo $TASK_TITLE_MAX_LENGTH caracteres."))
+            }
 
             val tarefa = TarefaDto(
                 id = null,
@@ -97,6 +102,9 @@ class TarefaRepository(
             if (titulo.isBlank()) {
                 return Result.failure(Exception("O título da tarefa não pode estar vazio."))
             }
+            if (titulo.trim().length > TASK_TITLE_MAX_LENGTH) {
+                return Result.failure(Exception("O titulo da tarefa tem demasiados caracteres. Usa no maximo $TASK_TITLE_MAX_LENGTH caracteres."))
+            }
 
             val tarefa = TarefaDto(
                 id = null,
@@ -127,6 +135,9 @@ class TarefaRepository(
         return try {
             if (titulo.isBlank()) {
                 return Result.failure(Exception("O título da tarefa não pode estar vazio."))
+            }
+            if (titulo.trim().length > TASK_TITLE_MAX_LENGTH) {
+                return Result.failure(Exception("O titulo da tarefa tem demasiados caracteres. Usa no maximo $TASK_TITLE_MAX_LENGTH caracteres."))
             }
 
             val tarefa = TarefaDto(

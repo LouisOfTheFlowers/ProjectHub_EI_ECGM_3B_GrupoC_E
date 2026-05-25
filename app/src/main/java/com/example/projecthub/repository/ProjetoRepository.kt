@@ -3,6 +3,8 @@ package com.example.projecthub.repository
 import com.example.projecthub.remote.supabase.ProjetoRemoteDataSource
 import com.example.projecthub.remote.supabase.models.ProjetoDto
 
+private const val PROJECT_TITLE_MAX_LENGTH = 80
+
 class ProjetoRepository(
     private val projetoRemoteDataSource: ProjetoRemoteDataSource = ProjetoRemoteDataSource()
 ) {
@@ -51,6 +53,9 @@ class ProjetoRepository(
             if (nome.isBlank()) {
                 return Result.failure(Exception("O nome do projeto não pode estar vazio."))
             }
+            if (nome.trim().length > PROJECT_TITLE_MAX_LENGTH) {
+                return Result.failure(Exception("O nome do projeto tem demasiados caracteres. Usa no maximo $PROJECT_TITLE_MAX_LENGTH caracteres."))
+            }
 
             val projeto = ProjetoDto(
                 id = null,
@@ -84,6 +89,9 @@ class ProjetoRepository(
         return try {
             if (nome.isBlank()) {
                 return Result.failure(Exception("O nome do projeto não pode estar vazio."))
+            }
+            if (nome.trim().length > PROJECT_TITLE_MAX_LENGTH) {
+                return Result.failure(Exception("O nome do projeto tem demasiados caracteres. Usa no maximo $PROJECT_TITLE_MAX_LENGTH caracteres."))
             }
 
             val projeto = ProjetoDto(

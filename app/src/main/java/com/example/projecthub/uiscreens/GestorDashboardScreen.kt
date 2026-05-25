@@ -126,6 +126,8 @@ private fun DashboardHeader() {
 @Composable
 private fun DashboardContent(state: GestorDashboardState) {
     val language = currentAppSettings().language
+    val isLandscape = isLandscapeLayout()
+
     when {
         state.isLoading -> {
             Box(
@@ -149,29 +151,42 @@ private fun DashboardContent(state: GestorDashboardState) {
         }
 
         else -> {
-            MetricCard(
-                label = language.t("manager.dashboard.projects"),
-                value = state.totalProjects.toString(),
-                accent = GestorOrange,
-                detail = language.t("manager.dashboard.projectsDetail"),
-                icon = GestorDashboardIcon.Projects
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            MetricCard(
-                label = language.t("common.completed"),
-                value = state.completedTasks.toString(),
-                accent = GestorAccent,
-                detail = language.t("manager.dashboard.completedDetail"),
-                icon = GestorDashboardIcon.Completed
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            MetricCard(
-                label = language.t("common.inProgress"),
-                value = state.inProgressTasks.toString(),
-                accent = GestorRed,
-                detail = language.t("manager.dashboard.progressDetail"),
-                icon = GestorDashboardIcon.Pending
-            )
+            val cards: @Composable (Modifier) -> Unit = { modifier ->
+                MetricCard(
+                    label = language.t("manager.dashboard.projects"),
+                    value = state.totalProjects.toString(),
+                    accent = GestorOrange,
+                    detail = language.t("manager.dashboard.projectsDetail"),
+                    icon = GestorDashboardIcon.Projects,
+                    modifier = modifier
+                )
+                if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
+                MetricCard(
+                    label = language.t("common.completed"),
+                    value = state.completedTasks.toString(),
+                    accent = GestorAccent,
+                    detail = language.t("manager.dashboard.completedDetail"),
+                    icon = GestorDashboardIcon.Completed,
+                    modifier = modifier
+                )
+                if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
+                MetricCard(
+                    label = language.t("common.inProgress"),
+                    value = state.inProgressTasks.toString(),
+                    accent = GestorRed,
+                    detail = language.t("manager.dashboard.progressDetail"),
+                    icon = GestorDashboardIcon.Pending,
+                    modifier = modifier
+                )
+            }
+
+            if (isLandscape) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    cards(Modifier.weight(1f))
+                }
+            } else {
+                cards(Modifier.fillMaxWidth())
+            }
         }
     }
 }
@@ -189,11 +204,11 @@ private fun MetricCard(
     value: String,
     accent: Color,
     detail: String,
-    icon: GestorDashboardIcon
+    icon: GestorDashboardIcon,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
             .height(108.dp),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),

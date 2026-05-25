@@ -470,6 +470,31 @@ class GestorProjectsViewModel(
                 actionMessage = null
             )
 
+            val tasksResult = tarefaRepository.getTarefasByProjeto(project.id)
+            if (tasksResult.isFailure) {
+                state = state.copy(
+                    isAssociating = false,
+                    errorMessage = "Nao foi possivel validar as tarefas do projeto."
+                )
+                return@launch
+            }
+
+            val unfinishedTasks = tasksResult
+                .getOrDefault(emptyList())
+                .filter { !it.status.isCompletedStatus() }
+
+            if (unfinishedTasks.isNotEmpty()) {
+                val lateTasks = unfinishedTasks.count { it.isLate() }
+                val pendingTasks = unfinishedTasks.count { it.isPendingByDate() && !it.isLate() }
+                val inProgressTasks = unfinishedTasks.size - lateTasks - pendingTasks
+
+                state = state.copy(
+                    isAssociating = false,
+                    errorMessage = "Nao podes concluir este projeto. Todas as tarefas tem de estar concluidas. Pendentes: $pendingTasks, em progresso: $inProgressTasks, em atraso: $lateTasks."
+                )
+                return@launch
+            }
+
             val invalidMember = project.members.firstOrNull { member ->
                 ratings[member.id] == null || ratings[member.id] !in 0..5
             }
@@ -537,7 +562,7 @@ class GestorProjectsViewModel(
 
             val matchesStatus = when (state.selectedStatus) {
                 "Concluídos" -> project.statusLabel == "Concluído"
-                "Em Progresso" -> project.statusLabel == "Em Progresso"
+                "Em progresso" -> project.statusLabel == "Em progresso"
                 "Pendentes" -> project.statusLabel == "Pendente"
                 else -> true
             }
@@ -619,6 +644,16 @@ class GestorProjectsViewModel(
                 startDate?.isAfter(LocalDate.now()) == true
     }
 
+    private fun TarefaDto.isLate(): Boolean {
+        val dueDate = data_fim
+            ?.take(10)
+            ?.toLocalDateOrNull()
+
+        return !status.isCompletedStatus() &&
+                dueDate != null &&
+                dueDate.isBefore(LocalDate.now())
+    }
+
     private fun TarefaDto.toTaskStatusLabel(): String {
         val dueDate = data_fim
             ?.take(10)
@@ -658,8 +693,8 @@ class GestorProjectsViewModel(
 
         return when {
             isCompletedStatus() -> "Concluído"
-            isInProgressStatus() -> "Em Progresso"
-            startDate == LocalDate.now() -> "Em Progresso"
+            isInProgressStatus() -> "Em progresso"
+            startDate == LocalDate.now() -> "Em progresso"
             isPendingStatus() -> "Pendente"
             else -> this.ifBlank { "Sem status" }
         }

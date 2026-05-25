@@ -577,16 +577,5 @@ private fun UserRoleEditor(
 
 @Composable
 private fun StatusChip(text: String, color: Color) {
-    Text(
-        text = text,
-        color = color,
-        fontWeight = FontWeight.Bold,
-        fontSize = 12.sp,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = Modifier
-            .clip(RoundedCornerShape(50))
-            .background(color.copy(alpha = 0.12f))
-            .padding(horizontal = 10.dp, vertical = 5.dp)
-    )
+    AppStatusChip(text = text, contentColor = color)
 }
