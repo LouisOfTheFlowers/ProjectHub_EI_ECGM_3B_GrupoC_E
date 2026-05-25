@@ -9,17 +9,17 @@ import com.example.projecthub.remote.supabase.UserRemoteDataSource
 import com.example.projecthub.remote.supabase.models.ProjetoDto
 import com.example.projecthub.remote.supabase.models.TarefaDto
 import com.example.projecthub.repository.AvaliacaoRepository
-<<<<<<< Updated upstream
-=======
 import com.example.projecthub.repository.ObservacaoFotoRepository
 import com.example.projecthub.repository.ObservacaoRepository
->>>>>>> Stashed changes
 import com.example.projecthub.repository.ProjetoRepository
 import com.example.projecthub.repository.ProjetoUserRepository
+import com.example.projecthub.repository.RegistoTarefaRepository
 import com.example.projecthub.repository.TarefaRepository
+import com.example.projecthub.repository.TarefaUserRepository
 import kotlinx.coroutines.launch
 import java.text.Normalizer
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 data class GestorProjectMember(
     val id: Int,
@@ -51,8 +51,6 @@ data class GestorProjectListItem(
     val isExpanded: Boolean = false
 )
 
-<<<<<<< Updated upstream
-=======
 data class GestorProjectInfoParticipant(
     val id: Int,
     val name: String,
@@ -91,7 +89,6 @@ data class GestorProjectInfoState(
     val errorMessage: String? = null
 )
 
->>>>>>> Stashed changes
 data class GestorProjectsState(
     val projects: List<GestorProjectListItem> = emptyList(),
     val visibleProjects: List<GestorProjectListItem> = emptyList(),
@@ -101,7 +98,8 @@ data class GestorProjectsState(
     val isLoading: Boolean = true,
     val isAssociating: Boolean = false,
     val errorMessage: String? = null,
-    val actionMessage: String? = null
+    val actionMessage: String? = null,
+    val detailState: GestorProjectInfoState = GestorProjectInfoState()
 )
 
 class GestorProjectsViewModel(
@@ -109,13 +107,10 @@ class GestorProjectsViewModel(
     private val tarefaRepository: TarefaRepository = TarefaRepository(),
     private val projetoUserRepository: ProjetoUserRepository = ProjetoUserRepository(),
     private val avaliacaoRepository: AvaliacaoRepository = AvaliacaoRepository(),
-<<<<<<< Updated upstream
-=======
     private val tarefaUserRepository: TarefaUserRepository = TarefaUserRepository(),
     private val registoTarefaRepository: RegistoTarefaRepository = RegistoTarefaRepository(),
     private val observacaoRepository: ObservacaoRepository = ObservacaoRepository(),
     private val observacaoFotoRepository: ObservacaoFotoRepository = ObservacaoFotoRepository(),
->>>>>>> Stashed changes
     private val userRemoteDataSource: UserRemoteDataSource = UserRemoteDataSource()
 ) : ViewModel() {
 
@@ -132,12 +127,18 @@ class GestorProjectsViewModel(
         }
 
         viewModelScope.launch {
-            state = state.copy(isLoading = true, errorMessage = null, actionMessage = null)
+            state = state.copy(
+                isLoading = true,
+                errorMessage = null,
+                actionMessage = null
+            )
 
             val projectsResult = projetoRepository.getProjetosByGestor(gestorId)
             val tasksResult = tarefaRepository.getTarefas()
             val ratingsResult = avaliacaoRepository.getAvaliacoes()
-            val usersResult = runCatching { userRemoteDataSource.getUsers() }
+            val usersResult = runCatching {
+                userRemoteDataSource.getUsers()
+            }
 
             if (
                 projectsResult.isFailure ||
@@ -154,28 +155,41 @@ class GestorProjectsViewModel(
 
             val projects = projectsResult.getOrDefault(emptyList())
             val projectIds = projects.mapNotNull { it.id }.toSet()
+
             val projectUsers = projectIds.flatMap { projectId ->
                 projetoUserRepository.getUsersByProjeto(projectId).getOrDefault(emptyList())
             }
+
             val tasksByProject = tasksResult
                 .getOrDefault(emptyList())
                 .filter { it.projeto_id in projectIds }
                 .groupBy { it.projeto_id }
+
             val projectUsersByProject = projectUsers
                 .filter { it.projeto_id in projectIds }
                 .groupBy { it.projeto_id }
+
             val ratingsByProjectAndUser = ratingsResult
                 .getOrDefault(emptyList())
                 .filter { it.projeto_id in projectIds }
                 .associateBy { it.projeto_id to it.user_id }
+
             val users = usersResult.getOrDefault(emptyList())
-            val usersById = users.mapNotNull { user -> user.id?.let { it to user } }.toMap()
-            val userOptions = users
-                .filter { it.role.normalizedStatus() == "UTILIZADOR" }
+
+            val usersById = users
                 .mapNotNull { user ->
-                    user.id?.let {
+                    user.id?.let { id -> id to user }
+                }
+                .toMap()
+
+            val userOptions = users
+                .filter { user ->
+                    user.role.normalizedStatus() == "UTILIZADOR"
+                }
+                .mapNotNull { user ->
+                    user.id?.let { id ->
                         GestorUserOption(
-                            id = it,
+                            id = id,
                             name = user.nome.ifBlank { user.username },
                             email = user.email
                         )
@@ -183,7 +197,11 @@ class GestorProjectsViewModel(
                 }
                 .sortedBy { it.name.lowercase() }
 
-            val oldExpandedIds = state.projects.filter { it.isExpanded }.map { it.id }.toSet()
+            val oldExpandedIds = state.projects
+                .filter { it.isExpanded }
+                .map { it.id }
+                .toSet()
+
             val projectItems = projects
                 .mapNotNull { project ->
                     project.toListItem(
@@ -220,14 +238,17 @@ class GestorProjectsViewModel(
     fun toggleProject(projectId: Int) {
         state = state.copy(
             projects = state.projects.map { project ->
-                if (project.id == projectId) project.copy(isExpanded = !project.isExpanded) else project
+                if (project.id == projectId) {
+                    project.copy(isExpanded = !project.isExpanded)
+                } else {
+                    project
+                }
             }
         )
+
         applyFilters()
     }
 
-<<<<<<< Updated upstream
-=======
     fun loadProjectInfo(project: GestorProjectListItem) {
         viewModelScope.launch {
             state = state.copy(
@@ -244,7 +265,9 @@ class GestorProjectsViewModel(
             val recordsResult = registoTarefaRepository.getRegistos()
             val observationsResult = observacaoRepository.getObservacoes()
             val photosResult = observacaoFotoRepository.getFotos()
-            val usersResult = runCatching { userRemoteDataSource.getUsers() }
+            val usersResult = runCatching {
+                userRemoteDataSource.getUsers()
+            }
 
             if (
                 tasksResult.isFailure ||
@@ -253,6 +276,7 @@ class GestorProjectsViewModel(
                 ratingsResult.isFailure ||
                 recordsResult.isFailure ||
                 observationsResult.isFailure ||
+                photosResult.isFailure ||
                 usersResult.isFailure
             ) {
                 state = state.copy(
@@ -265,15 +289,23 @@ class GestorProjectsViewModel(
                 return@launch
             }
 
-            val usersById = usersResult.getOrDefault(emptyList())
-                .mapNotNull { user -> user.id?.let { it to user } }
+            val usersById = usersResult
+                .getOrDefault(emptyList())
+                .mapNotNull { user ->
+                    user.id?.let { id -> id to user }
+                }
                 .toMap()
-            val ratingsByUser = ratingsResult.getOrDefault(emptyList()).associateBy { it.user_id }
+
+            val ratingsByUser = ratingsResult
+                .getOrDefault(emptyList())
+                .associateBy { it.user_id }
+
             val participants = projectUsersResult
                 .getOrDefault(emptyList())
                 .mapNotNull { relation ->
                     val user = usersById[relation.user_id] ?: return@mapNotNull null
                     val rating = ratingsByUser[relation.user_id]
+
                     GestorProjectInfoParticipant(
                         id = relation.user_id,
                         name = user.nome.ifBlank { user.username },
@@ -284,23 +316,42 @@ class GestorProjectsViewModel(
                 }
                 .sortedBy { it.name.lowercase() }
 
-            val tasks = tasksResult.getOrDefault(emptyList()).sortedBy { it.titulo.lowercase() }
-            val taskIds = tasks.mapNotNull { it.id }.toSet()
+            val tasks = tasksResult
+                .getOrDefault(emptyList())
+                .sortedBy { it.titulo.lowercase() }
+
+            val taskIds = tasks
+                .mapNotNull { it.id }
+                .toSet()
+
             val taskUsersByTask = taskUsersResult
                 .getOrDefault(emptyList())
                 .filter { it.tarefa_id in taskIds }
                 .groupBy { it.tarefa_id }
+
             val records = recordsResult
                 .getOrDefault(emptyList())
                 .filter { it.tarefa_id in taskIds }
-            val recordsById = records.mapNotNull { record -> record.id?.let { it to record } }.toMap()
-            val photosByObservation = photosResult.getOrDefault(emptyList()).groupBy { it.observacao_id }
+
+            val recordsById = records
+                .mapNotNull { record ->
+                    record.id?.let { id -> id to record }
+                }
+                .toMap()
+
+            val photosByObservation = photosResult
+                .getOrDefault(emptyList())
+                .groupBy { it.observacao_id }
+
             val observationsByTask = observationsResult
                 .getOrDefault(emptyList())
                 .mapNotNull { observation ->
                     val record = recordsById[observation.registo_id] ?: return@mapNotNull null
                     val user = usersById[record.user_id]
-                    val userName = user?.nome?.ifBlank { user.username } ?: "Utilizador ${record.user_id}"
+
+                    val userName = user?.nome?.ifBlank { user.username }
+                        ?: "Utilizador ${record.user_id}"
+
                     record.tarefa_id to GestorProjectInfoObservation(
                         id = observation.id,
                         text = observation.texto,
@@ -309,17 +360,29 @@ class GestorProjectsViewModel(
                         local = record.local?.takeIf { it.isNotBlank() } ?: "-",
                         completionPercent = record.taxa_conclusao,
                         spentHours = record.tempo_gasto,
-                        photoUrls = observation.id?.let { photosByObservation[it].orEmpty().map { photo -> photo.foto_url } }.orEmpty()
+                        photoUrls = observation.id
+                            ?.let { observationId ->
+                                photosByObservation[observationId]
+                                    .orEmpty()
+                                    .map { photo -> photo.foto_url }
+                            }
+                            .orEmpty()
                     )
                 }
-                .groupBy({ it.first }, { it.second })
+                .groupBy(
+                    keySelector = { it.first },
+                    valueTransform = { it.second }
+                )
 
             val infoTasks = tasks.mapNotNull { task ->
                 val taskId = task.id ?: return@mapNotNull null
+
                 val assignees = taskUsersByTask[taskId]
                     .orEmpty()
                     .mapNotNull { relation ->
-                        usersById[relation.user_id]?.let { user -> user.nome.ifBlank { user.username } }
+                        usersById[relation.user_id]?.let { user ->
+                            user.nome.ifBlank { user.username }
+                        }
                     }
                     .sortedBy { it.lowercase() }
 
@@ -331,7 +394,8 @@ class GestorProjectsViewModel(
                     startDate = task.data_inicio.toUiDateText(),
                     dueDate = task.data_fim.toUiDateText(),
                     assignees = assignees,
-                    observations = observationsByTask[taskId].orEmpty()
+                    observations = observationsByTask[taskId]
+                        .orEmpty()
                         .sortedByDescending { it.date }
                 )
             }
@@ -348,22 +412,30 @@ class GestorProjectsViewModel(
     }
 
     fun clearProjectInfo() {
-        state = state.copy(detailState = GestorProjectInfoState())
+        state = state.copy(
+            detailState = GestorProjectInfoState()
+        )
     }
 
->>>>>>> Stashed changes
     fun associateUserToProject(
         projetoId: Int,
         userId: Int?,
         gestorId: Int?
     ) {
         if (userId == null) {
-            state = state.copy(actionMessage = null, errorMessage = "Seleciona um utilizador.")
+            state = state.copy(
+                actionMessage = null,
+                errorMessage = "Seleciona um utilizador."
+            )
             return
         }
 
         viewModelScope.launch {
-            state = state.copy(isAssociating = true, errorMessage = null, actionMessage = null)
+            state = state.copy(
+                isAssociating = true,
+                errorMessage = null,
+                actionMessage = null
+            )
 
             val result = projetoUserRepository.associarUserAoProjeto(
                 projetoId = projetoId,
@@ -392,7 +464,11 @@ class GestorProjectsViewModel(
         gestorId: Int?
     ) {
         viewModelScope.launch {
-            state = state.copy(isAssociating = true, errorMessage = null, actionMessage = null)
+            state = state.copy(
+                isAssociating = true,
+                errorMessage = null,
+                actionMessage = null
+            )
 
             val invalidMember = project.members.firstOrNull { member ->
                 ratings[member.id] == null || ratings[member.id] !in 0..5
@@ -442,16 +518,22 @@ class GestorProjectsViewModel(
     }
 
     fun clearMessages() {
-        state = state.copy(errorMessage = null, actionMessage = null)
+        state = state.copy(
+            errorMessage = null,
+            actionMessage = null
+        )
     }
 
     private fun applyFilters() {
         val query = state.searchQuery.trim()
+
         val visibleProjects = state.projects.filter { project ->
             val matchesSearch = query.isBlank() ||
-                project.name.contains(query, ignoreCase = true) ||
-                project.description.contains(query, ignoreCase = true) ||
-                project.members.any { it.name.contains(query, ignoreCase = true) }
+                    project.name.contains(query, ignoreCase = true) ||
+                    project.description.contains(query, ignoreCase = true) ||
+                    project.members.any { member ->
+                        member.name.contains(query, ignoreCase = true)
+                    }
 
             val matchesStatus = when (state.selectedStatus) {
                 "Concluídos" -> project.statusLabel == "Concluído"
@@ -463,7 +545,9 @@ class GestorProjectsViewModel(
             matchesSearch && matchesStatus
         }
 
-        state = state.copy(visibleProjects = visibleProjects)
+        state = state.copy(
+            visibleProjects = visibleProjects
+        )
     }
 
     private fun ProjetoDto.toListItem(
@@ -475,25 +559,38 @@ class GestorProjectsViewModel(
     ): GestorProjectListItem? {
         val projectId = id ?: return null
         val isCompleted = status.isCompletedStatus()
-        val completedTasks = tasks.count { it.status.isCompletedStatus() }
-        val pendingTasks = tasks.count { it.isPendingByDate() }
-        val inProgressTasks = tasks.count { it.status.isInProgressStatus() && !it.isPendingByDate() }
+
+        val completedTasks = tasks.count {
+            it.status.isCompletedStatus()
+        }
+
+        val pendingTasks = tasks.count {
+            it.isPendingByDate()
+        }
+
+        val inProgressTasks = tasks.count {
+            it.status.isInProgressStatus() && !it.isPendingByDate()
+        }
+
         val progressPercent = if (tasks.isEmpty()) {
             0
         } else {
             ((completedTasks.toFloat() / tasks.size.toFloat()) * 100).toInt()
         }
 
-        val members = memberIds.distinct().mapNotNull { userId ->
-            usersById[userId]?.let { user ->
-                GestorProjectMember(
-                    id = userId,
-                    name = user.nome.ifBlank { user.username },
-                    email = user.email,
-                    rating = ratingsByProjectAndUser[projectId to userId]?.classificacao
-                )
+        val members = memberIds
+            .distinct()
+            .mapNotNull { userId ->
+                usersById[userId]?.let { user ->
+                    GestorProjectMember(
+                        id = userId,
+                        name = user.nome.ifBlank { user.username },
+                        email = user.email,
+                        rating = ratingsByProjectAndUser[projectId to userId]?.classificacao
+                    )
+                }
             }
-        }.sortedBy { it.name.lowercase() }
+            .sortedBy { it.name.lowercase() }
 
         return GestorProjectListItem(
             id = projectId,
@@ -514,23 +611,37 @@ class GestorProjectsViewModel(
     }
 
     private fun TarefaDto.isPendingByDate(): Boolean {
-        val startDate = data_inicio?.take(10)?.toLocalDateOrNull()
-        return status.isPendingStatus() || startDate?.isAfter(LocalDate.now()) == true
+        val startDate = data_inicio
+            ?.take(10)
+            ?.toLocalDateOrNull()
+
+        return status.isPendingStatus() ||
+                startDate?.isAfter(LocalDate.now()) == true
     }
 
-<<<<<<< Updated upstream
-=======
     private fun TarefaDto.toTaskStatusLabel(): String {
-        val dueDate = data_fim?.take(10)?.toLocalDateOrNull()
-        val startDate = data_inicio?.take(10)?.toLocalDateOrNull()
+        val dueDate = data_fim
+            ?.take(10)
+            ?.toLocalDateOrNull()
+
+        val startDate = data_inicio
+            ?.take(10)
+            ?.toLocalDateOrNull()
+
         val isCompleted = status.isCompletedStatus()
-        val isDelayed = !isCompleted && dueDate != null && dueDate.isBefore(LocalDate.now())
-        val isInProgress = !isCompleted && !isDelayed && (
-            status.isInProgressStatus() ||
-                status.isPendingStatus() ||
-                startDate?.isEqual(LocalDate.now()) == true ||
-                startDate?.isBefore(LocalDate.now()) == true
-            )
+
+        val isDelayed = !isCompleted &&
+                dueDate != null &&
+                dueDate.isBefore(LocalDate.now())
+
+        val isInProgress = !isCompleted &&
+                !isDelayed &&
+                (
+                    status.isInProgressStatus() ||
+                            status.isPendingStatus() ||
+                            startDate?.isEqual(LocalDate.now()) == true ||
+                            startDate?.isBefore(LocalDate.now()) == true
+                )
 
         return when {
             isCompleted -> "Concluída"
@@ -540,9 +651,11 @@ class GestorProjectsViewModel(
         }
     }
 
->>>>>>> Stashed changes
     private fun String.toStatusLabel(startDateText: String?): String {
-        val startDate = startDateText?.take(10)?.toLocalDateOrNull()
+        val startDate = startDateText
+            ?.take(10)
+            ?.toLocalDateOrNull()
+
         return when {
             isCompletedStatus() -> "Concluído"
             isInProgressStatus() -> "Em Progresso"
@@ -576,7 +689,11 @@ class GestorProjectsViewModel(
     }
 
     private fun String.isPendingStatus(): Boolean {
-        return normalizedStatus() in setOf("PENDENTE", "POR_INICIAR", "NAO_INICIADO")
+        return normalizedStatus() in setOf(
+            "PENDENTE",
+            "POR_INICIAR",
+            "NAO_INICIADO"
+        )
     }
 
     private fun String.normalizedStatus(): String {
@@ -591,6 +708,19 @@ class GestorProjectsViewModel(
     }
 
     private fun String.toLocalDateOrNull(): LocalDate? {
-        return runCatching { LocalDate.parse(this) }.getOrNull()
+        return runCatching {
+            LocalDate.parse(this)
+        }.getOrNull()
+    }
+
+    private fun String?.toUiDateText(): String {
+        val date = this
+            ?.take(10)
+            ?.toLocalDateOrNull()
+            ?: return "-"
+
+        return date.format(
+            DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        )
     }
 }

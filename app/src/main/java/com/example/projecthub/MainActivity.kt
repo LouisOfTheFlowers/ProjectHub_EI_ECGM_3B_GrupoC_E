@@ -1,13 +1,19 @@
 package com.example.projecthub
 
 import android.Manifest
+import android.graphics.Color as AndroidColor
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -36,6 +42,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        window.setBackgroundDrawable(ColorDrawable(AndroidColor.rgb(232, 249, 252)))
+        window.statusBarColor = AndroidColor.BLACK
+        window.navigationBarColor = AndroidColor.BLACK
+        window.attributes = window.attributes.apply {
+            alpha = 1f
+        }
+
         setContent {
             val settingsViewModel: SettingsViewModel = viewModel()
             val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
@@ -57,14 +70,19 @@ class MainActivity : ComponentActivity() {
                 darkTheme = darkTheme,
                 dynamicColor = false
             ) {
-                AppSettingsProvider(settings = settings) {
-                    val authViewModel: AuthViewModel = viewModel()
-                    val navController = rememberNavController()
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    AppSettingsProvider(settings = settings) {
+                        val authViewModel: AuthViewModel = viewModel()
+                        val navController = rememberNavController()
 
-                    NavHost(
-                        navController = navController,
-                        startDestination = AppRoutes.Login
-                    ) {
+                        NavHost(
+                            navController = navController,
+                            startDestination = AppRoutes.Login,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
                         composable(AppRoutes.Login) {
                             LoginScreen(
                                 authViewModel = authViewModel,
@@ -169,6 +187,7 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onBack = { navController.popBackStack() }
                             )
+                        }
                         }
                     }
                 }
