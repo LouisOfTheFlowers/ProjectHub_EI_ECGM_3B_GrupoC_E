@@ -43,6 +43,8 @@ import androidx.compose.ui.unit.sp
 import com.example.projecthub.R
 import com.example.projecthub.navigation.AppRoutes
 import com.example.projecthub.navigation.SidebarDestination
+import com.example.projecthub.settings.currentAppSettings
+import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val UtilizadorScaffoldAccent = AuthAccent
@@ -66,7 +68,7 @@ fun UtilizadorScaffold(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .border(5.dp, UtilizadorScaffoldAccent)
+                .border(5.dp, ProjectHubColors.HeaderBackground)
                 .background(MaterialTheme.colorScheme.surface)
         ) {
             UtilizadorTopBar(
@@ -120,7 +122,7 @@ private fun UtilizadorTopBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(UtilizadorScaffoldAccent)
+            .background(ProjectHubColors.HeaderBackground)
             .statusBarsPadding()
             .height(62.dp)
             .padding(horizontal = 18.dp),
@@ -134,12 +136,12 @@ private fun UtilizadorTopBar(
                 .clickable(onClick = onMenuClick),
             contentAlignment = Alignment.Center
         ) {
-            UtilizadorMenuIcon(color = Color.White)
+            UtilizadorMenuIcon(color = ProjectHubColors.HeaderContent)
         }
 
         Text(
             text = "Project Hub",
-            color = Color.White,
+            color = ProjectHubColors.HeaderContent,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 21.sp
         )
@@ -182,7 +184,7 @@ private fun UtilizadorSidebar(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(Color.White)
+                    .background(ProjectHubColors.LightSurface)
                     .padding(5.dp)
             )
 
@@ -196,7 +198,7 @@ private fun UtilizadorSidebar(
                     fontSize = 20.sp
                 )
                 Text(
-                    text = "Utilizador",
+                    text = currentAppSettings().language.t("role.user"),
                     color = ProjectHubColors.SidebarMutedText,
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp
@@ -207,10 +209,10 @@ private fun UtilizadorSidebar(
         Spacer(modifier = Modifier.height(24.dp))
 
         val destinations = listOf(
-            SidebarDestination(AppRoutes.UserDashboard, "Dashboard", UtilizadorSidebarIcon.Dashboard),
-            SidebarDestination(AppRoutes.UserTasks, "Minhas Tarefas", UtilizadorSidebarIcon.Tasks),
-            SidebarDestination(AppRoutes.UserProjects, "Projetos Atribuidos", UtilizadorSidebarIcon.Projects),
-            SidebarDestination(AppRoutes.UserSettings, "Definicoes", UtilizadorSidebarIcon.Settings)
+            SidebarDestination(AppRoutes.UserDashboard, currentAppSettings().language.t("sidebar.dashboard"), UtilizadorSidebarIcon.Dashboard),
+            SidebarDestination(AppRoutes.UserTasks, currentAppSettings().language.t("user.tasks.title"), UtilizadorSidebarIcon.Tasks),
+            SidebarDestination(AppRoutes.UserProjects, currentAppSettings().language.t("user.projects.title"), UtilizadorSidebarIcon.Projects),
+            SidebarDestination(AppRoutes.UserSettings, currentAppSettings().language.t("sidebar.settings"), UtilizadorSidebarIcon.Settings)
         )
 
         destinations.forEach { destination ->
@@ -224,7 +226,7 @@ private fun UtilizadorSidebar(
         Spacer(modifier = Modifier.weight(1f))
 
         UtilizadorSidebarItem(
-            label = "Sair",
+            label = currentAppSettings().language.t("sidebar.logout"),
             icon = UtilizadorSidebarIcon.Logout,
             onClick = onLogout
         )

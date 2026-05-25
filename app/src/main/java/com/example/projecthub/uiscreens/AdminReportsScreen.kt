@@ -42,7 +42,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.settings.t
 import com.example.projecthub.viewmodel.AdminReportCard
 import com.example.projecthub.viewmodel.AdminReportExport
 import com.example.projecthub.viewmodel.AdminReportExportType
@@ -52,8 +54,6 @@ import com.example.projecthub.viewmodel.AdminReportsViewModel
 import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val ReportsAccent = AuthAccent
-private val ReportsInk = ProjectHubColors.Ink
-private val ReportsMuted = ProjectHubColors.Muted
 private val ReportsGreen = ProjectHubColors.SuccessDark
 private val ReportsOrange = ProjectHubColors.Warning
 private val ReportsRed = ProjectHubColors.DangerDark
@@ -64,6 +64,7 @@ fun AdminReportsScreen(
     viewModel: AdminReportsViewModel = viewModel()
 ) {
     val state = viewModel.state
+    val language = currentAppSettings().language
     val context = LocalContext.current
     var pendingExport by remember { mutableStateOf<AdminReportExport?>(null) }
 
@@ -78,11 +79,7 @@ fun AdminReportsScreen(
                         output.write(export.content.toByteArray(Charsets.UTF_8))
                     } ?: error("Não foi possível abrir o ficheiro selecionado.")
 
-                    Toast.makeText(
-                        context,
-                        "Relatório de ${export.label.lowercase()} exportado.",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(context, "${export.label} CSV", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
                     viewModel.setExportError(
                         e.message ?: "Não foi possível exportar o relatório."
@@ -120,16 +117,17 @@ fun AdminReportsScreen(
 
 @Composable
 private fun ReportsHeader() {
+    val language = currentAppSettings().language
     Column {
         Text(
-            text = "Relatórios Executivos",
-            color = ReportsInk,
+            text = language.t("reports.adminTitle"),
+            color = ProjectHubColors.Ink,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 24.sp
         )
         Text(
-            text = "Exporta estatísticas por utilizador, projeto ou tarefa.",
-            color = ReportsMuted,
+            text = language.t("reports.adminSubtitle"),
+            color = ProjectHubColors.Muted,
             fontSize = 14.sp
         )
     }
@@ -152,10 +150,11 @@ private fun ReportsError(
     message: String,
     onRetry: () -> Unit
 ) {
+    val language = currentAppSettings().language
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -168,7 +167,7 @@ private fun ReportsError(
             Spacer(modifier = Modifier.height(10.dp))
             TextButton(onClick = rememberSoundClick(onRetry)) {
                 Text(
-                    text = "Tentar novamente",
+                    text = language.t("common.retry"),
                     color = ReportsAccent,
                     fontWeight = FontWeight.Bold
                 )
@@ -182,6 +181,7 @@ private fun ReportsContent(
     state: AdminReportsState,
     onExport: (AdminReportExportType) -> Unit
 ) {
+    val language = currentAppSettings().language
     ReportSummaryGrid(summary = state.summary)
 
     Spacer(modifier = Modifier.height(16.dp))
@@ -197,8 +197,8 @@ private fun ReportsContent(
     }
 
     Text(
-        text = "Exportações disponíveis",
-        color = ReportsInk,
+        text = language.t("reports.availableExports"),
+        color = ProjectHubColors.Ink,
         fontWeight = FontWeight.ExtraBold,
         fontSize = 20.sp
     )
@@ -216,16 +216,17 @@ private fun ReportsContent(
 
 @Composable
 private fun ReportSummaryGrid(summary: AdminReportSummary) {
+    val language = currentAppSettings().language
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             SummaryCard(
-                label = "Utilizadores",
+                label = language.t("reports.users"),
                 value = summary.totalUsers.toString(),
                 accent = ReportsAccent,
                 modifier = Modifier.weight(1f)
             )
             SummaryCard(
-                label = "Projetos",
+                label = language.t("reports.projects"),
                 value = summary.totalProjects.toString(),
                 accent = ReportsBlue,
                 modifier = Modifier.weight(1f)
@@ -234,13 +235,13 @@ private fun ReportSummaryGrid(summary: AdminReportSummary) {
 
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             SummaryCard(
-                label = "Tarefas",
+                label = language.t("reports.tasks"),
                 value = summary.totalTasks.toString(),
                 accent = ReportsOrange,
                 modifier = Modifier.weight(1f)
             )
             SummaryCard(
-                label = "Progresso",
+                label = language.t("common.progress"),
                 value = "${summary.averageCompletion}%",
                 accent = ReportsGreen,
                 modifier = Modifier.weight(1f)
@@ -248,7 +249,7 @@ private fun ReportSummaryGrid(summary: AdminReportSummary) {
         }
 
         SummaryCard(
-            label = "Horas registadas",
+            label = language.t("reports.registeredHours"),
             value = "${summary.totalHours.formatOneDecimal()} h",
             accent = ReportsRed,
             modifier = Modifier.fillMaxWidth()
@@ -263,10 +264,11 @@ private fun SummaryCard(
     accent: Color,
     modifier: Modifier = Modifier
 ) {
+    val language = currentAppSettings().language
     Card(
         modifier = modifier.height(86.dp),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(
@@ -277,7 +279,7 @@ private fun SummaryCard(
         ) {
             Text(
                 text = label,
-                color = ReportsMuted,
+                color = ProjectHubColors.Muted,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 12.sp
             )
@@ -306,7 +308,7 @@ private fun ReportExportCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -326,14 +328,14 @@ private fun ReportExportCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = card.title,
-                        color = ReportsInk,
+                        color = ProjectHubColors.Ink,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 17.sp
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = card.description,
-                        color = ReportsMuted,
+                        color = ProjectHubColors.Muted,
                         fontSize = 13.sp
                     )
                 }
@@ -342,9 +344,9 @@ private fun ReportExportCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ReportChip(text = "${card.rows} linhas", color = accent)
+                ReportChip(text = "${card.rows} ${language.t("common.rows")}", color = accent)
                 ReportChip(text = card.primaryMetric, color = ReportsGreen)
-                ReportChip(text = card.secondaryMetric, color = ReportsMuted)
+                ReportChip(text = card.secondaryMetric, color = ProjectHubColors.Muted)
             }
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -361,7 +363,7 @@ private fun ReportExportCard(
                 ExportIcon(color = Color.White)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Exportar CSV",
+                    text = language.t("common.exportCsv"),
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )

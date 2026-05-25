@@ -18,12 +18,17 @@ private val DarkColorScheme = darkColorScheme(
     tertiary = Cyan80,
     background = ProjectHubColors.DarkBackground,
     surface = ProjectHubColors.DarkSurface,
+    surfaceVariant = ProjectHubColors.DarkSurfaceSoft,
+    outline = ProjectHubColors.DarkBorder,
     error = ProjectHubColors.Danger,
-    onPrimary = ProjectHubColors.DarkInk,
-    onSecondary = ProjectHubColors.DarkInk,
-    onTertiary = ProjectHubColors.DarkInk,
+    onPrimary = Color(0xFF032127),
+    onSecondary = Color(0xFF062015),
+    onTertiary = Color(0xFF082031),
     onBackground = ProjectHubColors.DarkInk,
-    onSurface = ProjectHubColors.DarkInk
+    onSurface = ProjectHubColors.DarkInk,
+    onSurfaceVariant = ProjectHubColors.DarkMuted,
+    inverseSurface = Color(0xFFE8F3F5),
+    inverseOnSurface = Color(0xFF0B141B)
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -56,6 +61,8 @@ fun ProjectHubTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
+
+    ProjectHubColors.applyTheme(darkTheme)
 
     MaterialTheme(
         colorScheme = colorScheme,

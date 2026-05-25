@@ -41,6 +41,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.settings.currentAppSettings
+import com.example.projecthub.settings.t
 import com.example.projecthub.viewmodel.GestorTeamMemberItem
 import com.example.projecthub.viewmodel.GestorTeamProjectOption
 import com.example.projecthub.viewmodel.GestorTeamState
@@ -81,15 +83,16 @@ fun GestorTeamScreen(
 
 @Composable
 private fun TeamHeader() {
+    val language = currentAppSettings().language
     Column {
         Text(
-            text = "Minha Equipa",
+            text = language.t("manager.team.title"),
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 24.sp
         )
         Text(
-            text = "Utilizadores associados aos teus projetos",
+            text = language.t("manager.team.subtitle"),
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
             fontSize = 14.sp
         )
@@ -98,6 +101,7 @@ private fun TeamHeader() {
 
 @Composable
 private fun TeamStats(state: GestorTeamState) {
+    val language = currentAppSettings().language
     val visibleRatings = state.visibleMembers.mapNotNull { member ->
         state.selectedProjectId?.let { member.averageRatingByProject[it] } ?: member.averageRating
     }
@@ -108,19 +112,19 @@ private fun TeamStats(state: GestorTeamState) {
 
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         TeamStatCard(
-            label = "Membros",
+            label = language.t("manager.team.members"),
             value = state.visibleMembers.size.toString(),
             color = TeamAccent,
             modifier = Modifier.weight(1f)
         )
         TeamStatCard(
-            label = "Media",
+            label = language.t("manager.team.average"),
             value = visibleAverageRating?.formatRating() ?: "-",
             color = TeamOrange,
             modifier = Modifier.weight(1f)
         )
         TeamStatCard(
-            label = "Concluidas",
+            label = language.t("manager.team.completed"),
             value = visibleCompletedTasks.toString(),
             color = TeamGreen,
             modifier = Modifier.weight(1f)
@@ -169,6 +173,7 @@ private fun TeamFilters(
     onSearchChange: (String) -> Unit,
     onProjectChange: (Int?) -> Unit
 ) {
+    val language = currentAppSettings().language
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -181,7 +186,7 @@ private fun TeamFilters(
                 onValueChange = onSearchChange,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                placeholder = { Text("Pesquisar por nome, username, email ou projeto...") },
+                placeholder = { Text(language.t("manager.team.search")) },
                 colors = appTextFieldColors()
             )
 
@@ -202,8 +207,9 @@ private fun ProjectDropdown(
     selectedProjectId: Int?,
     onProjectChange: (Int?) -> Unit
 ) {
+    val language = currentAppSettings().language
     var expanded by remember { mutableStateOf(false) }
-    val selectedLabel = projects.firstOrNull { it.id == selectedProjectId }?.name ?: "Todos os projetos"
+    val selectedLabel = projects.firstOrNull { it.id == selectedProjectId }?.name ?: language.t("manager.team.allProjects")
 
     Box {
         Row(
@@ -237,7 +243,7 @@ private fun ProjectDropdown(
             modifier = Modifier.background(MaterialTheme.colorScheme.surface)
         ) {
             DropdownMenuItem(
-                text = { Text("Todos os projetos") },
+                text = { Text(language.t("manager.team.allProjects")) },
                 onClick = {
                     expanded = false
                     onProjectChange(null)
@@ -258,6 +264,7 @@ private fun ProjectDropdown(
 
 @Composable
 private fun TeamList(state: GestorTeamState) {
+    val language = currentAppSettings().language
     when {
         state.isLoading -> {
             Box(
@@ -281,7 +288,7 @@ private fun TeamList(state: GestorTeamState) {
 
         state.visibleMembers.isEmpty() -> {
             Text(
-                text = "Nenhum membro encontrado.",
+                text = language.t("manager.team.noMembers"),
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
                 fontSize = 15.sp
             )
@@ -304,6 +311,7 @@ private fun TeamMemberCard(
     member: GestorTeamMemberItem,
     selectedProjectId: Int?
 ) {
+    val language = currentAppSettings().language
     val visibleRating = selectedProjectId?.let { member.averageRatingByProject[it] }
         ?: member.averageRating
     val visibleCompletedTasks = selectedProjectId?.let { member.completedTasksByProject[it] }
@@ -353,7 +361,7 @@ private fun TeamMemberCard(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = member.projectNames.joinToString(separator = " · ").ifBlank { "Sem projetos" },
+                    text = member.projectNames.joinToString(separator = " · ").ifBlank { language.t("manager.team.noProjects") },
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp
@@ -364,15 +372,15 @@ private fun TeamMemberCard(
 
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 MemberMetric(
-                    label = "Media das estrelas",
-                    value = visibleRating?.let { "${it.formatRating()} / 5" } ?: "Sem avaliacoes",
+                    label = language.t("manager.team.ratingAverage"),
+                    value = visibleRating?.let { "${it.formatRating()} / 5" } ?: language.t("manager.team.noRatings"),
                     color = TeamOrange,
                     modifier = Modifier.weight(1f),
                     showStars = visibleRating != null,
                     rating = visibleRating
                 )
                 MemberMetric(
-                    label = "Tarefas concluidas",
+                    label = language.t("manager.team.completedTasks"),
                     value = visibleCompletedTasks.toString(),
                     color = TeamGreen,
                     modifier = Modifier.weight(1f)

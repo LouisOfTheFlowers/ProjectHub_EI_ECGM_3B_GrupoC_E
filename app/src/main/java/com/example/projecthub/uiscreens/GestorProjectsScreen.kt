@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -47,7 +46,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.settings.t
+import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.viewmodel.GestorProjectInfoObservation
 import com.example.projecthub.viewmodel.GestorProjectInfoState
 import com.example.projecthub.viewmodel.GestorProjectInfoTask
@@ -55,21 +58,17 @@ import com.example.projecthub.viewmodel.GestorProjectListItem
 import com.example.projecthub.viewmodel.GestorProjectsState
 import com.example.projecthub.viewmodel.GestorProjectsViewModel
 import com.example.projecthub.viewmodel.GestorUserOption
-import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val GestorProjectsAccent = AuthAccent
-private val GestorProjectsInk = ProjectHubColors.Ink
-private val GestorProjectsMuted = ProjectHubColors.Muted
 private val GestorProjectsBlue = ProjectHubColors.Info
 private val GestorProjectsGreen = ProjectHubColors.Success
-private val GestorProjectsGray = ProjectHubColors.SidebarMutedText
 private val GestorProjectsRed = ProjectHubColors.Danger
 
 private val GestorProjectStatuses = listOf(
     "Todos os Status",
     "Em Progresso",
     "Pendentes",
-    "Concluidos"
+    "Concluídos"
 )
 
 @Composable
@@ -78,6 +77,8 @@ fun GestorProjectsScreen(
     viewModel: GestorProjectsViewModel = viewModel()
 ) {
     val state = viewModel.state
+    val language = currentAppSettings().language
+
     var projectToAssociate by remember { mutableStateOf<GestorProjectListItem?>(null) }
     var projectToComplete by remember { mutableStateOf<GestorProjectListItem?>(null) }
     var projectToView by remember { mutableStateOf<GestorProjectListItem?>(null) }
@@ -103,14 +104,15 @@ fun GestorProjectsScreen(
 
     Column {
         Text(
-            text = "Meus Projetos",
-            color = GestorProjectsInk,
+            text = language.t("manager.projects.title"),
+            color = ProjectHubColors.Ink,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 24.sp
         )
+
         Text(
-            text = "Acompanha projetos e equipa atribuida",
-            color = GestorProjectsMuted,
+            text = language.t("manager.projects.subtitle"),
+            color = ProjectHubColors.Muted,
             fontSize = 14.sp
         )
 
@@ -198,12 +200,14 @@ private fun ProjectFilters(
             onValueChange = onSearchChange,
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            placeholder = { Text("Pesquisar projetos...") },
+            placeholder = {
+                Text(currentAppSettings().language.t("projects.search"))
+            },
             shape = RoundedCornerShape(8.dp),
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                disabledContainerColor = Color.White,
+                focusedContainerColor = ProjectHubColors.LightSurface,
+                unfocusedContainerColor = ProjectHubColors.LightSurface,
+                disabledContainerColor = ProjectHubColors.LightSurface,
                 focusedIndicatorColor = ProjectHubColors.BorderSoft,
                 unfocusedIndicatorColor = ProjectHubColors.BorderSoft
             )
@@ -233,7 +237,7 @@ private fun StatusDropdown(
                 .height(52.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
-                .background(Color.White)
+                .background(ProjectHubColors.LightSurface)
                 .clickable(onClick = openClick)
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -241,13 +245,14 @@ private fun StatusDropdown(
         ) {
             Text(
                 text = selected,
-                color = GestorProjectsInk,
+                color = ProjectHubColors.Ink,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp
             )
+
             Text(
                 text = if (expanded) "^" else "v",
-                color = GestorProjectsMuted,
+                color = ProjectHubColors.Muted,
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp
             )
@@ -256,14 +261,14 @@ private fun StatusDropdown(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.background(Color.White)
+            modifier = Modifier.background(ProjectHubColors.LightSurface)
         ) {
             GestorProjectStatuses.forEach { option ->
                 DropdownMenuItem(
                     text = {
                         Text(
                             text = option,
-                            color = GestorProjectsInk,
+                            color = ProjectHubColors.Ink,
                             fontWeight = if (option == selected) FontWeight.Bold else FontWeight.Medium
                         )
                     },
@@ -310,12 +315,12 @@ private fun ProjectList(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
             ) {
                 Text(
-                    text = "Nao existem projetos para os filtros selecionados.",
-                    color = GestorProjectsMuted,
+                    text = currentAppSettings().language.t("manager.projects.noFiltered"),
+                    color = ProjectHubColors.Muted,
                     fontSize = 15.sp,
                     modifier = Modifier.padding(18.dp)
                 )
@@ -325,12 +330,12 @@ private fun ProjectList(
         else -> {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 state.visibleProjects.forEach { project ->
-                        ProjectCard(
-                            project = project,
-                            onToggleProject = onToggleProject,
-                            onAssociateUser = onAssociateUser,
-                            onCompleteProject = onCompleteProject,
-                            onMoreInfo = onMoreInfo
+                    ProjectCard(
+                        project = project,
+                        onToggleProject = onToggleProject,
+                        onAssociateUser = onAssociateUser,
+                        onCompleteProject = onCompleteProject,
+                        onMoreInfo = onMoreInfo
                     )
                 }
             }
@@ -346,30 +351,36 @@ private fun ProjectCard(
     onCompleteProject: (GestorProjectListItem) -> Unit,
     onMoreInfo: (GestorProjectListItem) -> Unit
 ) {
-    val toggleClick = rememberSoundClick { onToggleProject(project.id) }
+    val toggleClick = rememberSoundClick {
+        onToggleProject(project.id)
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = toggleClick),
-                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(onClick = toggleClick)
+                ) {
                     Text(
                         text = project.name,
-                        color = GestorProjectsInk,
+                        color = ProjectHubColors.Ink,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 21.sp
                     )
+
                     Spacer(modifier = Modifier.height(6.dp))
+
                     Text(
                         text = project.description,
                         color = ProjectHubColors.SlateMuted,
@@ -382,7 +393,9 @@ private fun ProjectCard(
                 Column(horizontalAlignment = Alignment.End) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Button(
-                            onClick = rememberSoundClick { onMoreInfo(project) },
+                            onClick = rememberSoundClick {
+                                onMoreInfo(project)
+                            },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = GestorProjectsAccent,
                                 contentColor = Color.White
@@ -391,14 +404,21 @@ private fun ProjectCard(
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
                             modifier = Modifier.height(34.dp)
                         ) {
-                            Text("Mais info", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            Text(
+                                text = currentAppSettings().language.t("common.moreInfo"),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
                         }
+
                         Spacer(modifier = Modifier.width(10.dp))
+
                         Text(
                             text = if (project.isExpanded) "^" else "v",
-                            color = GestorProjectsMuted,
+                            color = ProjectHubColors.Muted,
                             fontWeight = FontWeight.ExtraBold,
-                            fontSize = 18.sp
+                            fontSize = 18.sp,
+                            modifier = Modifier.clickable(onClick = toggleClick)
                         )
                     }
 
@@ -406,9 +426,15 @@ private fun ProjectCard(
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         StatusPill(project.statusLabel)
+
                         if (!project.isCompleted) {
                             Spacer(modifier = Modifier.width(8.dp))
-                            CompleteIconButton(onClick = { onCompleteProject(project) })
+
+                            CompleteIconButton(
+                                onClick = {
+                                    onCompleteProject(project)
+                                }
+                            )
                         }
                     }
                 }
@@ -416,8 +442,11 @@ private fun ProjectCard(
 
             if (project.isExpanded) {
                 Spacer(modifier = Modifier.height(18.dp))
+
                 ProjectDetails(project = project)
+
                 Spacer(modifier = Modifier.height(16.dp))
+
                 ProjectMembers(
                     project = project,
                     onAssociateUser = onAssociateUser
@@ -434,30 +463,40 @@ private fun ProjectInfoPage(
 ) {
     Column {
         TextButton(onClick = rememberSoundClick(onBack)) {
-            Text("< Voltar aos Projetos", color = GestorProjectsAccent, fontWeight = FontWeight.Bold)
+            Text(
+                text = currentAppSettings().language.t("manager.projects.back"),
+                color = GestorProjectsAccent,
+                fontWeight = FontWeight.Bold
+            )
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
         when {
-            state.isLoading -> Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = GestorProjectsAccent)
+            state.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = GestorProjectsAccent)
+                }
             }
 
-            state.errorMessage != null -> InfoMessageCard(
-                title = "Detalhes do projeto",
-                detail = state.errorMessage
-            )
+            state.errorMessage != null -> {
+                InfoMessageCard(
+                    title = currentAppSettings().language.t("manager.projects.detailsTitle"),
+                    detail = state.errorMessage
+                )
+            }
 
-            state.project == null -> InfoMessageCard(
-                title = "Projeto nao encontrado",
-                detail = "Nao foi possivel encontrar os detalhes deste projeto."
-            )
+            state.project == null -> {
+                InfoMessageCard(
+                    title = currentAppSettings().language.t("manager.projects.notFoundTitle"),
+                    detail = currentAppSettings().language.t("manager.projects.notFoundDetail")
+                )
+            }
 
             else -> {
                 val project = state.project
@@ -470,19 +509,23 @@ private fun ProjectInfoPage(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = project.name,
-                            color = GestorProjectsInk,
+                            color = ProjectHubColors.Ink,
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 24.sp
                         )
+
                         Spacer(modifier = Modifier.height(4.dp))
+
                         Text(
-                            text = "Detalhes, participantes, tarefas e observacoes",
-                            color = GestorProjectsMuted,
+                            text = currentAppSettings().language.t("manager.projects.detailsSubtitle"),
+                            color = ProjectHubColors.Muted,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
+
                     Spacer(modifier = Modifier.width(10.dp))
+
                     StatusPill(project.statusLabel)
                 }
 
@@ -491,7 +534,7 @@ private fun ProjectInfoPage(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -500,14 +543,19 @@ private fun ProjectInfoPage(
                             color = ProjectHubColors.SlateMuted,
                             fontSize = 14.sp
                         )
+
                         Spacer(modifier = Modifier.height(14.dp))
+
                         ProjectDetails(project = project)
                     }
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
+
                 ProjectInfoParticipants(state = state)
+
                 Spacer(modifier = Modifier.height(14.dp))
+
                 ProjectInfoTasks(tasks = state.tasks)
             }
         }
@@ -515,24 +563,31 @@ private fun ProjectInfoPage(
 }
 
 @Composable
-private fun ProjectInfoParticipants(state: GestorProjectInfoState) {
+private fun ProjectInfoParticipants(
+    state: GestorProjectInfoState
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Participantes",
-                color = GestorProjectsInk,
+                text = currentAppSettings().language.t("manager.projects.participants"),
+                color = ProjectHubColors.Ink,
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 18.sp
             )
+
             Spacer(modifier = Modifier.height(10.dp))
 
             if (state.participants.isEmpty()) {
-                Text("Sem participantes associados.", color = GestorProjectsMuted, fontSize = 14.sp)
+                Text(
+                    text = currentAppSettings().language.t("manager.projects.noParticipants"),
+                    color = ProjectHubColors.Muted,
+                    fontSize = 14.sp
+                )
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     state.participants.forEach { participant ->
@@ -550,17 +605,33 @@ private fun ProjectInfoParticipants(state: GestorProjectInfoState) {
                             ) {
                                 Text(
                                     text = participant.name,
-                                    color = GestorProjectsInk,
+                                    color = ProjectHubColors.Ink,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp
                                 )
-                                participant.rating?.let { StarRatingText(rating = it) }
+
+                                participant.rating?.let { rating ->
+                                    StarRatingText(rating = rating)
+                                }
                             }
-                            Text(participant.email, color = GestorProjectsMuted, fontSize = 12.sp)
-                            participant.comment?.takeIf { it.isNotBlank() }?.let { comment ->
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(comment, color = ProjectHubColors.Slate, fontSize = 12.sp)
-                            }
+
+                            Text(
+                                text = participant.email,
+                                color = ProjectHubColors.Muted,
+                                fontSize = 12.sp
+                            )
+
+                            participant.comment
+                                ?.takeIf { it.isNotBlank() }
+                                ?.let { comment ->
+                                    Spacer(modifier = Modifier.height(6.dp))
+
+                                    Text(
+                                        text = comment,
+                                        color = ProjectHubColors.Slate,
+                                        fontSize = 12.sp
+                                    )
+                                }
                         }
                     }
                 }
@@ -570,35 +641,60 @@ private fun ProjectInfoParticipants(state: GestorProjectInfoState) {
 }
 
 @Composable
-private fun ProjectInfoTasks(tasks: List<GestorProjectInfoTask>) {
+private fun ProjectInfoTasks(
+    tasks: List<GestorProjectInfoTask>
+) {
+    var selectedTask by remember {
+        mutableStateOf<GestorProjectInfoTask?>(null)
+    }
+
+    selectedTask?.let { task ->
+        ProjectTaskObservationsPage(
+            task = task,
+            onBack = {
+                selectedTask = null
+            }
+        )
+        return
+    }
+
     Text(
-        text = "Tarefas",
-        color = GestorProjectsInk,
+        text = currentAppSettings().language.t("reports.tasks"),
+        color = ProjectHubColors.Ink,
         fontWeight = FontWeight.ExtraBold,
         fontSize = 18.sp
     )
+
     Spacer(modifier = Modifier.height(10.dp))
 
     if (tasks.isEmpty()) {
         InfoMessageCard(
-            title = "Sem tarefas",
-            detail = "Este projeto ainda nao tem tarefas registadas."
+            title = currentAppSettings().language.t("manager.projects.noTasksTitle"),
+            detail = currentAppSettings().language.t("manager.projects.noTasksDetail")
         )
     } else {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             tasks.forEach { task ->
-                ProjectInfoTaskCard(task = task)
+                ProjectInfoTaskCard(
+                    task = task,
+                    onOpenObservations = {
+                        selectedTask = task
+                    }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun ProjectInfoTaskCard(task: GestorProjectInfoTask) {
+private fun ProjectInfoTaskCard(
+    task: GestorProjectInfoTask,
+    onOpenObservations: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -608,45 +704,143 @@ private fun ProjectInfoTaskCard(task: GestorProjectInfoTask) {
                 verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(task.title, color = GestorProjectsInk, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                    Text(
+                        text = task.title,
+                        color = ProjectHubColors.Ink,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 16.sp
+                    )
+
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(task.description, color = GestorProjectsMuted, fontSize = 13.sp)
+
+                    Text(
+                        text = task.description,
+                        color = ProjectHubColors.Muted,
+                        fontSize = 13.sp
+                    )
                 }
+
                 Spacer(modifier = Modifier.width(8.dp))
+
                 InfoTaskStatusPill(task.statusLabel)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                DetailItem(label = "Inicio", value = task.startDate, modifier = Modifier.weight(1f))
-                DetailItem(label = "Prazo", value = task.dueDate, modifier = Modifier.weight(1f))
+                DetailItem(
+                    label = currentAppSettings().language.t("common.start"),
+                    value = task.startDate,
+                    modifier = Modifier.weight(1f)
+                )
+
+                DetailItem(
+                    label = currentAppSettings().language.t("common.deadline"),
+                    value = task.dueDate,
+                    modifier = Modifier.weight(1f)
+                )
             }
 
             Spacer(modifier = Modifier.height(10.dp))
+
             Text(
-                text = "Responsaveis: ${task.assignees.takeIf { it.isNotEmpty() }?.joinToString() ?: "Sem utilizadores"}",
+                text = "${currentAppSettings().language.t("tasks.responsibles")}: ${
+                    task.assignees
+                        .takeIf { it.isNotEmpty() }
+                        ?.joinToString()
+                        ?: currentAppSettings().language.t("tasks.noAssignees")
+                }",
                 color = ProjectHubColors.Slate,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold
             )
 
             Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = "Observacoes",
-                color = GestorProjectsInk,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
-            Spacer(modifier = Modifier.height(8.dp))
 
-            if (task.observations.isEmpty()) {
-                Text("Sem observacoes nesta tarefa.", color = GestorProjectsMuted, fontSize = 13.sp)
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    task.observations.forEach { observation ->
-                        ProjectObservationRow(observation = observation)
-                    }
+            Button(
+                onClick = rememberSoundClick(onOpenObservations),
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = GestorProjectsAccent,
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = "${currentAppSettings().language.t("user.tasks.observations")} (${task.observations.size})",
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProjectTaskObservationsPage(
+    task: GestorProjectInfoTask,
+    onBack: () -> Unit
+) {
+    var selectedObservation by remember {
+        mutableStateOf<GestorProjectInfoObservation?>(null)
+    }
+
+    selectedObservation?.let { observation ->
+        ProjectObservationDetailPage(
+            task = task,
+            observation = observation,
+            onBack = {
+                selectedObservation = null
+            }
+        )
+        return
+    }
+
+    Column {
+        TextButton(
+            onClick = rememberSoundClick(onBack),
+            colors = ButtonDefaults.textButtonColors(contentColor = ProjectHubColors.Ink)
+        ) {
+            Text(
+                text = currentAppSettings().language.t("manager.projects.backProject"),
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = task.title,
+            color = ProjectHubColors.Ink,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 24.sp
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = currentAppSettings().language.t("tasks.observationsTitle"),
+            color = ProjectHubColors.Muted,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        if (task.observations.isEmpty()) {
+            InfoMessageCard(
+                title = currentAppSettings().language.t("user.tasks.noObservationsTitle"),
+                detail = currentAppSettings().language.t("user.tasks.noObservationsDetail")
+            )
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                task.observations.forEach { observation ->
+                    ProjectObservationRow(
+                        observation = observation,
+                        onClick = {
+                            selectedObservation = observation
+                        }
+                    )
                 }
             }
         }
@@ -654,30 +848,165 @@ private fun ProjectInfoTaskCard(task: GestorProjectInfoTask) {
 }
 
 @Composable
-private fun ProjectObservationRow(observation: GestorProjectInfoObservation) {
+private fun ProjectObservationDetailPage(
+    task: GestorProjectInfoTask,
+    observation: GestorProjectInfoObservation,
+    onBack: () -> Unit
+) {
+    Column {
+        TextButton(
+            onClick = rememberSoundClick(onBack),
+            colors = ButtonDefaults.textButtonColors(contentColor = ProjectHubColors.Ink)
+        ) {
+            Text(
+                text = currentAppSettings().language.t("tasks.backObservations"),
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = task.title,
+            color = ProjectHubColors.Ink,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 24.sp
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = currentAppSettings().language.t("tasks.observationDetail"),
+            color = ProjectHubColors.Muted,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = observation.text,
+                    color = ProjectHubColors.Ink,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.sp
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    DetailItem(
+                        label = currentAppSettings().language.t("common.user"),
+                        value = observation.userName,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    DetailItem(
+                        label = currentAppSettings().language.t("common.date"),
+                        value = observation.date,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    DetailItem(
+                        label = currentAppSettings().language.t("user.tasks.completion"),
+                        value = "${observation.completionPercent}%",
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    DetailItem(
+                        label = currentAppSettings().language.t("common.hours"),
+                        value = observation.spentHours?.let { "$it h" } ?: "-",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                DetailItem(
+                    label = currentAppSettings().language.t("common.location"),
+                    value = observation.local,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Text(
+            text = currentAppSettings().language.t("common.photos"),
+            color = ProjectHubColors.Ink,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 18.sp
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        if (observation.photoUrls.isEmpty()) {
+            InfoMessageCard(
+                title = currentAppSettings().language.t("common.noPhotos"),
+                detail = currentAppSettings().language.t("common.photoEmpty")
+            )
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                observation.photoUrls.forEach { photoUrl ->
+                    AsyncImage(
+                        model = photoUrl,
+                        contentDescription = currentAppSettings().language.t("profile.photoDescription"),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(190.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(ProjectHubColors.SurfaceSoft)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProjectObservationRow(
+    observation: GestorProjectInfoObservation,
+    onClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .background(ProjectHubColors.SurfaceSoft)
+            .clickable(onClick = rememberSoundClick(onClick))
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
         Text(
             text = observation.text,
-            color = GestorProjectsInk,
+            color = ProjectHubColors.Ink,
             fontWeight = FontWeight.SemiBold,
             fontSize = 13.sp
         )
+
         Spacer(modifier = Modifier.height(6.dp))
+
         Text(
-            text = "${observation.userName} | ${observation.date} | ${observation.completionPercent}%",
-            color = GestorProjectsMuted,
+            text = "${observation.userName} | ${observation.date} | ${observation.completionPercent}% | ${observation.photoUrls.size} fotos",
+            color = ProjectHubColors.Muted,
             fontSize = 12.sp
         )
+
         observation.spentHours?.let { hours ->
             Text(
-                text = "Tempo gasto: $hours h",
-                color = GestorProjectsMuted,
+                text = currentAppSettings().language.t("tasks.timeSpent").format(hours),
+                color = ProjectHubColors.Muted,
                 fontSize = 12.sp
             )
         }
@@ -685,12 +1014,14 @@ private fun ProjectObservationRow(observation: GestorProjectInfoObservation) {
 }
 
 @Composable
-private fun InfoTaskStatusPill(status: String) {
+private fun InfoTaskStatusPill(
+    status: String
+) {
     val color = when (status) {
-        "Concluida" -> GestorProjectsGreen
+        "Concluída" -> GestorProjectsGreen
         "Atrasada" -> GestorProjectsRed
         "Em progresso" -> GestorProjectsBlue
-        else -> GestorProjectsGray
+        else -> ProjectHubColors.SidebarMutedText
     }
 
     Box(
@@ -699,7 +1030,12 @@ private fun InfoTaskStatusPill(status: String) {
             .background(color.copy(alpha = 0.14f))
             .padding(horizontal = 9.dp, vertical = 5.dp)
     ) {
-        Text(status, color = color, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+        Text(
+            text = status,
+            color = color,
+            fontWeight = FontWeight.Bold,
+            fontSize = 11.sp
+        )
     }
 }
 
@@ -711,27 +1047,41 @@ private fun InfoMessageCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(title, color = GestorProjectsInk, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+            Text(
+                text = title,
+                color = ProjectHubColors.Ink,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 16.sp
+            )
+
             Spacer(modifier = Modifier.height(6.dp))
-            Text(detail, color = GestorProjectsMuted, fontSize = 13.sp)
+
+            Text(
+                text = detail,
+                color = ProjectHubColors.Muted,
+                fontSize = 13.sp
+            )
         }
     }
 }
 
 @Composable
-private fun ProjectDetails(project: GestorProjectListItem) {
+private fun ProjectDetails(
+    project: GestorProjectListItem
+) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         DetailItem(
-            label = "Inicio",
+            label = currentAppSettings().language.t("common.start"),
             value = project.startDate,
             modifier = Modifier.weight(1f)
         )
+
         DetailItem(
-            label = "Prazo",
+            label = currentAppSettings().language.t("common.deadline"),
             value = project.dueDate,
             modifier = Modifier.weight(1f)
         )
@@ -743,15 +1093,27 @@ private fun ProjectDetails(project: GestorProjectListItem) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        TaskLegend(color = GestorProjectsGreen, text = "Concluidas: ${project.completedTasks}")
-        TaskLegend(color = GestorProjectsBlue, text = "Em progresso: ${project.inProgressTasks}")
-        TaskLegend(color = GestorProjectsGray, text = "Pendentes: ${project.pendingTasks}")
+        TaskLegend(
+            color = GestorProjectsGreen,
+            text = "${currentAppSettings().language.t("common.completed")}: ${project.completedTasks}"
+        )
+
+        TaskLegend(
+            color = GestorProjectsBlue,
+            text = "${currentAppSettings().language.t("common.inProgress")}: ${project.inProgressTasks}"
+        )
+
+        TaskLegend(
+            color = ProjectHubColors.SidebarMutedText,
+            text = "${currentAppSettings().language.t("common.pending")}: ${project.pendingTasks}"
+        )
     }
 
     Spacer(modifier = Modifier.height(6.dp))
+
     Text(
-        text = "Total de tarefas: ${project.totalTasks}",
-        color = GestorProjectsMuted,
+        text = currentAppSettings().language.t("manager.projects.tasksTotal").format(project.totalTasks),
+        color = ProjectHubColors.Muted,
         fontSize = 13.sp
     )
 }
@@ -765,11 +1127,13 @@ private fun DetailItem(
     Column(modifier = modifier) {
         Text(
             text = label,
-            color = GestorProjectsMuted,
+            color = ProjectHubColors.Muted,
             fontWeight = FontWeight.SemiBold,
             fontSize = 12.sp
         )
+
         Spacer(modifier = Modifier.height(3.dp))
+
         Text(
             text = value,
             color = ProjectHubColors.Slate,
@@ -790,10 +1154,12 @@ private fun TaskLegend(
                 .clip(CircleShape)
                 .background(color)
         )
+
         Spacer(modifier = Modifier.width(5.dp))
+
         Text(
             text = text,
-            color = GestorProjectsInk,
+            color = ProjectHubColors.Ink,
             fontSize = 13.sp
         )
     }
@@ -810,11 +1176,13 @@ private fun ProjectMembers(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            TeamIcon(color = GestorProjectsMuted)
+            TeamIcon(color = ProjectHubColors.Muted)
+
             Spacer(modifier = Modifier.width(8.dp))
+
             Text(
-                text = "Equipa do Projeto",
-                color = GestorProjectsInk,
+                text = currentAppSettings().language.t("manager.projects.projectTeam"),
+                color = ProjectHubColors.Ink,
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 16.sp
             )
@@ -822,14 +1190,20 @@ private fun ProjectMembers(
 
         if (!project.isCompleted) {
             Button(
-                onClick = rememberSoundClick { onAssociateUser(project) },
+                onClick = rememberSoundClick {
+                    onAssociateUser(project)
+                },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = GestorProjectsAccent,
                     contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text(text = "Associar", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                Text(
+                    text = currentAppSettings().language.t("manager.projects.associate"),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp
+                )
             }
         }
     }
@@ -838,8 +1212,8 @@ private fun ProjectMembers(
 
     if (project.members.isEmpty()) {
         Text(
-            text = "Sem membros associados.",
-            color = GestorProjectsMuted,
+            text = currentAppSettings().language.t("manager.projects.noMembers"),
+            color = ProjectHubColors.Muted,
             fontSize = 14.sp
         )
     } else {
@@ -859,17 +1233,19 @@ private fun ProjectMembers(
                     ) {
                         Text(
                             text = member.name,
-                            color = GestorProjectsInk,
+                            color = ProjectHubColors.Ink,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 15.sp
                         )
+
                         if (project.isCompleted && member.rating != null) {
                             StarRatingText(rating = member.rating)
                         }
                     }
+
                     Text(
                         text = member.email,
-                        color = GestorProjectsMuted,
+                        color = ProjectHubColors.Muted,
                         fontSize = 12.sp
                     )
                 }
@@ -879,7 +1255,9 @@ private fun ProjectMembers(
 }
 
 @Composable
-private fun CompleteIconButton(onClick: () -> Unit) {
+private fun CompleteIconButton(
+    onClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .size(34.dp)
@@ -906,25 +1284,32 @@ private fun CompleteProjectDialog(
     onConfirm: (Map<Int, Int>) -> Unit
 ) {
     var ratings by remember(project.id) {
-        mutableStateOf(project.members.associate { member -> member.id to (member.rating ?: 0) })
+        mutableStateOf(
+            project.members.associate { member ->
+                member.id to (member.rating ?: 0)
+            }
+        )
     }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Concluir projeto") },
+        title = {
+            Text(currentAppSettings().language.t("manager.projects.completeTitle"))
+        },
         text = {
             Column {
                 Text(
-                    text = "Avalia cada membro de 0 a 5 estrelas.",
-                    color = GestorProjectsMuted,
+                    text = currentAppSettings().language.t("manager.projects.rateMembers"),
+                    color = ProjectHubColors.Muted,
                     fontSize = 14.sp
                 )
+
                 Spacer(modifier = Modifier.height(12.dp))
 
                 if (project.members.isEmpty()) {
                     Text(
-                        text = "Este projeto nao tem membros para avaliar.",
-                        color = GestorProjectsMuted
+                        text = currentAppSettings().language.t("manager.projects.noMembersToRate"),
+                        color = ProjectHubColors.Muted
                     )
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -932,11 +1317,13 @@ private fun CompleteProjectDialog(
                             Column {
                                 Text(
                                     text = member.name,
-                                    color = GestorProjectsInk,
+                                    color = ProjectHubColors.Ink,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp
                                 )
+
                                 Spacer(modifier = Modifier.height(6.dp))
+
                                 StarSelector(
                                     rating = ratings[member.id] ?: 0,
                                     onRatingChange = { value ->
@@ -950,17 +1337,28 @@ private fun CompleteProjectDialog(
 
                 errorMessage?.let {
                     Spacer(modifier = Modifier.height(10.dp))
-                    Text(text = it, color = GestorProjectsRed, fontWeight = FontWeight.Bold)
+
+                    Text(
+                        text = it,
+                        color = GestorProjectsRed,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         },
         confirmButton = {
             TextButton(
                 enabled = !isSaving,
-                onClick = rememberSoundClick { onConfirm(ratings) }
+                onClick = rememberSoundClick {
+                    onConfirm(ratings)
+                }
             ) {
                 Text(
-                    text = if (isSaving) "A concluir..." else "Concluir",
+                    text = if (isSaving) {
+                        currentAppSettings().language.t("common.completing")
+                    } else {
+                        currentAppSettings().language.t("user.tasks.complete")
+                    },
                     color = GestorProjectsGreen,
                     fontWeight = FontWeight.Bold
                 )
@@ -968,7 +1366,7 @@ private fun CompleteProjectDialog(
         },
         dismissButton = {
             TextButton(onClick = rememberSoundClick(onDismiss)) {
-                Text("Cancelar")
+                Text(currentAppSettings().language.t("common.cancel"))
             }
         }
     )
@@ -982,13 +1380,29 @@ private fun StarSelector(
     Row(verticalAlignment = Alignment.CenterVertically) {
         (0..5).forEach { value ->
             Text(
-                text = if (value == 0) "0" else if (value <= rating) "★" else "☆",
-                color = if (value == 0) GestorProjectsMuted else if (value <= rating) ProjectHubColors.Rating else ProjectHubColors.Border,
+                text = if (value == 0) {
+                    "0"
+                } else if (value <= rating) {
+                    "★"
+                } else {
+                    "☆"
+                },
+                color = if (value == 0) {
+                    ProjectHubColors.Muted
+                } else if (value <= rating) {
+                    ProjectHubColors.Rating
+                } else {
+                    ProjectHubColors.Border
+                },
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = if (value == 0) 15.sp else 26.sp,
                 modifier = Modifier
                     .clip(RoundedCornerShape(4.dp))
-                    .clickable(onClick = rememberSoundClick { onRatingChange(value) })
+                    .clickable(
+                        onClick = rememberSoundClick {
+                            onRatingChange(value)
+                        }
+                    )
                     .padding(horizontal = 4.dp, vertical = 2.dp)
             )
         }
@@ -996,8 +1410,11 @@ private fun StarSelector(
 }
 
 @Composable
-private fun StarRatingText(rating: Int) {
+private fun StarRatingText(
+    rating: Int
+) {
     val clamped = rating.coerceIn(0, 5)
+
     Text(
         text = "${"★".repeat(clamped)}${"☆".repeat(5 - clamped)} $clamped/5",
         color = ProjectHubColors.Rating,
@@ -1007,12 +1424,14 @@ private fun StarRatingText(rating: Int) {
 }
 
 @Composable
-private fun StatusPill(status: String) {
+private fun StatusPill(
+    status: String
+) {
     val color = when (status) {
-        "Concluido" -> GestorProjectsGreen
+        "Concluído" -> GestorProjectsGreen
         "Em Progresso" -> GestorProjectsBlue
-        "Pendente" -> GestorProjectsGray
-        else -> GestorProjectsMuted
+        "Pendente" -> ProjectHubColors.SidebarMutedText
+        else -> ProjectHubColors.Muted
     }
 
     Box(
@@ -1039,44 +1458,64 @@ private fun AssociateUserDialog(
     onDismiss: () -> Unit,
     onConfirm: (Int?) -> Unit
 ) {
-    var selectedUserId by remember(project.id, users) { mutableStateOf(users.firstOrNull()?.id) }
+    var selectedUserId by remember(project.id, users) {
+        mutableStateOf(users.firstOrNull()?.id)
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Associar utilizador") },
+        title = {
+            Text(currentAppSettings().language.t("manager.projects.associateUser"))
+        },
         text = {
             Column {
                 Text(
                     text = project.name,
-                    color = GestorProjectsInk,
+                    color = ProjectHubColors.Ink,
                     fontWeight = FontWeight.Bold
                 )
+
                 Spacer(modifier = Modifier.height(12.dp))
+
                 if (users.isEmpty()) {
                     Text(
-                        text = "Nao existem utilizadores disponiveis para associar.",
-                        color = GestorProjectsMuted
+                        text = currentAppSettings().language.t("manager.projects.noAvailableUsers"),
+                        color = ProjectHubColors.Muted
                     )
                 } else {
                     UserDropdown(
                         users = users,
                         selectedUserId = selectedUserId,
-                        onUserSelected = { selectedUserId = it }
+                        onUserSelected = {
+                            selectedUserId = it
+                        }
                     )
                 }
+
                 errorMessage?.let {
                     Spacer(modifier = Modifier.height(10.dp))
-                    Text(text = it, color = GestorProjectsRed, fontWeight = FontWeight.Bold)
+
+                    Text(
+                        text = it,
+                        color = GestorProjectsRed,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         },
         confirmButton = {
             TextButton(
                 enabled = !isSaving && users.isNotEmpty(),
-                onClick = rememberSoundClick { onConfirm(selectedUserId) }
+                onClick = rememberSoundClick {
+                    onConfirm(selectedUserId)
+                }
             ) {
                 Text(
-                    text = if (isSaving) "A associar..." else "Associar",
+                    text = if (isSaving) {
+                        currentAppSettings().language.t("common.saving")
+                    } else {
+                        currentAppSettings().language.t("manager.projects.associate")
+                    },
                     color = GestorProjectsAccent,
                     fontWeight = FontWeight.Bold
                 )
@@ -1084,7 +1523,7 @@ private fun AssociateUserDialog(
         },
         dismissButton = {
             TextButton(onClick = rememberSoundClick(onDismiss)) {
-                Text("Cancelar")
+                Text(currentAppSettings().language.t("common.cancel"))
             }
         }
     )
@@ -1096,8 +1535,13 @@ private fun UserDropdown(
     selectedUserId: Int?,
     onUserSelected: (Int) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    val selected = users.firstOrNull { it.id == selectedUserId }
+    var expanded by remember {
+        mutableStateOf(false)
+    }
+
+    val selected = users.firstOrNull {
+        it.id == selectedUserId
+    }
 
     Box {
         Row(
@@ -1106,35 +1550,51 @@ private fun UserDropdown(
                 .height(52.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
-                .clickable(onClick = rememberSoundClick { expanded = true })
+                .clickable(
+                    onClick = rememberSoundClick {
+                        expanded = true
+                    }
+                )
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = selected?.name ?: "Seleciona um utilizador",
-                color = GestorProjectsInk,
+                text = selected?.name ?: currentAppSettings().language.t("common.selectUser"),
+                color = ProjectHubColors.Ink,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp
             )
+
             Text(
                 text = if (expanded) "^" else "v",
-                color = GestorProjectsMuted,
+                color = ProjectHubColors.Muted,
                 fontWeight = FontWeight.Bold
             )
         }
 
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.background(Color.White)
+            onDismissRequest = {
+                expanded = false
+            },
+            modifier = Modifier.background(ProjectHubColors.LightSurface)
         ) {
             users.forEach { user ->
                 DropdownMenuItem(
                     text = {
                         Column {
-                            Text(user.name, color = GestorProjectsInk, fontWeight = FontWeight.Bold)
-                            Text(user.email, color = GestorProjectsMuted, fontSize = 12.sp)
+                            Text(
+                                text = user.name,
+                                color = ProjectHubColors.Ink,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            Text(
+                                text = user.email,
+                                color = ProjectHubColors.Muted,
+                                fontSize = 12.sp
+                            )
                         }
                     },
                     onClick = {
@@ -1148,12 +1608,65 @@ private fun UserDropdown(
 }
 
 @Composable
-private fun TeamIcon(color: Color) {
+private fun TeamIcon(
+    color: Color
+) {
     Canvas(modifier = Modifier.size(22.dp)) {
-        val stroke = Stroke(width = 2.1.dp.toPx(), cap = StrokeCap.Round)
-        drawCircle(color = color, radius = size.width * 0.13f, center = Offset(size.width * 0.38f, size.height * 0.34f), style = stroke)
-        drawCircle(color = color, radius = size.width * 0.11f, center = Offset(size.width * 0.65f, size.height * 0.42f), style = stroke)
-        drawArc(color = color, startAngle = 200f, sweepAngle = 140f, useCenter = false, topLeft = Offset(size.width * 0.18f, size.height * 0.52f), size = androidx.compose.ui.geometry.Size(size.width * 0.38f, size.height * 0.28f), style = stroke)
-        drawArc(color = color, startAngle = 215f, sweepAngle = 110f, useCenter = false, topLeft = Offset(size.width * 0.52f, size.height * 0.6f), size = androidx.compose.ui.geometry.Size(size.width * 0.3f, size.height * 0.2f), style = stroke)
+        val stroke = Stroke(
+            width = 2.1.dp.toPx(),
+            cap = StrokeCap.Round
+        )
+
+        drawCircle(
+            color = color,
+            radius = size.width * 0.13f,
+            center = Offset(
+                x = size.width * 0.38f,
+                y = size.height * 0.34f
+            ),
+            style = stroke
+        )
+
+        drawCircle(
+            color = color,
+            radius = size.width * 0.11f,
+            center = Offset(
+                x = size.width * 0.65f,
+                y = size.height * 0.42f
+            ),
+            style = stroke
+        )
+
+        drawArc(
+            color = color,
+            startAngle = 200f,
+            sweepAngle = 140f,
+            useCenter = false,
+            topLeft = Offset(
+                x = size.width * 0.18f,
+                y = size.height * 0.52f
+            ),
+            size = androidx.compose.ui.geometry.Size(
+                width = size.width * 0.38f,
+                height = size.height * 0.28f
+            ),
+            style = stroke
+        )
+
+        drawArc(
+            color = color,
+            startAngle = 215f,
+            sweepAngle = 110f,
+            useCenter = false,
+            topLeft = Offset(
+                x = size.width * 0.52f,
+                y = size.height * 0.6f
+            ),
+            size = androidx.compose.ui.geometry.Size(
+                width = size.width * 0.3f,
+                height = size.height * 0.2f
+            ),
+            style = stroke
+        )
     }
 }

@@ -5,217 +5,224 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.projecthub.remote.supabase.UserRemoteDataSource
+import com.example.projecthub.remote.supabase.models.ProjetoDto
 import com.example.projecthub.remote.supabase.models.TarefaDto
+import com.example.projecthub.repository.AvaliacaoRepository
+import com.example.projecthub.repository.ObservacaoFotoRepository
 import com.example.projecthub.repository.ObservacaoRepository
 import com.example.projecthub.repository.ProjetoRepository
 import com.example.projecthub.repository.ProjetoUserRepository
 import com.example.projecthub.repository.RegistoTarefaRepository
 import com.example.projecthub.repository.TarefaRepository
 import com.example.projecthub.repository.TarefaUserRepository
-import com.example.projecthub.remote.supabase.UserRemoteDataSource
 import kotlinx.coroutines.launch
 import java.text.Normalizer
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-enum class GestorTaskStatusFilter(val label: String) {
-    All("Todas"),
-    Pending("Pendentes"),
-    InProgress("Em progresso"),
-    Completed("Concluidas")
-}
-
-data class GestorTaskProjectOption(
-    val id: Int,
-    val name: String
-)
-
-data class GestorTaskUserOption(
+data class GestorProjectMember(
     val id: Int,
     val name: String,
-    val projectIds: Set<Int>
+    val email: String,
+    val rating: Int? = null
 )
 
-data class GestorTaskAssignee(
+data class GestorUserOption(
     val id: Int,
-    val name: String
+    val name: String,
+    val email: String
 )
 
-data class GestorTaskListItem(
+data class GestorProjectListItem(
     val id: Int,
-    val projectId: Int,
-    val title: String,
+    val name: String,
     val description: String,
     val statusLabel: String,
-    val rawStatus: String,
     val startDate: String,
     val dueDate: String,
-    val assignees: List<GestorTaskAssignee>,
+    val totalTasks: Int,
+    val completedTasks: Int,
+    val inProgressTasks: Int,
+    val pendingTasks: Int,
+    val members: List<GestorProjectMember>,
+    val progressPercent: Int,
     val isCompleted: Boolean,
-    val isInProgress: Boolean,
-    val isPending: Boolean,
-    val isDelayed: Boolean
+    val isExpanded: Boolean = false
 )
 
-data class GestorTaskInfoObservation(
+data class GestorProjectInfoParticipant(
+    val id: Int,
+    val name: String,
+    val email: String,
+    val rating: Int?,
+    val comment: String?
+)
+
+data class GestorProjectInfoObservation(
     val id: Int?,
     val text: String,
     val userName: String,
     val date: String,
+    val local: String,
     val completionPercent: Int,
-    val spentHours: Float?
+    val spentHours: Float?,
+    val photoUrls: List<String>
 )
 
-data class GestorTaskInfoState(
-    val task: GestorTaskListItem? = null,
-    val observations: List<GestorTaskInfoObservation> = emptyList(),
-    val recordsCount: Int = 0,
+data class GestorProjectInfoTask(
+    val id: Int,
+    val title: String,
+    val description: String,
+    val statusLabel: String,
+    val startDate: String,
+    val dueDate: String,
+    val assignees: List<String>,
+    val observations: List<GestorProjectInfoObservation>
+)
+
+data class GestorProjectInfoState(
+    val project: GestorProjectListItem? = null,
+    val participants: List<GestorProjectInfoParticipant> = emptyList(),
+    val tasks: List<GestorProjectInfoTask> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
 
-data class GestorProjectTaskGroup(
-    val projectId: Int,
-    val projectName: String,
-    val totalTasks: Int,
-    val visibleTasks: List<GestorTaskListItem>,
-    val completedTasks: Int,
-    val inProgressTasks: Int,
-    val pendingTasks: Int,
-    val isExpanded: Boolean
-)
-
-data class GestorTasksState(
-    val projectGroups: List<GestorProjectTaskGroup> = emptyList(),
-    val projects: List<GestorTaskProjectOption> = emptyList(),
-    val users: List<GestorTaskUserOption> = emptyList(),
-    val expandedProjectIds: Set<Int> = emptySet(),
-    val selectedStatus: GestorTaskStatusFilter = GestorTaskStatusFilter.All,
+data class GestorProjectsState(
+    val projects: List<GestorProjectListItem> = emptyList(),
+    val visibleProjects: List<GestorProjectListItem> = emptyList(),
+    val userOptions: List<GestorUserOption> = emptyList(),
     val searchQuery: String = "",
-    val totalTasks: Int = 0,
-    val pendingTasks: Int = 0,
-    val inProgressTasks: Int = 0,
-    val completedTasks: Int = 0,
+    val selectedStatus: String = "Todos os Status",
     val isLoading: Boolean = true,
-    val isCreating: Boolean = false,
-    val createErrorMessage: String? = null,
+    val isAssociating: Boolean = false,
     val errorMessage: String? = null,
-    val detailState: GestorTaskInfoState = GestorTaskInfoState()
+    val actionMessage: String? = null,
+    val detailState: GestorProjectInfoState = GestorProjectInfoState()
 )
 
-class GestorTasksViewModel(
+class GestorProjectsViewModel(
     private val projetoRepository: ProjetoRepository = ProjetoRepository(),
     private val tarefaRepository: TarefaRepository = TarefaRepository(),
     private val projetoUserRepository: ProjetoUserRepository = ProjetoUserRepository(),
+    private val avaliacaoRepository: AvaliacaoRepository = AvaliacaoRepository(),
     private val tarefaUserRepository: TarefaUserRepository = TarefaUserRepository(),
     private val registoTarefaRepository: RegistoTarefaRepository = RegistoTarefaRepository(),
     private val observacaoRepository: ObservacaoRepository = ObservacaoRepository(),
+    private val observacaoFotoRepository: ObservacaoFotoRepository = ObservacaoFotoRepository(),
     private val userRemoteDataSource: UserRemoteDataSource = UserRemoteDataSource()
 ) : ViewModel() {
 
-    private data class TaskGroupSource(
-        val projectId: Int,
-        val projectName: String,
-        val tasks: List<GestorTaskListItem>
-    )
-
-    private var sourceGroups: List<TaskGroupSource> = emptyList()
-
-    var state by mutableStateOf(GestorTasksState())
+    var state by mutableStateOf(GestorProjectsState())
         private set
 
-    fun loadTasks(gestorId: Int?) {
+    fun loadProjects(gestorId: Int?) {
         if (gestorId == null) {
-            state = GestorTasksState(
+            state = GestorProjectsState(
                 isLoading = false,
-                errorMessage = "Nao foi possivel identificar o gestor autenticado."
+                errorMessage = "Não foi possível identificar o gestor autenticado."
             )
             return
         }
 
         viewModelScope.launch {
-            state = state.copy(isLoading = true, errorMessage = null)
+            state = state.copy(
+                isLoading = true,
+                errorMessage = null,
+                actionMessage = null
+            )
 
             val projectsResult = projetoRepository.getProjetosByGestor(gestorId)
             val tasksResult = tarefaRepository.getTarefas()
-            val taskUsersResult = tarefaUserRepository.getTarefaUsers()
-            val usersResult = runCatching { userRemoteDataSource.getUsers() }
+            val ratingsResult = avaliacaoRepository.getAvaliacoes()
+            val usersResult = runCatching {
+                userRemoteDataSource.getUsers()
+            }
 
-            if (projectsResult.isFailure || tasksResult.isFailure || taskUsersResult.isFailure || usersResult.isFailure) {
+            if (
+                projectsResult.isFailure ||
+                tasksResult.isFailure ||
+                ratingsResult.isFailure ||
+                usersResult.isFailure
+            ) {
                 state = state.copy(
                     isLoading = false,
-                    errorMessage = "Nao foi possivel carregar as tarefas."
+                    errorMessage = "Não foi possível carregar os projetos do gestor."
                 )
                 return@launch
             }
 
             val projects = projectsResult.getOrDefault(emptyList())
-            val activeProjects = projects.filterNot { it.status.isCompletedStatus() }
-            val projectIds = activeProjects.mapNotNull { it.id }.toSet()
+            val projectIds = projects.mapNotNull { it.id }.toSet()
+
             val projectUsers = projectIds.flatMap { projectId ->
                 projetoUserRepository.getUsersByProjeto(projectId).getOrDefault(emptyList())
             }
-            val usersById = usersResult.getOrDefault(emptyList())
-                .mapNotNull { user -> user.id?.let { it to (user.nome.ifBlank { user.username }) } }
-                .toMap()
-            val userProjectIds = projectUsers.groupBy { it.user_id }.mapValues { entry ->
-                entry.value.map { it.projeto_id }.toSet()
-            }
-            val userOptions = userProjectIds.mapNotNull { (userId, ids) ->
-                usersById[userId]?.let { name -> GestorTaskUserOption(userId, name, ids) }
-            }.sortedBy { it.name.lowercase() }
 
-            val taskUsersByTask = taskUsersResult.getOrDefault(emptyList()).groupBy { it.tarefa_id }
-            val tasksByProject = tasksResult.getOrDefault(emptyList())
+            val tasksByProject = tasksResult
+                .getOrDefault(emptyList())
                 .filter { it.projeto_id in projectIds }
                 .groupBy { it.projeto_id }
 
-            sourceGroups = activeProjects.mapNotNull { project ->
-                val projectId = project.id ?: return@mapNotNull null
-                TaskGroupSource(
-                    projectId = projectId,
-                    projectName = project.nome,
-                    tasks = tasksByProject[projectId]
-                        .orEmpty()
-                        .map { task ->
-                            task.toListItem(
-                                assignees = taskUsersByTask[task.id ?: -1]
-                                    .orEmpty()
-                                    .mapNotNull { relation ->
-                                        usersById[relation.user_id]?.let {
-                                            GestorTaskAssignee(relation.user_id, it)
-                                        }
-                                    }
-                                    .sortedBy { it.name.lowercase() }
-                            )
-                        }
-                        .sortedWith(compareBy<GestorTaskListItem> { it.isCompleted }.thenBy { it.title.lowercase() })
-                )
-            }.sortedBy { it.projectName.lowercase() }
+            val projectUsersByProject = projectUsers
+                .filter { it.projeto_id in projectIds }
+                .groupBy { it.projeto_id }
+
+            val ratingsByProjectAndUser = ratingsResult
+                .getOrDefault(emptyList())
+                .filter { it.projeto_id in projectIds }
+                .associateBy { it.projeto_id to it.user_id }
+
+            val users = usersResult.getOrDefault(emptyList())
+
+            val usersById = users
+                .mapNotNull { user ->
+                    user.id?.let { id -> id to user }
+                }
+                .toMap()
+
+            val userOptions = users
+                .filter { user ->
+                    user.role.normalizedStatus() == "UTILIZADOR"
+                }
+                .mapNotNull { user ->
+                    user.id?.let { id ->
+                        GestorUserOption(
+                            id = id,
+                            name = user.nome.ifBlank { user.username },
+                            email = user.email
+                        )
+                    }
+                }
+                .sortedBy { it.name.lowercase() }
+
+            val oldExpandedIds = state.projects
+                .filter { it.isExpanded }
+                .map { it.id }
+                .toSet()
+
+            val projectItems = projects
+                .mapNotNull { project ->
+                    project.toListItem(
+                        tasks = tasksByProject[project.id].orEmpty(),
+                        memberIds = projectUsersByProject[project.id].orEmpty().map { it.user_id },
+                        usersById = usersById,
+                        ratingsByProjectAndUser = ratingsByProjectAndUser,
+                        isExpanded = project.id in oldExpandedIds
+                    )
+                }
+                .sortedBy { it.name.lowercase() }
 
             state = state.copy(
-                projects = activeProjects.mapNotNull { project ->
-                    project.id?.let { GestorTaskProjectOption(it, project.nome) }
-                }.sortedBy { it.name.lowercase() },
-                users = userOptions,
-                expandedProjectIds = sourceGroups.map { it.projectId }.toSet(),
-                isLoading = false
+                projects = projectItems,
+                userOptions = userOptions,
+                isLoading = false,
+                errorMessage = null
             )
+
             applyFilters()
         }
-    }
-
-    fun toggleProject(projectId: Int) {
-        val expanded = state.expandedProjectIds
-        state = state.copy(
-            expandedProjectIds = if (projectId in expanded) expanded - projectId else expanded + projectId
-        )
-        applyFilters()
-    }
-
-    fun updateStatusFilter(filter: GestorTaskStatusFilter) {
-        state = state.copy(selectedStatus = filter)
-        applyFilters()
     }
 
     fun updateSearchQuery(query: String) {
@@ -223,352 +230,497 @@ class GestorTasksViewModel(
         applyFilters()
     }
 
-    fun loadTaskInfo(task: GestorTaskListItem) {
+    fun updateStatusFilter(status: String) {
+        state = state.copy(selectedStatus = status)
+        applyFilters()
+    }
+
+    fun toggleProject(projectId: Int) {
+        state = state.copy(
+            projects = state.projects.map { project ->
+                if (project.id == projectId) {
+                    project.copy(isExpanded = !project.isExpanded)
+                } else {
+                    project
+                }
+            }
+        )
+
+        applyFilters()
+    }
+
+    fun loadProjectInfo(project: GestorProjectListItem) {
         viewModelScope.launch {
             state = state.copy(
-                detailState = GestorTaskInfoState(
-                    task = task,
+                detailState = GestorProjectInfoState(
+                    project = project,
                     isLoading = true
                 )
             )
 
-            val recordsResult = registoTarefaRepository.getRegistosByTarefa(task.id)
+            val tasksResult = tarefaRepository.getTarefasByProjeto(project.id)
+            val projectUsersResult = projetoUserRepository.getUsersByProjeto(project.id)
+            val taskUsersResult = tarefaUserRepository.getTarefaUsers()
+            val ratingsResult = avaliacaoRepository.getAvaliacoesByProjeto(project.id)
+            val recordsResult = registoTarefaRepository.getRegistos()
             val observationsResult = observacaoRepository.getObservacoes()
-            val usersResult = runCatching { userRemoteDataSource.getUsers() }
+            val photosResult = observacaoFotoRepository.getFotos()
+            val usersResult = runCatching {
+                userRemoteDataSource.getUsers()
+            }
 
-            if (recordsResult.isFailure || observationsResult.isFailure || usersResult.isFailure) {
+            if (
+                tasksResult.isFailure ||
+                projectUsersResult.isFailure ||
+                taskUsersResult.isFailure ||
+                ratingsResult.isFailure ||
+                recordsResult.isFailure ||
+                observationsResult.isFailure ||
+                photosResult.isFailure ||
+                usersResult.isFailure
+            ) {
                 state = state.copy(
-                    detailState = GestorTaskInfoState(
-                        task = task,
+                    detailState = GestorProjectInfoState(
+                        project = project,
                         isLoading = false,
-                        errorMessage = "Nao foi possivel carregar os detalhes da tarefa."
+                        errorMessage = "Não foi possível carregar os detalhes do projeto."
                     )
                 )
                 return@launch
             }
 
-            val usersById = usersResult.getOrDefault(emptyList())
-                .mapNotNull { user -> user.id?.let { it to user } }
+            val usersById = usersResult
+                .getOrDefault(emptyList())
+                .mapNotNull { user ->
+                    user.id?.let { id -> id to user }
+                }
                 .toMap()
-            val records = recordsResult.getOrDefault(emptyList())
-            val recordsById = records.mapNotNull { record -> record.id?.let { it to record } }.toMap()
-            val observations = observationsResult
+
+            val ratingsByUser = ratingsResult
+                .getOrDefault(emptyList())
+                .associateBy { it.user_id }
+
+            val participants = projectUsersResult
+                .getOrDefault(emptyList())
+                .mapNotNull { relation ->
+                    val user = usersById[relation.user_id] ?: return@mapNotNull null
+                    val rating = ratingsByUser[relation.user_id]
+
+                    GestorProjectInfoParticipant(
+                        id = relation.user_id,
+                        name = user.nome.ifBlank { user.username },
+                        email = user.email,
+                        rating = rating?.classificacao,
+                        comment = rating?.comentario
+                    )
+                }
+                .sortedBy { it.name.lowercase() }
+
+            val tasks = tasksResult
+                .getOrDefault(emptyList())
+                .sortedBy { it.titulo.lowercase() }
+
+            val taskIds = tasks
+                .mapNotNull { it.id }
+                .toSet()
+
+            val taskUsersByTask = taskUsersResult
+                .getOrDefault(emptyList())
+                .filter { it.tarefa_id in taskIds }
+                .groupBy { it.tarefa_id }
+
+            val records = recordsResult
+                .getOrDefault(emptyList())
+                .filter { it.tarefa_id in taskIds }
+
+            val recordsById = records
+                .mapNotNull { record ->
+                    record.id?.let { id -> id to record }
+                }
+                .toMap()
+
+            val photosByObservation = photosResult
+                .getOrDefault(emptyList())
+                .groupBy { it.observacao_id }
+
+            val observationsByTask = observationsResult
                 .getOrDefault(emptyList())
                 .mapNotNull { observation ->
                     val record = recordsById[observation.registo_id] ?: return@mapNotNull null
                     val user = usersById[record.user_id]
-                    val userName = user?.nome?.ifBlank { user.username } ?: "Utilizador ${record.user_id}"
 
-                    GestorTaskInfoObservation(
+                    val userName = user?.nome?.ifBlank { user.username }
+                        ?: "Utilizador ${record.user_id}"
+
+                    record.tarefa_id to GestorProjectInfoObservation(
                         id = observation.id,
                         text = observation.texto,
                         userName = userName,
                         date = (observation.created_at ?: record.created_at ?: record.data).toUiDateText(),
+                        local = record.local?.takeIf { it.isNotBlank() } ?: "-",
                         completionPercent = record.taxa_conclusao,
-                        spentHours = record.tempo_gasto
+                        spentHours = record.tempo_gasto,
+                        photoUrls = observation.id
+                            ?.let { observationId ->
+                                photosByObservation[observationId]
+                                    .orEmpty()
+                                    .map { photo -> photo.foto_url }
+                            }
+                            .orEmpty()
                     )
                 }
-                .sortedByDescending { it.date }
+                .groupBy(
+                    keySelector = { it.first },
+                    valueTransform = { it.second }
+                )
+
+            val infoTasks = tasks.mapNotNull { task ->
+                val taskId = task.id ?: return@mapNotNull null
+
+                val assignees = taskUsersByTask[taskId]
+                    .orEmpty()
+                    .mapNotNull { relation ->
+                        usersById[relation.user_id]?.let { user ->
+                            user.nome.ifBlank { user.username }
+                        }
+                    }
+                    .sortedBy { it.lowercase() }
+
+                GestorProjectInfoTask(
+                    id = taskId,
+                    title = task.titulo,
+                    description = task.descricao?.takeIf { it.isNotBlank() } ?: "Sem descrição",
+                    statusLabel = task.toTaskStatusLabel(),
+                    startDate = task.data_inicio.toUiDateText(),
+                    dueDate = task.data_fim.toUiDateText(),
+                    assignees = assignees,
+                    observations = observationsByTask[taskId]
+                        .orEmpty()
+                        .sortedByDescending { it.date }
+                )
+            }
 
             state = state.copy(
-                detailState = GestorTaskInfoState(
-                    task = task,
-                    observations = observations,
-                    recordsCount = records.size,
+                detailState = GestorProjectInfoState(
+                    project = project,
+                    participants = participants,
+                    tasks = infoTasks,
                     isLoading = false
                 )
             )
         }
     }
 
-    fun clearTaskInfo() {
-        state = state.copy(detailState = GestorTaskInfoState())
+    fun clearProjectInfo() {
+        state = state.copy(
+            detailState = GestorProjectInfoState()
+        )
     }
 
-    fun clearCreateError() {
-        state = state.copy(createErrorMessage = null)
-    }
-
-    fun createTask(
-        gestorId: Int?,
-        title: String,
-        description: String,
-        projectId: Int?,
-        startDateText: String,
-        endDateText: String,
-        userIds: Set<Int>,
-        onSuccess: () -> Unit
+    fun associateUserToProject(
+        projetoId: Int,
+        userId: Int?,
+        gestorId: Int?
     ) {
+        if (userId == null) {
+            state = state.copy(
+                actionMessage = null,
+                errorMessage = "Seleciona um utilizador."
+            )
+            return
+        }
+
         viewModelScope.launch {
-            val startDate = startDateText.toInputLocalDateOrNull()
-            val endDate = endDateText.toInputLocalDateOrNull()
-
-            val validationError = when {
-                title.isBlank() -> "Indica o titulo da tarefa."
-                description.isBlank() -> "Indica a descricao da tarefa."
-                projectId == null -> "Seleciona o projeto da tarefa."
-                startDate == null -> "Indica a data de inicio no formato dd/mm/aaaa."
-                endDate == null -> "Indica a data de fim no formato dd/mm/aaaa."
-                startDate.isAfter(endDate) -> "A data de inicio nao pode ser depois da data de fim."
-                userIds.isEmpty() -> "Associa pelo menos um utilizador a tarefa."
-                else -> null
-            }
-
-            if (validationError != null || startDate == null || endDate == null || projectId == null) {
-                state = state.copy(createErrorMessage = validationError)
-                return@launch
-            }
-
-            state = state.copy(isCreating = true, createErrorMessage = null)
-
-            val createResult = tarefaRepository.createTarefaReturning(
-                titulo = title,
-                descricao = description,
-                projetoId = projectId,
-                dataInicio = startDate.toString(),
-                dataFim = endDate.toString()
+            state = state.copy(
+                isAssociating = true,
+                errorMessage = null,
+                actionMessage = null
             )
 
-            val taskId = createResult.getOrNull()?.id
-            if (createResult.isFailure || taskId == null) {
-                state = state.copy(
-                    isCreating = false,
-                    createErrorMessage = createResult.exceptionOrNull()?.message
-                        ?: "Nao foi possivel criar a tarefa."
-                )
-                return@launch
-            }
-
-            for (userId in userIds) {
-                val associateResult = tarefaUserRepository.associarUserATarefa(taskId, userId)
-                if (associateResult.isFailure) {
-                    state = state.copy(
-                        isCreating = false,
-                        createErrorMessage = associateResult.exceptionOrNull()?.message
-                            ?: "Nao foi possivel associar utilizadores a tarefa."
-                    )
-                    return@launch
-                }
-            }
-
-            state = state.copy(isCreating = false)
-            loadTasks(gestorId)
-            onSuccess()
-        }
-    }
-
-    fun deleteTask(gestorId: Int?, taskId: Int) {
-        viewModelScope.launch {
-            val result = tarefaRepository.deleteManagerTask(taskId)
+            val result = projetoUserRepository.associarUserAoProjeto(
+                projetoId = projetoId,
+                userId = userId
+            )
 
             if (result.isSuccess) {
-                loadTasks(gestorId)
+                state = state.copy(
+                    isAssociating = false,
+                    actionMessage = "Utilizador associado ao projeto."
+                )
+                loadProjects(gestorId)
             } else {
                 state = state.copy(
+                    isAssociating = false,
                     errorMessage = result.exceptionOrNull()?.message
-                        ?: "Nao foi possivel eliminar a tarefa."
+                        ?: "Não foi possível associar o utilizador."
                 )
             }
         }
     }
 
-    fun updateTask(
-        gestorId: Int?,
-        task: GestorTaskListItem,
-        title: String,
-        description: String,
-        startDateText: String,
-        endDateText: String,
-        userIds: Set<Int>,
-        onSuccess: () -> Unit
+    fun completeProjectWithRatings(
+        project: GestorProjectListItem,
+        ratings: Map<Int, Int>,
+        gestorId: Int?
     ) {
         viewModelScope.launch {
-            val startDate = startDateText.toInputLocalDateOrNull()
-            val endDate = endDateText.toInputLocalDateOrNull()
-
-            val validationError = when {
-                title.isBlank() -> "Indica o titulo da tarefa."
-                description.isBlank() -> "Indica a descricao da tarefa."
-                startDate == null -> "Indica a data de inicio no formato dd/mm/aaaa."
-                endDate == null -> "Indica a data de fim no formato dd/mm/aaaa."
-                startDate.isAfter(endDate) -> "A data de inicio nao pode ser depois da data de fim."
-                userIds.isEmpty() -> "Associa pelo menos um utilizador a tarefa."
-                else -> null
-            }
-
-            if (validationError != null || startDate == null || endDate == null) {
-                state = state.copy(createErrorMessage = validationError)
-                return@launch
-            }
-
-            state = state.copy(isCreating = true, createErrorMessage = null)
-
-            val updateResult = tarefaRepository.updateTarefa(
-                tarefaId = task.id,
-                titulo = title,
-                descricao = description,
-                projetoId = task.projectId,
-                status = task.rawStatus,
-                dataInicio = startDate.toString(),
-                dataFim = endDate.toString()
+            state = state.copy(
+                isAssociating = true,
+                errorMessage = null,
+                actionMessage = null
             )
 
-            if (updateResult.isFailure) {
+            val invalidMember = project.members.firstOrNull { member ->
+                ratings[member.id] == null || ratings[member.id] !in 0..5
+            }
+
+            if (invalidMember != null) {
                 state = state.copy(
-                    isCreating = false,
-                    createErrorMessage = updateResult.exceptionOrNull()?.message
-                        ?: "Nao foi possivel atualizar a tarefa."
+                    isAssociating = false,
+                    errorMessage = "Avalia todos os membros de 0 a 5 estrelas."
                 )
                 return@launch
             }
 
-            val currentUserIds = task.assignees.map { it.id }.toSet()
-            val usersToRemove = currentUserIds - userIds
-            val usersToAdd = userIds - currentUserIds
+            for (member in project.members) {
+                val result = avaliacaoRepository.saveAvaliacao(
+                    projetoId = project.id,
+                    userId = member.id,
+                    classificacao = ratings[member.id] ?: 0
+                )
 
-            for (userId in usersToRemove) {
-                val result = tarefaUserRepository.removerUserDaTarefa(task.id, userId)
                 if (result.isFailure) {
                     state = state.copy(
-                        isCreating = false,
-                        createErrorMessage = result.exceptionOrNull()?.message
-                            ?: "Nao foi possivel remover utilizadores da tarefa."
+                        isAssociating = false,
+                        errorMessage = result.exceptionOrNull()?.message
+                            ?: "Não foi possível guardar as avaliações."
                     )
                     return@launch
                 }
             }
 
-            for (userId in usersToAdd) {
-                val result = tarefaUserRepository.associarUserATarefa(task.id, userId)
-                if (result.isFailure) {
-                    state = state.copy(
-                        isCreating = false,
-                        createErrorMessage = result.exceptionOrNull()?.message
-                            ?: "Nao foi possivel associar utilizadores a tarefa."
-                    )
-                    return@launch
-                }
-            }
+            val completeResult = projetoRepository.concluirProjeto(project.id)
 
-            state = state.copy(isCreating = false)
-            loadTasks(gestorId)
-            onSuccess()
+            if (completeResult.isSuccess) {
+                state = state.copy(
+                    isAssociating = false,
+                    actionMessage = "Projeto concluído com avaliações guardadas."
+                )
+                loadProjects(gestorId)
+            } else {
+                state = state.copy(
+                    isAssociating = false,
+                    errorMessage = completeResult.exceptionOrNull()?.message
+                        ?: "Não foi possível concluir o projeto."
+                )
+            }
         }
+    }
+
+    fun clearMessages() {
+        state = state.copy(
+            errorMessage = null,
+            actionMessage = null
+        )
     }
 
     private fun applyFilters() {
         val query = state.searchQuery.trim()
-        val groups = sourceGroups.map { group ->
-            val visibleTasks = group.tasks.filter { task ->
-                val matchesStatus = when (state.selectedStatus) {
-                    GestorTaskStatusFilter.All -> true
-                    GestorTaskStatusFilter.Pending -> task.isPending
-                    GestorTaskStatusFilter.InProgress -> task.isInProgress
-                    GestorTaskStatusFilter.Completed -> task.isCompleted
-                }
 
-                val matchesSearch = query.isBlank() ||
-                    group.projectName.contains(query, ignoreCase = true) ||
-                    task.title.contains(query, ignoreCase = true) ||
-                    task.description.contains(query, ignoreCase = true) ||
-                    task.assignees.any { it.name.contains(query, ignoreCase = true) }
+        val visibleProjects = state.projects.filter { project ->
+            val matchesSearch = query.isBlank() ||
+                    project.name.contains(query, ignoreCase = true) ||
+                    project.description.contains(query, ignoreCase = true) ||
+                    project.members.any { member ->
+                        member.name.contains(query, ignoreCase = true)
+                    }
 
-                matchesStatus && matchesSearch
+            val matchesStatus = when (state.selectedStatus) {
+                "Concluídos" -> project.statusLabel == "Concluído"
+                "Em Progresso" -> project.statusLabel == "Em Progresso"
+                "Pendentes" -> project.statusLabel == "Pendente"
+                else -> true
             }
 
-            GestorProjectTaskGroup(
-                projectId = group.projectId,
-                projectName = group.projectName,
-                totalTasks = group.tasks.size,
-                visibleTasks = visibleTasks,
-                completedTasks = group.tasks.count { it.isCompleted },
-                inProgressTasks = group.tasks.count { it.isInProgress },
-                pendingTasks = group.tasks.count { it.isPending },
-                isExpanded = group.projectId in state.expandedProjectIds
-            )
-        }.filter { group ->
-            query.isBlank() && state.selectedStatus == GestorTaskStatusFilter.All || group.visibleTasks.isNotEmpty()
+            matchesSearch && matchesStatus
         }
 
-        val allTasks = sourceGroups.flatMap { it.tasks }
         state = state.copy(
-            projectGroups = groups,
-            totalTasks = allTasks.size,
-            completedTasks = allTasks.count { it.isCompleted },
-            inProgressTasks = allTasks.count { it.isInProgress },
-            pendingTasks = allTasks.count { it.isPending }
+            visibleProjects = visibleProjects
         )
     }
 
-    private fun TarefaDto.toListItem(assignees: List<GestorTaskAssignee>): GestorTaskListItem {
-        val dueDate = data_fim?.toLocalDateOrNull()
-        val startDate = data_inicio?.take(10)?.toLocalDateOrNull()
+    private fun ProjetoDto.toListItem(
+        tasks: List<TarefaDto>,
+        memberIds: List<Int>,
+        usersById: Map<Int, com.example.projecthub.remote.supabase.models.UserDto>,
+        ratingsByProjectAndUser: Map<Pair<Int, Int>, com.example.projecthub.remote.supabase.models.AvaliacaoDto>,
+        isExpanded: Boolean
+    ): GestorProjectListItem? {
+        val projectId = id ?: return null
         val isCompleted = status.isCompletedStatus()
-        val isPending = !isCompleted && startDate?.isAfter(LocalDate.now()) == true
-        val isInProgress = !isCompleted && !isPending && (
-            status.isInProgressStatus() ||
-                status.isPendingStatus() ||
-                startDate?.isEqual(LocalDate.now()) == true ||
-                startDate?.isBefore(LocalDate.now()) == true
-            )
-        val isDelayed = !isCompleted && dueDate != null && dueDate.isBefore(LocalDate.now())
 
-        return GestorTaskListItem(
-            id = id ?: 0,
-            projectId = projeto_id,
-            title = titulo,
-            description = descricao?.takeIf { it.isNotBlank() } ?: "Sem descricao",
-            statusLabel = when {
-                isCompleted -> "Concluida"
-                isDelayed -> "Atrasada"
-                isInProgress -> "Em progresso"
-                else -> "Pendente"
-            },
-            rawStatus = status,
+        val completedTasks = tasks.count {
+            it.status.isCompletedStatus()
+        }
+
+        val pendingTasks = tasks.count {
+            it.isPendingByDate()
+        }
+
+        val inProgressTasks = tasks.count {
+            it.status.isInProgressStatus() && !it.isPendingByDate()
+        }
+
+        val progressPercent = if (tasks.isEmpty()) {
+            0
+        } else {
+            ((completedTasks.toFloat() / tasks.size.toFloat()) * 100).toInt()
+        }
+
+        val members = memberIds
+            .distinct()
+            .mapNotNull { userId ->
+                usersById[userId]?.let { user ->
+                    GestorProjectMember(
+                        id = userId,
+                        name = user.nome.ifBlank { user.username },
+                        email = user.email,
+                        rating = ratingsByProjectAndUser[projectId to userId]?.classificacao
+                    )
+                }
+            }
+            .sortedBy { it.name.lowercase() }
+
+        return GestorProjectListItem(
+            id = projectId,
+            name = nome,
+            description = descricao?.takeIf { it.isNotBlank() } ?: "Sem descrição",
+            statusLabel = status.toStatusLabel(data_inicio),
             startDate = data_inicio?.take(10) ?: "-",
             dueDate = data_fim?.take(10) ?: "-",
-            assignees = assignees,
+            totalTasks = tasks.size,
+            completedTasks = completedTasks,
+            inProgressTasks = inProgressTasks,
+            pendingTasks = pendingTasks,
+            members = members,
+            progressPercent = progressPercent,
             isCompleted = isCompleted,
-            isInProgress = isInProgress,
-            isPending = isPending,
-            isDelayed = isDelayed
+            isExpanded = isExpanded
         )
+    }
+
+    private fun TarefaDto.isPendingByDate(): Boolean {
+        val startDate = data_inicio
+            ?.take(10)
+            ?.toLocalDateOrNull()
+
+        return status.isPendingStatus() ||
+                startDate?.isAfter(LocalDate.now()) == true
+    }
+
+    private fun TarefaDto.toTaskStatusLabel(): String {
+        val dueDate = data_fim
+            ?.take(10)
+            ?.toLocalDateOrNull()
+
+        val startDate = data_inicio
+            ?.take(10)
+            ?.toLocalDateOrNull()
+
+        val isCompleted = status.isCompletedStatus()
+
+        val isDelayed = !isCompleted &&
+                dueDate != null &&
+                dueDate.isBefore(LocalDate.now())
+
+        val isInProgress = !isCompleted &&
+                !isDelayed &&
+                (
+                    status.isInProgressStatus() ||
+                            status.isPendingStatus() ||
+                            startDate?.isEqual(LocalDate.now()) == true ||
+                            startDate?.isBefore(LocalDate.now()) == true
+                )
+
+        return when {
+            isCompleted -> "Concluída"
+            isDelayed -> "Atrasada"
+            isInProgress -> "Em progresso"
+            else -> "Pendente"
+        }
+    }
+
+    private fun String.toStatusLabel(startDateText: String?): String {
+        val startDate = startDateText
+            ?.take(10)
+            ?.toLocalDateOrNull()
+
+        return when {
+            isCompletedStatus() -> "Concluído"
+            isInProgressStatus() -> "Em Progresso"
+            startDate == LocalDate.now() -> "Em Progresso"
+            isPendingStatus() -> "Pendente"
+            else -> this.ifBlank { "Sem status" }
+        }
     }
 
     private fun String.isCompletedStatus(): Boolean {
-        return normalizedStatus() in setOf("CONCLUIDO", "CONCLUIDA", "COMPLETO", "COMPLETA", "COMPLETADO", "COMPLETADA", "FINALIZADO", "FINALIZADA")
+        return normalizedStatus() in setOf(
+            "CONCLUIDO",
+            "CONCLUIDA",
+            "COMPLETO",
+            "COMPLETA",
+            "FINALIZADO",
+            "FINALIZADA"
+        )
     }
 
     private fun String.isInProgressStatus(): Boolean {
-        return normalizedStatus() in setOf("EM_PROGRESSO", "EMPROGRESSO", "EM_ANDAMENTO", "ANDAMENTO", "A_DECORRER", "IN_PROGRESS", "INPROGRESS")
+        return normalizedStatus() in setOf(
+            "EM_PROGRESSO",
+            "EMPROGRESSO",
+            "EM_ANDAMENTO",
+            "ANDAMENTO",
+            "A_DECORRER",
+            "IN_PROGRESS",
+            "INPROGRESS"
+        )
     }
 
     private fun String.isPendingStatus(): Boolean {
-        return normalizedStatus() in setOf("PENDENTE", "POR_INICIAR", "NAO_INICIADO")
+        return normalizedStatus() in setOf(
+            "PENDENTE",
+            "POR_INICIAR",
+            "NAO_INICIADO"
+        )
     }
 
     private fun String.normalizedStatus(): String {
         val withoutAccents = Normalizer.normalize(this, Normalizer.Form.NFD)
             .replace("\\p{Mn}+".toRegex(), "")
 
-        return withoutAccents.trim().replace(" ", "_").replace("-", "_").uppercase()
+        return withoutAccents
+            .trim()
+            .replace(" ", "_")
+            .replace("-", "_")
+            .uppercase()
     }
 
     private fun String.toLocalDateOrNull(): LocalDate? {
-        return runCatching { LocalDate.parse(take(10)) }.getOrNull()
-    }
-
-    private fun String.toInputLocalDateOrNull(): LocalDate? {
-        val trimmed = trim()
         return runCatching {
-            LocalDate.parse(trimmed, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-        }.getOrElse {
-            runCatching { LocalDate.parse(trimmed) }.getOrNull()
-        }
+            LocalDate.parse(this)
+        }.getOrNull()
     }
 
     private fun String?.toUiDateText(): String {
-        val date = this?.take(10)?.toLocalDateOrNull() ?: return "-"
-        return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+        val date = this
+            ?.take(10)
+            ?.toLocalDateOrNull()
+            ?: return "-"
+
+        return date.format(
+            DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        )
     }
 }

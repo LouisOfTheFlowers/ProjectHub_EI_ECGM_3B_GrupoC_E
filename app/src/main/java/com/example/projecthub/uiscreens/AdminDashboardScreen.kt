@@ -43,8 +43,6 @@ import com.example.projecthub.viewmodel.AdminDashboardState
 import com.example.projecthub.viewmodel.AdminDashboardViewModel
 
 private val AdminAccent = AuthAccent
-private val AdminInk = ProjectHubColors.Ink
-private val AdminMuted = ProjectHubColors.Muted
 private val AdminOrange = ProjectHubColors.Warning
 private val AdminRed = ProjectHubColors.Danger
 

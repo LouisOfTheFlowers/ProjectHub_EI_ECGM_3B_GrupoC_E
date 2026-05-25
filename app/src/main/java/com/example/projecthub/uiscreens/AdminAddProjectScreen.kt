@@ -56,8 +56,6 @@ import java.time.format.DateTimeFormatter
 import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val AddProjectAccent = AuthAccent
-private val AddProjectInk = ProjectHubColors.Ink
-private val AddProjectMuted = ProjectHubColors.Muted
 private val AddProjectRed = ProjectHubColors.Danger
 
 @Composable
@@ -81,7 +79,7 @@ fun AdminAddProjectScreen(
     Column {
         TextButton(
             onClick = backClick,
-            colors = ButtonDefaults.textButtonColors(contentColor = AddProjectInk)
+            colors = ButtonDefaults.textButtonColors(contentColor = ProjectHubColors.Ink)
         ) {
             Text(
                 text = language.t("addProject.back"),
@@ -95,13 +93,13 @@ fun AdminAddProjectScreen(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
             elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
         ) {
             Column(modifier = Modifier.padding(18.dp)) {
                 Text(
                     text = language.t("addProject.title"),
-                    color = AddProjectInk,
+                    color = ProjectHubColors.Ink,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 25.sp
                 )
@@ -214,7 +212,7 @@ fun AdminAddProjectScreen(
                     enabled = !state.isCreating,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = ProjectHubColors.Disabled,
-                        contentColor = AddProjectInk
+                        contentColor = ProjectHubColors.Ink
                     ),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier
@@ -315,7 +313,7 @@ private fun DatePickerField(
     ) {
         Text(
             text = value.ifBlank { "dd/mm/aaaa" },
-            color = if (value.isBlank()) AddProjectMuted else AddProjectInk,
+            color = if (value.isBlank()) ProjectHubColors.Muted else ProjectHubColors.Ink,
             fontWeight = FontWeight.SemiBold,
             fontSize = 15.sp
         )
@@ -347,7 +345,7 @@ private fun ProjectDatePickerDialog(
                     }
                 }
             ) {
-                Text("OK")
+                Text(language.t("common.ok"))
             }
         },
         dismissButton = {
@@ -372,7 +370,7 @@ private fun Long.toProjectDateText(): String {
 private fun FormLabel(text: String) {
     Text(
         text = text,
-        color = AddProjectInk,
+        color = ProjectHubColors.Ink,
         fontWeight = FontWeight.Bold,
         fontSize = 15.sp,
         modifier = Modifier.padding(bottom = 6.dp)
@@ -403,13 +401,13 @@ private fun ManagerDropdown(
         ) {
             Text(
                 text = selectedManager?.name ?: language.t("addProject.managerPlaceholder"),
-                color = if (selectedManager == null) AddProjectMuted else AddProjectInk,
+                color = if (selectedManager == null) ProjectHubColors.Muted else ProjectHubColors.Ink,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp
             )
             Text(
                 text = if (expanded) "^" else "v",
-                color = AddProjectMuted,
+                color = ProjectHubColors.Muted,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -417,14 +415,14 @@ private fun ManagerDropdown(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.background(Color.White)
+            modifier = Modifier.background(ProjectHubColors.LightSurface)
         ) {
             managers.forEach { manager ->
                 DropdownMenuItem(
                     text = {
                         Text(
                             text = manager.name,
-                            color = AddProjectInk,
+                            color = ProjectHubColors.Ink,
                             fontWeight = FontWeight.Medium
                         )
                     },

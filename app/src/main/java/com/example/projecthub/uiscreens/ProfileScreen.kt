@@ -51,13 +51,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.R
 import com.example.projecthub.remote.supabase.models.UserDto
+import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.viewmodel.ProfileViewModel
 
 private val ProfileAccent = AuthAccent
-private val ProfileInk = ProjectHubColors.Ink
-private val ProfileMuted = ProjectHubColors.Muted
 private val ProfileGreen = ProjectHubColors.SuccessDark
 private val ProfileRed = ProjectHubColors.DangerDark
 
@@ -69,6 +69,7 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = viewModel()
 ) {
     val state = viewModel.state
+    val language = currentAppSettings().language
     val context = LocalContext.current
     var isEditingEmail by remember { mutableStateOf(false) }
     var isEditingPassword by remember { mutableStateOf(false) }
@@ -125,7 +126,7 @@ fun ProfileScreen(
             },
             title = {
                 Text(
-                    text = "Alteração concluída",
+                    text = language.t("profile.changeComplete"),
                     fontWeight = FontWeight.ExtraBold
                 )
             },
@@ -139,7 +140,7 @@ fun ProfileScreen(
                         viewModel.clearMessage()
                     }
                 ) {
-                    Text("OK", color = ProfileAccent, fontWeight = FontWeight.Bold)
+                    Text(language.t("common.ok"), color = ProfileAccent, fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -155,7 +156,7 @@ fun ProfileScreen(
             },
             title = {
                 Text(
-                    text = "Alterar palavra-passe",
+                    text = language.t("profile.changePassword"),
                     fontWeight = FontWeight.ExtraBold
                 )
             },
@@ -164,7 +165,7 @@ fun ProfileScreen(
                     OutlinedTextField(
                         value = oldPassword,
                         onValueChange = { oldPassword = it },
-                        label = { Text("Palavra-passe antiga") },
+                        label = { Text(language.t("profile.oldPassword")) },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth()
@@ -173,7 +174,7 @@ fun ProfileScreen(
                     OutlinedTextField(
                         value = newPassword,
                         onValueChange = { newPassword = it },
-                        label = { Text("Nova palavra-passe") },
+                        label = { Text(language.t("profile.newPassword")) },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth()
@@ -182,7 +183,7 @@ fun ProfileScreen(
                     OutlinedTextField(
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
-                        label = { Text("Confirmar nova palavra-passe") },
+                        label = { Text(language.t("profile.confirmNewPassword")) },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth()
@@ -202,7 +203,7 @@ fun ProfileScreen(
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = if (state.isSaving) "A guardar..." else "Guardar",
+                        text = if (state.isSaving) language.t("common.saving") else language.t("common.save"),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -218,7 +219,7 @@ fun ProfileScreen(
                     enabled = !state.isSaving,
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Cancelar")
+                    Text(language.t("common.cancel"))
                 }
             }
         )
@@ -233,15 +234,15 @@ fun ProfileScreen(
             },
             title = {
                 Text(
-                    text = "Alterar email",
+                    text = language.t("profile.changeEmail"),
                     fontWeight = FontWeight.ExtraBold
                 )
             },
             text = {
                 Column {
                     Text(
-                        text = "Email atual: ${currentUser.email}",
-                        color = ProfileMuted,
+                        text = language.t("profile.currentEmail").format(currentUser.email),
+                        color = ProjectHubColors.Muted,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -253,11 +254,11 @@ fun ProfileScreen(
                     ) {
                         Text(
                             text = if (state.emailCodeSent) {
-                                "Reenviar código"
+                                language.t("profile.resendCode")
                             } else if (state.isSendingEmailCode) {
-                                "A enviar..."
+                                language.t("profile.sending")
                             } else {
-                                "Enviar código para o email atual"
+                                language.t("profile.sendCode")
                             },
                             fontWeight = FontWeight.Bold
                         )
@@ -266,7 +267,7 @@ fun ProfileScreen(
                     OutlinedTextField(
                         value = emailCode,
                         onValueChange = { emailCode = it },
-                        label = { Text("Código recebido") },
+                        label = { Text(language.t("profile.receivedCode")) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -274,7 +275,7 @@ fun ProfileScreen(
                     OutlinedTextField(
                         value = emailInput,
                         onValueChange = { emailInput = it },
-                        label = { Text("Novo email") },
+                        label = { Text(language.t("profile.newEmail")) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -293,7 +294,7 @@ fun ProfileScreen(
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = if (state.isSaving) "A guardar..." else "Guardar",
+                        text = if (state.isSaving) language.t("common.saving") else language.t("common.save"),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -308,7 +309,7 @@ fun ProfileScreen(
                     enabled = !state.isSaving,
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Cancelar")
+                    Text(language.t("common.cancel"))
                 }
             }
         )
@@ -323,12 +324,12 @@ fun ProfileScreen(
             },
             title = {
                 Text(
-                    text = "Eliminar conta",
+                    text = language.t("profile.deleteAccount"),
                     fontWeight = FontWeight.ExtraBold
                 )
             },
             text = {
-                Text("Tens a certeza que queres eliminar a tua conta? Esta ação remove a conta do sistema e termina a sessão.")
+                Text(language.t("profile.deleteQuestion"))
             },
             confirmButton = {
                 Button(
@@ -341,7 +342,7 @@ fun ProfileScreen(
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = if (state.isDeleting) "A eliminar..." else "Eliminar",
+                        text = if (state.isDeleting) language.t("profile.deleting") else language.t("common.delete"),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -352,7 +353,7 @@ fun ProfileScreen(
                     enabled = !state.isDeleting,
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Cancelar")
+                    Text(language.t("common.cancel"))
                 }
             }
         )
@@ -360,28 +361,28 @@ fun ProfileScreen(
 
     Column {
         Text(
-            text = "A minha conta",
-            color = ProfileInk,
+            text = language.t("profile.title"),
+            color = ProjectHubColors.Ink,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 24.sp
         )
         Text(
-            text = "Informações básicas do teu perfil.",
-            color = ProfileMuted,
+            text = language.t("profile.subtitle"),
+            color = ProjectHubColors.Muted,
             fontSize = 14.sp
         )
 
         Spacer(modifier = Modifier.height(18.dp))
 
         if (currentUser == null) {
-            ProfileMessageCard("Não foi possível carregar a tua conta.", ProfileRed)
+            ProfileMessageCard(language.t("profile.loadError"), ProfileRed)
             return@Column
         }
 
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
             elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
         ) {
             Column(
@@ -398,13 +399,13 @@ fun ProfileScreen(
 
                 Text(
                     text = currentUser.nome,
-                    color = ProfileInk,
+                    color = ProjectHubColors.Ink,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 22.sp
                 )
                 Text(
                     text = "@${currentUser.username}",
-                    color = ProfileMuted,
+                    color = ProjectHubColors.Muted,
                     fontSize = 14.sp
                 )
 
@@ -428,7 +429,7 @@ fun ProfileScreen(
                         )
                     } else {
                         Text(
-                            text = "Alterar foto de perfil",
+                            text = language.t("profile.changePhoto"),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -445,7 +446,7 @@ fun ProfileScreen(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = "Remover foto",
+                            text = language.t("profile.removePhoto"),
                             color = ProfileRed,
                             fontWeight = FontWeight.Bold
                         )
@@ -461,10 +462,10 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        AccountActionCard(title = "Email associado") {
+        AccountActionCard(title = language.t("profile.emailAssociated")) {
             Text(
                 text = currentUser.email,
-                color = ProfileInk,
+                color = ProjectHubColors.Ink,
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp
             )
@@ -481,16 +482,16 @@ fun ProfileScreen(
                 ),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Alterar email", fontWeight = FontWeight.Bold)
+                Text(language.t("profile.changeEmail"), fontWeight = FontWeight.Bold)
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        AccountActionCard(title = "Seguranca") {
+        AccountActionCard(title = language.t("profile.security")) {
             Text(
-                text = "Atualiza a tua palavra-passe de acesso.",
-                color = ProfileMuted,
+                text = language.t("profile.updatePasswordHint"),
+                color = ProjectHubColors.Muted,
                 fontSize = 13.sp
             )
             Spacer(modifier = Modifier.height(10.dp))
@@ -504,16 +505,16 @@ fun ProfileScreen(
                 ),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Alterar palavra-passe", fontWeight = FontWeight.Bold)
+                Text(language.t("profile.changePassword"), fontWeight = FontWeight.Bold)
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        AccountActionCard(title = "Eliminar conta") {
+        AccountActionCard(title = language.t("profile.deleteAccount")) {
             Text(
-                text = "Esta ação remove a tua conta e termina a sessão.",
-                color = ProfileMuted,
+                text = language.t("profile.deleteHint"),
+                color = ProjectHubColors.Muted,
                 fontSize = 13.sp
             )
             Spacer(modifier = Modifier.height(10.dp))
@@ -524,7 +525,7 @@ fun ProfileScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Eliminar conta",
+                    text = language.t("profile.deleteAccount"),
                     color = ProfileRed,
                     fontWeight = FontWeight.ExtraBold
                 )
@@ -551,7 +552,7 @@ private fun ProfilePhoto(
         when {
             bitmap != null -> Image(
                 bitmap = bitmap,
-                contentDescription = "Foto de perfil",
+                contentDescription = currentAppSettings().language.t("profile.photoDescription"),
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
@@ -577,13 +578,14 @@ internal fun TopBarProfilePhoto(
     Box(
         modifier = modifier
             .clip(CircleShape)
-            .background(Color.White),
+            .background(Color.White)
+            .border(1.dp, ProjectHubColors.HeaderContent.copy(alpha = 0.18f), CircleShape),
         contentAlignment = Alignment.Center
     ) {
         when {
             bitmap != null -> Image(
                 bitmap = bitmap,
-                contentDescription = "A minha conta",
+                contentDescription = currentAppSettings().language.t("profile.title"),
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
@@ -597,7 +599,7 @@ internal fun TopBarProfilePhoto(
 
             else -> Image(
                 painter = painterResource(id = R.drawable.projecthub_logo),
-                contentDescription = "A minha conta",
+                contentDescription = currentAppSettings().language.t("profile.title"),
                 modifier = Modifier.padding(4.dp)
             )
         }
@@ -629,13 +631,13 @@ private fun AccountActionCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
         Text(
             text = title,
-            color = ProfileInk,
+            color = ProjectHubColors.Ink,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 16.sp
         )

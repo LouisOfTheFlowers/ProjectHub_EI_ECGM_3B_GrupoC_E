@@ -43,6 +43,8 @@ import androidx.compose.ui.unit.sp
 import com.example.projecthub.R
 import com.example.projecthub.navigation.AppRoutes
 import com.example.projecthub.navigation.SidebarDestination
+import com.example.projecthub.settings.currentAppSettings
+import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val GestorScaffoldAccent = AuthAccent
@@ -67,7 +69,7 @@ fun GestorScaffold(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .border(5.dp, GestorScaffoldAccent)
+                .border(5.dp, ProjectHubColors.HeaderBackground)
                 .background(MaterialTheme.colorScheme.surface)
         ) {
             GestorTopBar(
@@ -112,7 +114,7 @@ private fun GestorTopBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(GestorScaffoldAccent)
+            .background(ProjectHubColors.HeaderBackground)
             .statusBarsPadding()
             .height(62.dp)
             .padding(horizontal = 18.dp),
@@ -126,12 +128,12 @@ private fun GestorTopBar(
                 .clickable(onClick = onMenuClick),
             contentAlignment = Alignment.Center
         ) {
-            GestorMenuIcon(color = Color.White)
+            GestorMenuIcon(color = ProjectHubColors.HeaderContent)
         }
 
         Text(
             text = "Project Hub",
-            color = Color.White,
+            color = ProjectHubColors.HeaderContent,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 21.sp
         )
@@ -178,6 +180,7 @@ private fun GestorSidebar(
     onNavigate: (String) -> Unit,
     onLogout: () -> Unit
 ) {
+    val language = currentAppSettings().language
     Column(
         modifier = Modifier
             .width(284.dp)
@@ -198,7 +201,7 @@ private fun GestorSidebar(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(Color.White)
+                    .background(ProjectHubColors.LightSurface)
                     .padding(5.dp)
             )
 
@@ -212,7 +215,7 @@ private fun GestorSidebar(
                     fontSize = 20.sp
                 )
                 Text(
-                    text = "Gestor",
+                    text = language.t("role.manager"),
                     color = ProjectHubColors.SidebarMutedText,
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp
@@ -223,12 +226,12 @@ private fun GestorSidebar(
         Spacer(modifier = Modifier.height(24.dp))
 
         val destinations = listOf(
-            SidebarDestination(AppRoutes.GestorDashboard, "Dashboard", GestorSidebarIcon.Dashboard),
-            SidebarDestination(AppRoutes.GestorProjects, "Meus Projetos", GestorSidebarIcon.Projects),
-            SidebarDestination(AppRoutes.GestorTasks, "Gestao de Tarefas", GestorSidebarIcon.Tasks),
-            SidebarDestination(AppRoutes.GestorTeam, "Minha Equipa", GestorSidebarIcon.Team),
-            SidebarDestination(AppRoutes.GestorReports, "Relatorios de Projeto", GestorSidebarIcon.Reports),
-            SidebarDestination(AppRoutes.GestorSettings, "Definicoes", GestorSidebarIcon.Settings)
+            SidebarDestination(AppRoutes.GestorDashboard, language.t("sidebar.dashboard"), GestorSidebarIcon.Dashboard),
+            SidebarDestination(AppRoutes.GestorProjects, language.t("manager.projects.title"), GestorSidebarIcon.Projects),
+            SidebarDestination(AppRoutes.GestorTasks, language.t("tasks.managementTitle"), GestorSidebarIcon.Tasks),
+            SidebarDestination(AppRoutes.GestorTeam, language.t("manager.team.title"), GestorSidebarIcon.Team),
+            SidebarDestination(AppRoutes.GestorReports, language.t("reports.managerTitle"), GestorSidebarIcon.Reports),
+            SidebarDestination(AppRoutes.GestorSettings, language.t("sidebar.settings"), GestorSidebarIcon.Settings)
         )
 
         destinations.forEach { destination ->
@@ -242,7 +245,7 @@ private fun GestorSidebar(
         Spacer(modifier = Modifier.weight(1f))
 
         GestorSidebarItem(
-            label = "Sair",
+            label = language.t("sidebar.logout"),
             icon = GestorSidebarIcon.Logout,
             onClick = onLogout
         )
