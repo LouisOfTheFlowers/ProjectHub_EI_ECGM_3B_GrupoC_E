@@ -94,7 +94,7 @@ class GestorReportsViewModel(
             source = null
             state = GestorReportsState(
                 isLoading = false,
-                errorMessage = "Nao foi possivel identificar o gestor autenticado."
+                errorMessage = "Não foi possível identificar o gestor autenticado."
             )
             return
         }
@@ -118,7 +118,7 @@ class GestorReportsViewModel(
                 source = null
                 state = state.copy(
                     isLoading = false,
-                    errorMessage = "Nao foi possivel carregar os relatorios do gestor."
+                    errorMessage = "Não foi possível carregar os relatórios do gestor."
                 )
                 return@launch
             }
@@ -179,7 +179,7 @@ class GestorReportsViewModel(
         val currentSource = source
 
         if (currentSource == null) {
-            state = state.copy(exportErrorMessage = "Os dados ainda nao estao disponiveis.")
+            state = state.copy(exportErrorMessage = "Os dados ainda não estão disponíveis.")
             return null
         }
 
@@ -220,24 +220,24 @@ class GestorReportsViewModel(
         return listOf(
             GestorReportCard(
                 type = GestorReportExportType.Users,
-                title = "Estatisticas por utilizador",
-                description = "Equipa associada aos teus projetos, tarefas atribuidas, progresso e tempo registado.",
+                title = "Estatísticas por utilizador",
+                description = "Equipa associada aos teus projetos, tarefas atribuídas, progresso e tempo registado.",
                 rows = source.users.size,
                 primaryMetric = "$usersWithTasks com tarefas",
-                secondaryMetric = "${source.projectUsers.size} associacoes"
+                secondaryMetric = "${source.projectUsers.size} associações"
             ),
             GestorReportCard(
                 type = GestorReportExportType.Projects,
-                title = "Estatisticas por projeto",
-                description = "Projetos atribuidos a ti, equipa, tarefas concluidas, atrasos, progresso e horas.",
+                title = "Estatísticas por projeto",
+                description = "Projetos atribuídos a ti, equipa, tarefas concluídas, atrasos, progresso e horas.",
                 rows = source.projects.size,
-                primaryMetric = "$completedProjects concluidos",
+                primaryMetric = "$completedProjects concluídos",
                 secondaryMetric = "$delayedTasks tarefas atrasadas"
             ),
             GestorReportCard(
                 type = GestorReportExportType.Tasks,
-                title = "Estatisticas por tarefa",
-                description = "Tarefas dos teus projetos com responsaveis, registos, conclusao media e tempo gasto.",
+                title = "Estatísticas por tarefa",
+                description = "Tarefas dos teus projetos com responsáveis, registos, conclusão média e tempo gasto.",
                 rows = source.tasks.size,
                 primaryMetric = "$completedTasks completadas",
                 secondaryMetric = "${totalHours.formatNumber()} h"
@@ -389,7 +389,7 @@ class GestorReportsViewModel(
                     records.size.toString(),
                     records.map { it.taxa_conclusao }.averageOrZero().roundToInt().toString(),
                     records.sumOf { (it.tempo_gasto ?: 0f).toDouble() }.toFloat().formatNumber(),
-                    if (task.isDelayed()) "Sim" else "Nao"
+                    if (task.isDelayed()) "Sim" else "Não"
                 )
             }
 

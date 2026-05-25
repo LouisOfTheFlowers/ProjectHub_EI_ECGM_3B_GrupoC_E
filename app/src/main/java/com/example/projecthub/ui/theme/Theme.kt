@@ -9,42 +9,40 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Teal80,
+    primary = ProjectHubColors.AccentLight,
     secondary = Mint80,
     tertiary = Cyan80,
-    background = DarkBackground,
-    surface = DarkSurface,
-    onPrimary = DarkInk,
-    onSecondary = DarkInk,
-    onTertiary = DarkInk,
-    onBackground = DarkInk,
-    onSurface = DarkInk
+    background = ProjectHubColors.DarkBackground,
+    surface = ProjectHubColors.DarkSurface,
+    surfaceVariant = ProjectHubColors.DarkSurfaceSoft,
+    outline = ProjectHubColors.DarkBorder,
+    error = ProjectHubColors.Danger,
+    onPrimary = Color(0xFF032127),
+    onSecondary = Color(0xFF062015),
+    onTertiary = Color(0xFF082031),
+    onBackground = ProjectHubColors.DarkInk,
+    onSurface = ProjectHubColors.DarkInk,
+    onSurfaceVariant = ProjectHubColors.DarkMuted,
+    inverseSurface = Color(0xFFE8F3F5),
+    inverseOnSurface = Color(0xFF0B141B)
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Teal40,
-    secondary = Mint40,
+    primary = ProjectHubColors.Accent,
+    secondary = ProjectHubColors.SuccessDark,
     tertiary = Cyan40,
-    background = LightBackground,
-    surface = LightSurface,
-    onPrimary = LightInk,
-    onSecondary = LightInk,
-    onTertiary = LightInk,
-    onBackground = LightInk,
-    onSurface = LightInk
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
+    background = ProjectHubColors.LightBackground,
+    surface = ProjectHubColors.LightSurface,
+    error = ProjectHubColors.Danger,
     onPrimary = Color.White,
     onSecondary = Color.White,
     onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    onBackground = ProjectHubColors.LightInk,
+    onSurface = ProjectHubColors.LightInk
 )
 
 @Composable
@@ -63,6 +61,8 @@ fun ProjectHubTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
+
+    ProjectHubColors.applyTheme(darkTheme)
 
     MaterialTheme(
         colorScheme = colorScheme,

@@ -47,7 +47,7 @@ fun ResetPasswordScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(AuthBackground)
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 28.dp, vertical = 36.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

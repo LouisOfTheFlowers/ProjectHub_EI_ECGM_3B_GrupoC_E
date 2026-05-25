@@ -1,4 +1,4 @@
-﻿package com.example.projecthub.uiscreens
+package com.example.projecthub.uiscreens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -60,12 +61,11 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val ProjectsAccent = AuthAccent
-private val ProjectsInk = Color(0xFF111827)
-private val ProjectsMuted = Color(0xFF6B7280)
-private val ProjectsRed = Color(0xFFEF4444)
-private val ProjectsGreen = Color(0xFF22C55E)
+private val ProjectsRed = ProjectHubColors.Danger
+private val ProjectsGreen = ProjectHubColors.Success
 
 @Composable
 fun AdminProjectsScreen(
@@ -182,13 +182,13 @@ private fun ProjectsPage(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = language.t("projects.title"),
-                    color = ProjectsInk,
+                    color = ProjectHubColors.Ink,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 24.sp
                 )
                 Text(
                     text = language.t("projects.list"),
-                    color = ProjectsMuted,
+                    color = ProjectHubColors.Muted,
                     fontSize = 14.sp
                 )
             }
@@ -224,7 +224,7 @@ private fun ProjectsPage(
 
         Text(
             text = language.t("projects.list"),
-            color = ProjectsInk,
+            color = ProjectHubColors.Ink,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 20.sp
         )
@@ -254,8 +254,8 @@ private fun ProjectsPage(
 
             state.visibleProjects.isEmpty() -> {
                 Text(
-                    text = "Nenhum projeto encontrado.",
-                    color = ProjectsMuted,
+                    text = language.t("projects.notFound"),
+                    color = ProjectHubColors.Muted,
                     fontSize = 15.sp
                 )
             }
@@ -312,7 +312,7 @@ private fun ProjectStatCard(
             .fillMaxWidth()
             .height(86.dp),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Row(
@@ -334,10 +334,10 @@ private fun ProjectStatCard(
             Spacer(modifier = Modifier.width(14.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = title, color = ProjectsMuted, fontSize = 14.sp)
+                Text(text = title, color = ProjectHubColors.Muted, fontSize = 14.sp)
                 Text(
                     text = value,
-                    color = ProjectsInk,
+                    color = ProjectHubColors.Ink,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 28.sp
                 )
@@ -357,7 +357,7 @@ private fun ProjectFilters(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -405,7 +405,7 @@ private fun FilterDropdown(
                 .fillMaxWidth()
                 .height(52.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+                .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
                 .clickable(onClick = openClick)
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -413,13 +413,13 @@ private fun FilterDropdown(
         ) {
             Text(
                 text = label,
-                color = ProjectsInk,
+                color = ProjectHubColors.Ink,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp
             )
             Text(
                 text = if (expanded) "^" else "v",
-                color = ProjectsMuted,
+                color = ProjectHubColors.Muted,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp
             )
@@ -428,14 +428,14 @@ private fun FilterDropdown(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.background(Color.White)
+            modifier = Modifier.background(ProjectHubColors.LightSurface)
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
                     text = {
                         Text(
                             text = option,
-                            color = ProjectsInk,
+                            color = ProjectHubColors.Ink,
                             fontWeight = if (option == label) FontWeight.Bold else FontWeight.Medium
                         )
                     },
@@ -464,7 +464,7 @@ private fun ProjectListCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -476,13 +476,13 @@ private fun ProjectListCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = project.name,
-                        color = ProjectsInk,
+                        color = ProjectHubColors.Ink,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 17.sp
                     )
                     Text(
                         text = project.description,
-                        color = ProjectsMuted,
+                        color = ProjectHubColors.Muted,
                         fontSize = 13.sp
                     )
                 }
@@ -500,7 +500,7 @@ private fun ProjectListCard(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        ActionIconButton("✏", ProjectsAccent, onEdit)
+                        ActionIconButton("?", ProjectsAccent, onEdit)
                         ActionIconButton("X", ProjectsRed, onDelete)
                     }
                 }
@@ -522,14 +522,24 @@ private fun ProjectInfoRow(label: String, value: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, color = ProjectsMuted, fontSize = 13.sp)
+        Text(
+            text = label,
+            color = ProjectHubColors.Muted,
+            fontSize = 13.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
         Text(
             text = value,
-            color = ProjectsInk,
+            color = ProjectHubColors.Ink,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 13.sp
+            fontSize = 13.sp,
+            maxLines = 1,
+            modifier = Modifier.padding(start = 12.dp)
         )
     }
 }
@@ -641,7 +651,7 @@ private fun EditProjectDialog(
                             .fillMaxWidth()
                             .height(52.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+                            .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
                             .clickable { managerDropdownOpen = true }
                             .padding(horizontal = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -649,16 +659,16 @@ private fun EditProjectDialog(
                     ) {
                         Text(
                             text = selectedManagerName,
-                            color = ProjectsInk,
+                            color = ProjectHubColors.Ink,
                             fontWeight = FontWeight.SemiBold
                         )
-                        Text("v", color = ProjectsMuted, fontWeight = FontWeight.Bold)
+                        Text("v", color = ProjectHubColors.Muted, fontWeight = FontWeight.Bold)
                     }
 
                     DropdownMenu(
                         expanded = managerDropdownOpen,
                         onDismissRequest = { managerDropdownOpen = false },
-                        modifier = Modifier.background(Color.White)
+                        modifier = Modifier.background(ProjectHubColors.LightSurface)
                     ) {
                         managers.forEach { manager ->
                             DropdownMenuItem(

@@ -52,14 +52,13 @@ import com.example.projecthub.viewmodel.GestorReportExportType
 import com.example.projecthub.viewmodel.GestorReportSummary
 import com.example.projecthub.viewmodel.GestorReportsState
 import com.example.projecthub.viewmodel.GestorReportsViewModel
+import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val GestorReportsAccent = AuthAccent
-private val GestorReportsInk = Color(0xFF111827)
-private val GestorReportsMuted = Color(0xFF6B7280)
-private val GestorReportsGreen = Color(0xFF16A34A)
-private val GestorReportsOrange = Color(0xFFF97316)
-private val GestorReportsRed = Color(0xFFDC2626)
-private val GestorReportsBlue = Color(0xFF2563EB)
+private val GestorReportsGreen = ProjectHubColors.SuccessDark
+private val GestorReportsOrange = ProjectHubColors.Warning
+private val GestorReportsRed = ProjectHubColors.DangerDark
+private val GestorReportsBlue = ProjectHubColors.Info
 
 @Composable
 fun GestorReportsScreen(
@@ -83,16 +82,16 @@ fun GestorReportsScreen(
                 try {
                     context.contentResolver.openOutputStream(uri)?.use { output ->
                         output.write(export.content.toByteArray(Charsets.UTF_8))
-                    } ?: error("Nao foi possivel abrir o ficheiro selecionado.")
+                    } ?: error("Não foi possível abrir o ficheiro selecionado.")
 
                     Toast.makeText(
                         context,
-                        "Relatorio de ${export.label.lowercase()} exportado.",
+                        "Relatório de ${export.label.lowercase()} exportado.",
                         Toast.LENGTH_SHORT
                     ).show()
                 } catch (e: Exception) {
                     viewModel.setExportError(
-                        e.message ?: "Nao foi possivel exportar o relatorio."
+                        e.message ?: "Não foi possível exportar o relatório."
                     )
                 }
             }
@@ -127,16 +126,17 @@ fun GestorReportsScreen(
 
 @Composable
 private fun GestorReportsHeader() {
+    val language = currentAppSettings().language
     Column {
         Text(
-            text = "Relatorios de Projeto",
-            color = GestorReportsInk,
+            text = language.t("reports.managerTitle"),
+            color = ProjectHubColors.Ink,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 24.sp
         )
         Text(
-            text = "Exporta estatisticas dos teus projetos, equipa e tarefas.",
-            color = GestorReportsMuted,
+            text = language.t("reports.managerSubtitle"),
+            color = ProjectHubColors.Muted,
             fontSize = 14.sp
         )
     }
@@ -159,10 +159,11 @@ private fun GestorReportsError(
     message: String,
     onRetry: () -> Unit
 ) {
+    val language = currentAppSettings().language
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -175,7 +176,7 @@ private fun GestorReportsError(
             Spacer(modifier = Modifier.height(10.dp))
             TextButton(onClick = rememberSoundClick(onRetry)) {
                 Text(
-                    text = "Tentar novamente",
+                    text = language.t("common.retry"),
                     color = GestorReportsAccent,
                     fontWeight = FontWeight.Bold
                 )
@@ -189,6 +190,7 @@ private fun GestorReportsContent(
     state: GestorReportsState,
     onExport: (GestorReportExportType) -> Unit
 ) {
+    val language = currentAppSettings().language
     GestorReportSummaryGrid(summary = state.summary)
 
     Spacer(modifier = Modifier.height(16.dp))
@@ -204,8 +206,8 @@ private fun GestorReportsContent(
     }
 
     Text(
-        text = "Exportacoes disponiveis",
-        color = GestorReportsInk,
+        text = language.t("reports.availableExports"),
+        color = ProjectHubColors.Ink,
         fontWeight = FontWeight.ExtraBold,
         fontSize = 20.sp
     )
@@ -223,16 +225,17 @@ private fun GestorReportsContent(
 
 @Composable
 private fun GestorReportSummaryGrid(summary: GestorReportSummary) {
+    val language = currentAppSettings().language
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             GestorSummaryCard(
-                label = "Equipa",
+                label = language.t("reports.team"),
                 value = summary.totalUsers.toString(),
                 accent = GestorReportsAccent,
                 modifier = Modifier.weight(1f)
             )
             GestorSummaryCard(
-                label = "Projetos",
+                label = language.t("reports.projects"),
                 value = summary.totalProjects.toString(),
                 accent = GestorReportsBlue,
                 modifier = Modifier.weight(1f)
@@ -241,13 +244,13 @@ private fun GestorReportSummaryGrid(summary: GestorReportSummary) {
 
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             GestorSummaryCard(
-                label = "Tarefas",
+                label = language.t("reports.tasks"),
                 value = summary.totalTasks.toString(),
                 accent = GestorReportsOrange,
                 modifier = Modifier.weight(1f)
             )
             GestorSummaryCard(
-                label = "Progresso",
+                label = language.t("common.progress"),
                 value = "${summary.averageCompletion}%",
                 accent = GestorReportsGreen,
                 modifier = Modifier.weight(1f)
@@ -255,7 +258,7 @@ private fun GestorReportSummaryGrid(summary: GestorReportSummary) {
         }
 
         GestorSummaryCard(
-            label = "Horas registadas",
+            label = language.t("reports.registeredHours"),
             value = "${summary.totalHours.formatOneDecimal()} h",
             accent = GestorReportsRed,
             modifier = Modifier.fillMaxWidth()
@@ -270,10 +273,11 @@ private fun GestorSummaryCard(
     accent: Color,
     modifier: Modifier = Modifier
 ) {
+    val language = currentAppSettings().language
     Card(
         modifier = modifier.height(86.dp),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(
@@ -284,7 +288,7 @@ private fun GestorSummaryCard(
         ) {
             Text(
                 text = label,
-                color = GestorReportsMuted,
+                color = ProjectHubColors.Muted,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 12.sp
             )
@@ -314,7 +318,7 @@ private fun GestorReportExportCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -334,14 +338,14 @@ private fun GestorReportExportCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = card.title,
-                        color = GestorReportsInk,
+                        color = ProjectHubColors.Ink,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 17.sp
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = card.description,
-                        color = GestorReportsMuted,
+                        color = ProjectHubColors.Muted,
                         fontSize = 13.sp
                     )
                 }
@@ -350,9 +354,9 @@ private fun GestorReportExportCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                GestorReportChip(text = "${card.rows} linhas", color = accent)
+                GestorReportChip(text = "${card.rows} ${language.t("common.rows")}", color = accent)
                 GestorReportChip(text = card.primaryMetric, color = GestorReportsGreen)
-                GestorReportChip(text = card.secondaryMetric, color = GestorReportsMuted)
+                GestorReportChip(text = card.secondaryMetric, color = ProjectHubColors.Muted)
             }
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -369,7 +373,7 @@ private fun GestorReportExportCard(
                 GestorExportIcon(color = Color.White)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Exportar CSV",
+                    text = language.t("common.exportCsv"),
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )

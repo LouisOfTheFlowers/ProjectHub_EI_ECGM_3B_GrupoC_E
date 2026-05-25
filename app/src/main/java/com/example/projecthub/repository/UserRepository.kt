@@ -42,6 +42,7 @@ class UserRepository(
                 }
 
                 authRemoteDataSource.login(email, password)
+                ensurePublicProfileIfAuthenticated(nome, username)
             }
 
             Result.success(Unit)
@@ -181,5 +182,10 @@ class UserRepository(
             createdAt = createdAt,
             status = status
         )
+    }
+
+    private suspend fun ensurePublicProfileIfAuthenticated(nome: String, username: String) {
+        if (authRemoteDataSource.currentJwt().isNullOrBlank()) return
+        userRemoteDataSource.ensureOwnProfile(nome, username)
     }
 }

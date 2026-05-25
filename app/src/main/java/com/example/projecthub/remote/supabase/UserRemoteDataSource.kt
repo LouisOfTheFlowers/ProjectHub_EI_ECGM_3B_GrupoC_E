@@ -21,6 +21,14 @@ class UserRemoteDataSource {
         val newEmail: String
     )
 
+    @Serializable
+    private data class EnsureProfileParams(
+        @SerialName("p_nome")
+        val nome: String,
+        @SerialName("p_username")
+        val username: String
+    )
+
     suspend fun getUsers(): List<UserDto> {
         return SupabaseClientProvider.client
             .from("users")
@@ -32,6 +40,12 @@ class UserRemoteDataSource {
         SupabaseClientProvider.client
             .from("users")
             .insert(user)
+    }
+
+    suspend fun ensureOwnProfile(nome: String, username: String) {
+        SupabaseClientProvider.client
+            .postgrest
+            .rpc("user_ensure_own_profile", EnsureProfileParams(nome, username))
     }
 
     suspend fun getUserByEmail(email: String): UserDto? {

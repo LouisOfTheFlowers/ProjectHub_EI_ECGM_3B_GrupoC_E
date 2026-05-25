@@ -49,11 +49,10 @@ import com.example.projecthub.viewmodel.AdminTasksState
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val AddTaskAccent = AuthAccent
-private val AddTaskInk = Color(0xFF111827)
-private val AddTaskMuted = Color(0xFF6B7280)
-private val AddTaskRed = Color(0xFFEF4444)
+private val AddTaskRed = ProjectHubColors.Danger
 
 @Composable
 fun AdminAddTaskScreen(
@@ -76,7 +75,7 @@ fun AdminAddTaskScreen(
     Column {
         TextButton(
             onClick = backClick,
-            colors = ButtonDefaults.textButtonColors(contentColor = AddTaskInk)
+            colors = ButtonDefaults.textButtonColors(contentColor = ProjectHubColors.Ink)
         ) {
             Text(
                 text = language.t("addTask.back"),
@@ -90,13 +89,13 @@ fun AdminAddTaskScreen(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
             elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
         ) {
             Column(modifier = Modifier.padding(18.dp)) {
                 Text(
                     text = language.t("addTask.title"),
-                    color = AddTaskInk,
+                    color = ProjectHubColors.Ink,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 25.sp
                 )
@@ -202,8 +201,8 @@ fun AdminAddTaskScreen(
                     onClick = backClick,
                     enabled = !state.isCreating,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE5E7EB),
-                        contentColor = AddTaskInk
+                        containerColor = ProjectHubColors.Disabled,
+                        contentColor = ProjectHubColors.Ink
                     ),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier
@@ -239,7 +238,7 @@ fun AdminAddTaskScreen(
 private fun FormLabel(text: String) {
     Text(
         text = text,
-        color = AddTaskInk,
+        color = ProjectHubColors.Ink,
         fontWeight = FontWeight.Bold,
         fontSize = 15.sp,
         modifier = Modifier.padding(bottom = 6.dp)
@@ -262,7 +261,7 @@ private fun ProjectDropdown(
                 .fillMaxWidth()
                 .height(56.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+                .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
                 .clickable(enabled = projects.isNotEmpty(), onClick = openClick)
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -270,13 +269,13 @@ private fun ProjectDropdown(
         ) {
             Text(
                 text = selectedProject?.name ?: language.t("addTask.projectPlaceholder"),
-                color = if (selectedProject == null) AddTaskMuted else AddTaskInk,
+                color = if (selectedProject == null) ProjectHubColors.Muted else ProjectHubColors.Ink,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp
             )
             Text(
                 text = if (expanded) "^" else "v",
-                color = AddTaskMuted,
+                color = ProjectHubColors.Muted,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -284,14 +283,14 @@ private fun ProjectDropdown(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.background(Color.White)
+            modifier = Modifier.background(ProjectHubColors.LightSurface)
         ) {
             projects.forEach { project ->
                 DropdownMenuItem(
                     text = {
                         Text(
                             text = project.name,
-                            color = AddTaskInk,
+                            color = ProjectHubColors.Ink,
                             fontWeight = FontWeight.Medium
                         )
                     },
@@ -321,7 +320,7 @@ private fun TaskDatePickerField(
             .fillMaxWidth()
             .height(56.dp)
             .clip(RoundedCornerShape(8.dp))
-            .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+            .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
             .clickable(onClick = click)
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -329,13 +328,13 @@ private fun TaskDatePickerField(
     ) {
         Text(
             text = value.ifBlank { "dd/mm/aaaa" },
-            color = if (value.isBlank()) AddTaskMuted else AddTaskInk,
+            color = if (value.isBlank()) ProjectHubColors.Muted else ProjectHubColors.Ink,
             fontWeight = FontWeight.SemiBold,
             fontSize = 15.sp
         )
         Text(
             text = currentAppSettings().language.t("settings.dateFormat"),
-            color = AddTaskMuted,
+            color = ProjectHubColors.Muted,
             fontWeight = FontWeight.Bold,
             fontSize = 13.sp
         )
@@ -363,7 +362,7 @@ private fun TaskDatePickerDialog(
                     }
                 }
             ) {
-                Text("OK")
+                Text(language.t("common.ok"))
             }
         },
         dismissButton = {

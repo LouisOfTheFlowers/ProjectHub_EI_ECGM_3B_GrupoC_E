@@ -51,23 +51,25 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.R
 import com.example.projecthub.remote.supabase.models.UserDto
+import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
-import com.example.projecthub.viewmodel.GestorProfileViewModel
+import com.example.projecthub.settings.t
+import com.example.projecthub.ui.theme.ProjectHubColors
+import com.example.projecthub.viewmodel.ProfileViewModel
 
 private val ProfileAccent = AuthAccent
-private val ProfileInk = Color(0xFF111827)
-private val ProfileMuted = Color(0xFF6B7280)
-private val ProfileGreen = Color(0xFF16A34A)
-private val ProfileRed = Color(0xFFDC2626)
+private val ProfileGreen = ProjectHubColors.SuccessDark
+private val ProfileRed = ProjectHubColors.DangerDark
 
 @Composable
-fun GestorProfileScreen(
+fun ProfileScreen(
     user: UserDto?,
     onUserUpdated: (UserDto) -> Unit,
     onAccountDeleted: () -> Unit,
-    viewModel: GestorProfileViewModel = viewModel()
+    viewModel: ProfileViewModel = viewModel()
 ) {
     val state = viewModel.state
+    val language = currentAppSettings().language
     val context = LocalContext.current
     var isEditingEmail by remember { mutableStateOf(false) }
     var isEditingPassword by remember { mutableStateOf(false) }
@@ -124,7 +126,7 @@ fun GestorProfileScreen(
             },
             title = {
                 Text(
-                    text = "Alteracao concluida",
+                    text = language.t("profile.changeComplete"),
                     fontWeight = FontWeight.ExtraBold
                 )
             },
@@ -138,7 +140,7 @@ fun GestorProfileScreen(
                         viewModel.clearMessage()
                     }
                 ) {
-                    Text("OK", color = ProfileAccent, fontWeight = FontWeight.Bold)
+                    Text(language.t("common.ok"), color = ProfileAccent, fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -154,7 +156,7 @@ fun GestorProfileScreen(
             },
             title = {
                 Text(
-                    text = "Alterar palavra-passe",
+                    text = language.t("profile.changePassword"),
                     fontWeight = FontWeight.ExtraBold
                 )
             },
@@ -163,7 +165,7 @@ fun GestorProfileScreen(
                     OutlinedTextField(
                         value = oldPassword,
                         onValueChange = { oldPassword = it },
-                        label = { Text("Palavra-passe antiga") },
+                        label = { Text(language.t("profile.oldPassword")) },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth()
@@ -172,7 +174,7 @@ fun GestorProfileScreen(
                     OutlinedTextField(
                         value = newPassword,
                         onValueChange = { newPassword = it },
-                        label = { Text("Nova palavra-passe") },
+                        label = { Text(language.t("profile.newPassword")) },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth()
@@ -181,7 +183,7 @@ fun GestorProfileScreen(
                     OutlinedTextField(
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
-                        label = { Text("Confirmar nova palavra-passe") },
+                        label = { Text(language.t("profile.confirmNewPassword")) },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth()
@@ -194,11 +196,14 @@ fun GestorProfileScreen(
                         viewModel.updatePassword(oldPassword, newPassword, confirmPassword)
                     },
                     enabled = !state.isSaving,
-                    colors = ButtonDefaults.buttonColors(containerColor = ProfileAccent),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ProfileAccent,
+                        contentColor = Color.White
+                    ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = if (state.isSaving) "A guardar..." else "Guardar",
+                        text = if (state.isSaving) language.t("common.saving") else language.t("common.save"),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -214,7 +219,7 @@ fun GestorProfileScreen(
                     enabled = !state.isSaving,
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Cancelar")
+                    Text(language.t("common.cancel"))
                 }
             }
         )
@@ -229,15 +234,15 @@ fun GestorProfileScreen(
             },
             title = {
                 Text(
-                    text = "Alterar email",
+                    text = language.t("profile.changeEmail"),
                     fontWeight = FontWeight.ExtraBold
                 )
             },
             text = {
                 Column {
                     Text(
-                        text = "Email atual: ${currentUser.email}",
-                        color = ProfileMuted,
+                        text = language.t("profile.currentEmail").format(currentUser.email),
+                        color = ProjectHubColors.Muted,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -249,11 +254,11 @@ fun GestorProfileScreen(
                     ) {
                         Text(
                             text = if (state.emailCodeSent) {
-                                "Reenviar codigo"
+                                language.t("profile.resendCode")
                             } else if (state.isSendingEmailCode) {
-                                "A enviar..."
+                                language.t("profile.sending")
                             } else {
-                                "Enviar codigo para o email atual"
+                                language.t("profile.sendCode")
                             },
                             fontWeight = FontWeight.Bold
                         )
@@ -262,7 +267,7 @@ fun GestorProfileScreen(
                     OutlinedTextField(
                         value = emailCode,
                         onValueChange = { emailCode = it },
-                        label = { Text("Codigo recebido") },
+                        label = { Text(language.t("profile.receivedCode")) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -270,7 +275,7 @@ fun GestorProfileScreen(
                     OutlinedTextField(
                         value = emailInput,
                         onValueChange = { emailInput = it },
-                        label = { Text("Novo email") },
+                        label = { Text(language.t("profile.newEmail")) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -282,11 +287,14 @@ fun GestorProfileScreen(
                         viewModel.updateEmail(emailInput, emailCode, onUserUpdated)
                     },
                     enabled = !state.isSaving && state.emailCodeSent,
-                    colors = ButtonDefaults.buttonColors(containerColor = ProfileAccent),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ProfileAccent,
+                        contentColor = Color.White
+                    ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = if (state.isSaving) "A guardar..." else "Guardar",
+                        text = if (state.isSaving) language.t("common.saving") else language.t("common.save"),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -301,7 +309,7 @@ fun GestorProfileScreen(
                     enabled = !state.isSaving,
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Cancelar")
+                    Text(language.t("common.cancel"))
                 }
             }
         )
@@ -316,22 +324,25 @@ fun GestorProfileScreen(
             },
             title = {
                 Text(
-                    text = "Eliminar conta",
+                    text = language.t("profile.deleteAccount"),
                     fontWeight = FontWeight.ExtraBold
                 )
             },
             text = {
-                Text("Tens a certeza que queres eliminar a tua conta? Esta acao remove a conta do sistema e termina a sessao.")
+                Text(language.t("profile.deleteQuestion"))
             },
             confirmButton = {
                 Button(
                     onClick = rememberSoundClick { viewModel.deleteAccount(onAccountDeleted) },
                     enabled = !state.isDeleting,
-                    colors = ButtonDefaults.buttonColors(containerColor = ProfileRed),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ProfileRed,
+                        contentColor = Color.White
+                    ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = if (state.isDeleting) "A eliminar..." else "Eliminar",
+                        text = if (state.isDeleting) language.t("profile.deleting") else language.t("common.delete"),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -342,7 +353,7 @@ fun GestorProfileScreen(
                     enabled = !state.isDeleting,
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Cancelar")
+                    Text(language.t("common.cancel"))
                 }
             }
         )
@@ -350,28 +361,28 @@ fun GestorProfileScreen(
 
     Column {
         Text(
-            text = "A minha conta",
-            color = ProfileInk,
+            text = language.t("profile.title"),
+            color = ProjectHubColors.Ink,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 24.sp
         )
         Text(
-            text = "Informacoes basicas do teu perfil.",
-            color = ProfileMuted,
+            text = language.t("profile.subtitle"),
+            color = ProjectHubColors.Muted,
             fontSize = 14.sp
         )
 
         Spacer(modifier = Modifier.height(18.dp))
 
         if (currentUser == null) {
-            ProfileMessageCard("Nao foi possivel carregar a tua conta.", ProfileRed)
+            ProfileMessageCard(language.t("profile.loadError"), ProfileRed)
             return@Column
         }
 
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
             elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
         ) {
             Column(
@@ -388,13 +399,13 @@ fun GestorProfileScreen(
 
                 Text(
                     text = currentUser.nome,
-                    color = ProfileInk,
+                    color = ProjectHubColors.Ink,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 22.sp
                 )
                 Text(
                     text = "@${currentUser.username}",
-                    color = ProfileMuted,
+                    color = ProjectHubColors.Muted,
                     fontSize = 14.sp
                 )
 
@@ -418,7 +429,7 @@ fun GestorProfileScreen(
                         )
                     } else {
                         Text(
-                            text = "Alterar foto de perfil",
+                            text = language.t("profile.changePhoto"),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -435,7 +446,7 @@ fun GestorProfileScreen(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = "Remover foto",
+                            text = language.t("profile.removePhoto"),
                             color = ProfileRed,
                             fontWeight = FontWeight.Bold
                         )
@@ -451,10 +462,10 @@ fun GestorProfileScreen(
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        AccountActionCard(title = "Email associado") {
+        AccountActionCard(title = language.t("profile.emailAssociated")) {
             Text(
                 text = currentUser.email,
-                color = ProfileInk,
+                color = ProjectHubColors.Ink,
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp
             )
@@ -465,19 +476,22 @@ fun GestorProfileScreen(
                 onClick = rememberSoundClick { isEditingEmail = true },
                 enabled = !state.isSaving && !state.isDeleting,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = ProfileAccent),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ProfileAccent,
+                    contentColor = Color.White
+                ),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Alterar email", fontWeight = FontWeight.Bold)
+                Text(language.t("profile.changeEmail"), fontWeight = FontWeight.Bold)
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        AccountActionCard(title = "Seguranca") {
+        AccountActionCard(title = language.t("profile.security")) {
             Text(
-                text = "Atualiza a tua palavra-passe de acesso.",
-                color = ProfileMuted,
+                text = language.t("profile.updatePasswordHint"),
+                color = ProjectHubColors.Muted,
                 fontSize = 13.sp
             )
             Spacer(modifier = Modifier.height(10.dp))
@@ -485,19 +499,22 @@ fun GestorProfileScreen(
                 onClick = rememberSoundClick { isEditingPassword = true },
                 enabled = !state.isSaving && !state.isDeleting,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = ProfileAccent),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ProfileAccent,
+                    contentColor = Color.White
+                ),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Alterar palavra-passe", fontWeight = FontWeight.Bold)
+                Text(language.t("profile.changePassword"), fontWeight = FontWeight.Bold)
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        AccountActionCard(title = "Eliminar conta") {
+        AccountActionCard(title = language.t("profile.deleteAccount")) {
             Text(
-                text = "Esta acao remove a tua conta e termina a sessao.",
-                color = ProfileMuted,
+                text = language.t("profile.deleteHint"),
+                color = ProjectHubColors.Muted,
                 fontSize = 13.sp
             )
             Spacer(modifier = Modifier.height(10.dp))
@@ -508,7 +525,7 @@ fun GestorProfileScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Eliminar conta",
+                    text = language.t("profile.deleteAccount"),
                     color = ProfileRed,
                     fontWeight = FontWeight.ExtraBold
                 )
@@ -535,7 +552,7 @@ private fun ProfilePhoto(
         when {
             bitmap != null -> Image(
                 bitmap = bitmap,
-                contentDescription = "Foto de perfil",
+                contentDescription = currentAppSettings().language.t("profile.photoDescription"),
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
@@ -561,13 +578,14 @@ internal fun TopBarProfilePhoto(
     Box(
         modifier = modifier
             .clip(CircleShape)
-            .background(Color.White),
+            .background(Color.White)
+            .border(1.dp, ProjectHubColors.HeaderContent.copy(alpha = 0.18f), CircleShape),
         contentAlignment = Alignment.Center
     ) {
         when {
             bitmap != null -> Image(
                 bitmap = bitmap,
-                contentDescription = "A minha conta",
+                contentDescription = currentAppSettings().language.t("profile.title"),
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
@@ -581,7 +599,7 @@ internal fun TopBarProfilePhoto(
 
             else -> Image(
                 painter = painterResource(id = R.drawable.projecthub_logo),
-                contentDescription = "A minha conta",
+                contentDescription = currentAppSettings().language.t("profile.title"),
                 modifier = Modifier.padding(4.dp)
             )
         }
@@ -613,13 +631,13 @@ private fun AccountActionCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
         Text(
             text = title,
-            color = ProfileInk,
+            color = ProjectHubColors.Ink,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 16.sp
         )

@@ -62,7 +62,7 @@ class ProjetoUserRepository(
                 )
 
             if (existingAssociation != null) {
-                return Result.failure(Exception("Este utilizador já está associado a este projecto."))
+                return Result.failure(Exception("Este utilizador já está associado a este projeto."))
             }
 
             val projetoUser = ProjetoUserDto(

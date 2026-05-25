@@ -19,11 +19,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.projecthub.R
+import com.example.projecthub.ui.theme.ProjectHubColors
 
-internal val AuthBackground = Color(0xFFE8F9FC)
-internal val AuthAccent = Color(0xFF0A7C91)
-internal val AuthAccentSoft = Color(0xFF48B765)
-internal val AuthText = Color(0xFF12323A)
+internal val AuthAccent = ProjectHubColors.Accent
+internal val AuthAccentSoft = ProjectHubColors.AccentSoft
 
 @Composable
 internal fun AuthHeader(subtitle: String) {
@@ -38,7 +37,7 @@ internal fun AuthHeader(subtitle: String) {
             text = "ProjectHub",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
-            color = AuthText
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         Text(
@@ -52,16 +51,19 @@ internal fun AuthHeader(subtitle: String) {
 @Composable
 internal fun authTextFieldColors(): TextFieldColors {
     return OutlinedTextFieldDefaults.colors(
-        focusedTextColor = AuthText,
-        unfocusedTextColor = AuthText,
-        disabledTextColor = AuthText.copy(alpha = 0.55f),
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
         focusedBorderColor = AuthAccent,
         focusedLabelColor = AuthAccent,
         cursorColor = AuthAccent,
-        unfocusedBorderColor = Color(0xFF80AEB7),
-        unfocusedLabelColor = Color(0xFF557A83),
-        focusedPlaceholderColor = Color(0xFF557A83),
-        unfocusedPlaceholderColor = Color(0xFF557A83)
+        unfocusedBorderColor = ProjectHubColors.BorderSoft,
+        unfocusedLabelColor = ProjectHubColors.Muted,
+        focusedPlaceholderColor = ProjectHubColors.Muted,
+        unfocusedPlaceholderColor = ProjectHubColors.Muted,
+        focusedContainerColor = MaterialTheme.colorScheme.surface,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+        disabledContainerColor = MaterialTheme.colorScheme.surface
     )
 }
 
@@ -89,7 +91,7 @@ internal fun authButtonColors(): ButtonColors {
     return ButtonDefaults.buttonColors(
         containerColor = AuthAccent,
         contentColor = Color.White,
-        disabledContainerColor = Color(0xFF9FCBD1),
+        disabledContainerColor = ProjectHubColors.BorderSoft,
         disabledContentColor = Color.White
     )
 }

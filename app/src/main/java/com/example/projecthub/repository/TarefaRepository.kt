@@ -95,7 +95,7 @@ class TarefaRepository(
     ): Result<TarefaDto> {
         return try {
             if (titulo.isBlank()) {
-                return Result.failure(Exception("O titulo da tarefa nao pode estar vazio."))
+                return Result.failure(Exception("O título da tarefa não pode estar vazio."))
             }
 
             val tarefa = TarefaDto(

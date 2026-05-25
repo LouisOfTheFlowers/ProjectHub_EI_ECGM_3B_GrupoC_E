@@ -26,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -39,30 +38,35 @@ import com.example.projecthub.remote.supabase.models.UserDto
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
-import com.example.projecthub.viewmodel.GestorDashboardState
-import com.example.projecthub.viewmodel.GestorDashboardViewModel
+import com.example.projecthub.viewmodel.UtilizadorDashboardState
+import com.example.projecthub.viewmodel.UtilizadorDashboardViewModel
 
-private val GestorAccent = AuthAccent
-private val GestorOrange = ProjectHubColors.Warning
-private val GestorRed = ProjectHubColors.Danger
+private val UtilizadorAccent = AuthAccent
+private val UtilizadorGreen = ProjectHubColors.Success
+private val UtilizadorBlue = ProjectHubColors.InfoLight
+private val UtilizadorOrange = ProjectHubColors.Warning
+private val UtilizadorRed = ProjectHubColors.Danger
 
 @Composable
-fun GestorDashboardScreen(
-    gestorId: Int?,
+fun UtilizadorDashboardScreen(
+    userId: Int?,
     currentUser: UserDto?,
     onUserUpdated: (UserDto) -> Unit,
     onLogout: () -> Unit,
-    selectedRoute: String = AppRoutes.GestorDashboard,
+    selectedRoute: String = AppRoutes.UserDashboard,
+    taskObservationsId: Int? = null,
+    projectHistoryId: Int? = null,
     onNavigate: (String) -> Unit = {},
-    viewModel: GestorDashboardViewModel = viewModel()
+    onBack: () -> Unit = {},
+    viewModel: UtilizadorDashboardViewModel = viewModel()
 ) {
     val state = viewModel.state
 
-    LaunchedEffect(gestorId) {
-        viewModel.loadDashboard(gestorId)
+    LaunchedEffect(userId) {
+        viewModel.loadDashboard(userId)
     }
 
-    GestorScaffold(
+    UtilizadorScaffold(
         selectedRoute = selectedRoute,
         onNavigate = onNavigate,
         profilePhotoUri = currentUser?.foto,
@@ -70,23 +74,50 @@ fun GestorDashboardScreen(
         onLogout = onLogout
     ) {
         when (selectedRoute) {
-            AppRoutes.GestorDashboard -> {
-                DashboardHeader()
+            AppRoutes.UserDashboard -> {
+                UtilizadorDashboardHeader()
                 Spacer(modifier = Modifier.height(22.dp))
-                DashboardContent(state = state)
+                UtilizadorDashboardContent(state = state)
             }
 
-            AppRoutes.GestorProjects -> GestorProjectsScreen(gestorId = gestorId)
+            AppRoutes.UserTasks -> UtilizadorTasksSection(
+                state = state,
+                taskObservationsId = taskObservationsId,
+                onOpenObservations = { taskId ->
+                    onNavigate(AppRoutes.userTaskObservations(taskId))
+                },
+                onBack = onBack,
+                onAddObservation = { taskId, text, photoUri ->
+                    viewModel.addObservation(
+                        userId = userId,
+                        taskId = taskId,
+                        text = text,
+                        photoUri = photoUri
+                    )
+                },
+                onCompleteTask = { taskId, date, location, hours ->
+                    viewModel.completeTask(
+                        userId = userId,
+                        taskId = taskId,
+                        completionDate = date,
+                        location = location,
+                        spentHours = hours
+                    )
+                }
+            )
 
-            AppRoutes.GestorTasks -> GestorTasksScreen(gestorId = gestorId)
+            AppRoutes.UserProjects -> UtilizadorProjectsSection(
+                state = state,
+                projectHistoryId = projectHistoryId,
+                onOpenHistory = { projectId ->
+                    onNavigate(AppRoutes.userProjectHistory(projectId))
+                },
+                onBack = onBack
+            )
 
-            AppRoutes.GestorTeam -> GestorTeamScreen(gestorId = gestorId)
+            AppRoutes.UserSettings -> SettingsScreen()
 
-            AppRoutes.GestorReports -> GestorReportsScreen(gestorId = gestorId)
-
-            AppRoutes.GestorSettings -> SettingsScreen()
-
-            AppRoutes.GestorProfile -> ProfileScreen(
+            AppRoutes.UserProfile -> ProfileScreen(
                 user = currentUser,
                 onUserUpdated = onUserUpdated,
                 onAccountDeleted = onLogout
@@ -96,35 +127,26 @@ fun GestorDashboardScreen(
 }
 
 @Composable
-private fun PlaceholderSection(title: String) {
-    Text(
-        text = title,
-        color = MaterialTheme.colorScheme.onSurface,
-        fontWeight = FontWeight.Bold,
-        fontSize = 20.sp
-    )
-}
-
-@Composable
-private fun DashboardHeader() {
+private fun UtilizadorDashboardHeader() {
     val language = currentAppSettings().language
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column {
-            Text(
-                text = language.t("manager.dashboard.title"),
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
-            )
-        }
+    Column {
+        Text(
+            text = language.t("user.dashboard.title"),
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = language.t("user.dashboard.subtitle"),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+            fontSize = 13.sp
+        )
     }
 }
 
 @Composable
-private fun DashboardContent(state: GestorDashboardState) {
+private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
     val language = currentAppSettings().language
     when {
         state.isLoading -> {
@@ -134,62 +156,81 @@ private fun DashboardContent(state: GestorDashboardState) {
                     .height(220.dp),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = GestorAccent)
+                CircularProgressIndicator(color = UtilizadorAccent)
             }
         }
 
         state.errorMessage != null -> {
-            MetricCard(
+            UserMetricCard(
                 label = language.t("dashboard.state"),
                 value = language.t("dashboard.error"),
-                accent = GestorRed,
+                accent = UtilizadorRed,
                 detail = state.errorMessage,
-                icon = GestorDashboardIcon.Warning
+                icon = UserDashboardIcon.Warning
             )
         }
 
         else -> {
-            MetricCard(
-                label = language.t("manager.dashboard.projects"),
-                value = state.totalProjects.toString(),
-                accent = GestorOrange,
-                detail = language.t("manager.dashboard.projectsDetail"),
-                icon = GestorDashboardIcon.Projects
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            MetricCard(
-                label = language.t("common.completed"),
-                value = state.completedTasks.toString(),
-                accent = GestorAccent,
-                detail = language.t("manager.dashboard.completedDetail"),
-                icon = GestorDashboardIcon.Completed
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            MetricCard(
+            UserMetricCard(
                 label = language.t("common.inProgress"),
                 value = state.inProgressTasks.toString(),
-                accent = GestorRed,
-                detail = language.t("manager.dashboard.progressDetail"),
-                icon = GestorDashboardIcon.Pending
+                accent = UtilizadorBlue,
+                detail = language.t("user.dashboard.progressDetail"),
+                icon = UserDashboardIcon.Progress
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            UserMetricCard(
+                label = language.t("common.completed"),
+                value = state.completedTasks.toString(),
+                accent = UtilizadorGreen,
+                detail = language.t("user.dashboard.completedDetail"),
+                icon = UserDashboardIcon.Completed
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            UserMetricCard(
+                label = language.t("common.pending"),
+                value = state.pendingTasks.toString(),
+                accent = UtilizadorOrange,
+                detail = language.t("user.dashboard.pendingDetail"),
+                icon = UserDashboardIcon.Pending
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            UserMetricCard(
+                label = language.t("common.delayed"),
+                value = state.lateTasks.toString(),
+                accent = UtilizadorRed,
+                detail = language.t("user.dashboard.lateDetail"),
+                icon = UserDashboardIcon.Late
             )
         }
     }
 }
 
-private enum class GestorDashboardIcon {
+@Composable
+private fun UtilizadorPlaceholderSection(title: String) {
+    Text(
+        text = title,
+        color = MaterialTheme.colorScheme.onSurface,
+        fontWeight = FontWeight.Bold,
+        fontSize = 20.sp
+    )
+}
+
+private enum class UserDashboardIcon {
+    Progress,
     Completed,
-    Projects,
     Pending,
+    Late,
     Warning
 }
 
 @Composable
-private fun MetricCard(
+private fun UserMetricCard(
     label: String,
     value: String,
     accent: Color,
     detail: String,
-    icon: GestorDashboardIcon
+    icon: UserDashboardIcon
 ) {
     Card(
         modifier = Modifier
@@ -217,7 +258,7 @@ private fun MetricCard(
                         .background(accent.copy(alpha = 0.14f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    MetricIcon(icon = icon, color = accent)
+                    UserMetricIcon(icon = icon, color = accent)
                 }
 
                 Spacer(modifier = Modifier.width(14.dp))
@@ -249,81 +290,40 @@ private fun MetricCard(
 }
 
 @Composable
-private fun MetricIcon(
-    icon: GestorDashboardIcon,
+private fun UserMetricIcon(
+    icon: UserDashboardIcon,
     color: Color
 ) {
     Canvas(modifier = Modifier.size(24.dp)) {
         val stroke = Stroke(width = 2.6.dp.toPx(), cap = StrokeCap.Round)
 
         when (icon) {
-            GestorDashboardIcon.Completed -> {
-                drawCircle(color = color, style = stroke)
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.28f, size.height * 0.52f),
-                    end = Offset(size.width * 0.44f, size.height * 0.68f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.44f, size.height * 0.68f),
-                    end = Offset(size.width * 0.74f, size.height * 0.34f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-            }
-
-            GestorDashboardIcon.Projects -> {
+            UserDashboardIcon.Progress -> {
                 drawRoundRect(
                     color = color,
-                    topLeft = Offset(size.width * 0.14f, size.height * 0.28f),
-                    size = Size(size.width * 0.72f, size.height * 0.5f),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx(), 3.dp.toPx()),
-                    style = stroke
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.26f, size.height * 0.28f),
-                    end = Offset(size.width * 0.34f, size.height * 0.16f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.34f, size.height * 0.16f),
-                    end = Offset(size.width * 0.5f, size.height * 0.16f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-            }
-
-            GestorDashboardIcon.Pending -> {
-                drawRoundRect(
-                    color = color,
-                    topLeft = Offset(size.width * 0.22f, size.height * 0.2f),
-                    size = Size(size.width * 0.56f, size.height * 0.64f),
+                    topLeft = Offset(size.width * 0.18f, size.height * 0.2f),
+                    size = androidx.compose.ui.geometry.Size(size.width * 0.64f, size.height * 0.6f),
                     cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx(), 4.dp.toPx()),
                     style = stroke
                 )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.35f, size.height * 0.4f),
-                    end = Offset(size.width * 0.65f, size.height * 0.4f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.35f, size.height * 0.58f),
-                    end = Offset(size.width * 0.58f, size.height * 0.58f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
+                drawLine(color = color, start = Offset(size.width * 0.34f, size.height * 0.42f), end = Offset(size.width * 0.7f, size.height * 0.42f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+                drawLine(color = color, start = Offset(size.width * 0.34f, size.height * 0.6f), end = Offset(size.width * 0.58f, size.height * 0.6f), strokeWidth = stroke.width, cap = StrokeCap.Round)
             }
 
-            GestorDashboardIcon.Warning -> {
+            UserDashboardIcon.Completed -> {
+                drawCircle(color = color, style = stroke)
+                drawLine(color = color, start = Offset(size.width * 0.28f, size.height * 0.52f), end = Offset(size.width * 0.44f, size.height * 0.68f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+                drawLine(color = color, start = Offset(size.width * 0.44f, size.height * 0.68f), end = Offset(size.width * 0.74f, size.height * 0.34f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+            }
+
+            UserDashboardIcon.Pending -> {
+                drawCircle(color = color, radius = size.width * 0.36f, center = Offset(size.width * 0.5f, size.height * 0.5f), style = stroke)
+                drawLine(color = color, start = Offset(size.width * 0.5f, size.height * 0.28f), end = Offset(size.width * 0.5f, size.height * 0.52f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+                drawLine(color = color, start = Offset(size.width * 0.5f, size.height * 0.52f), end = Offset(size.width * 0.64f, size.height * 0.62f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+            }
+
+            UserDashboardIcon.Late,
+            UserDashboardIcon.Warning -> {
                 drawLine(color = color, start = Offset(size.width * 0.5f, size.height * 0.16f), end = Offset(size.width * 0.12f, size.height * 0.82f), strokeWidth = stroke.width, cap = StrokeCap.Round)
                 drawLine(color = color, start = Offset(size.width * 0.5f, size.height * 0.16f), end = Offset(size.width * 0.88f, size.height * 0.82f), strokeWidth = stroke.width, cap = StrokeCap.Round)
                 drawLine(color = color, start = Offset(size.width * 0.12f, size.height * 0.82f), end = Offset(size.width * 0.88f, size.height * 0.82f), strokeWidth = stroke.width, cap = StrokeCap.Round)

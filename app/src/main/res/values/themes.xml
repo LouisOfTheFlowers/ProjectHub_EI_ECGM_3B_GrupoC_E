@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.ProjectHub" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.ProjectHub" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#FFE8F9FC</item>
+        <item name="android:colorAccent">#FF0A7C91</item>
+        <item name="android:forceDarkAllowed">false</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/black</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowContentTransitions">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowDisablePreview">true</item>
+    </style>
 </resources>
