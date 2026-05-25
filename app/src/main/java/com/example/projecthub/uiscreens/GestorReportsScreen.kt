@@ -43,7 +43,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.settings.t
 import com.example.projecthub.viewmodel.GestorReportCard
 import com.example.projecthub.viewmodel.GestorReportExport
 import com.example.projecthub.viewmodel.GestorReportExportType
@@ -301,6 +303,7 @@ private fun GestorReportExportCard(
     card: GestorReportCard,
     onExport: () -> Unit
 ) {
+    val language = currentAppSettings().language
     val accent = when (card.type) {
         GestorReportExportType.Users -> GestorReportsAccent
         GestorReportExportType.Projects -> GestorReportsBlue

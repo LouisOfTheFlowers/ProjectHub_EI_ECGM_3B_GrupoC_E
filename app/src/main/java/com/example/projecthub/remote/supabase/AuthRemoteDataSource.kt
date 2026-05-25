@@ -1,6 +1,8 @@
 package com.example.projecthub.remote.supabase
 
+import android.content.Intent
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.handleDeeplinks
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.user.UserInfo
 import io.github.jan.supabase.auth.user.UserSession
@@ -32,8 +34,33 @@ class AuthRemoteDataSource {
             ?: throw IllegalStateException("Sessão JWT não encontrada após o login.")
     }
 
+    suspend fun restoreSession(): UserSession? {
+        val auth = SupabaseClientProvider.client.auth
+
+        auth.awaitInitialization()
+
+        auth.currentSessionOrNull()?.let { session ->
+            return session
+        }
+
+        val sessionFound = auth.loadFromStorage()
+        return if (sessionFound) {
+            auth.currentSessionOrNull()
+        } else {
+            null
+        }
+    }
+
     fun currentJwt(): String? {
         return SupabaseClientProvider.client.auth.currentAccessTokenOrNull()
+    }
+
+    suspend fun sendPasswordResetEmail(email: String) {
+        SupabaseClientProvider.client.auth.resetPasswordForEmail(email = email)
+    }
+
+    fun handlePasswordRecoveryDeepLink(intent: Intent, onSessionReady: (UserSession) -> Unit) {
+        SupabaseClientProvider.client.handleDeeplinks(intent, onSessionReady)
     }
 
     suspend fun sendReauthenticationCode() {

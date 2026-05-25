@@ -42,7 +42,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.settings.t
 import com.example.projecthub.viewmodel.AdminReportCard
 import com.example.projecthub.viewmodel.AdminReportExport
 import com.example.projecthub.viewmodel.AdminReportExportType
@@ -295,6 +297,7 @@ private fun ReportExportCard(
     card: AdminReportCard,
     onExport: () -> Unit
 ) {
+    val language = currentAppSettings().language
     val accent = when (card.type) {
         AdminReportExportType.Users -> ReportsAccent
         AdminReportExportType.Projects -> ReportsBlue

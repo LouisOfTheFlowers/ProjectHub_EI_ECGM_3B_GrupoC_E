@@ -1,16 +1,21 @@
 package com.example.projecthub
 
 import android.Manifest
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -20,15 +25,20 @@ import com.example.projecthub.settings.AppThemeMode
 import com.example.projecthub.ui.theme.ProjectHubTheme
 import com.example.projecthub.uiscreens.AdminDashboardScreen
 import com.example.projecthub.uiscreens.GestorDashboardScreen
+import com.example.projecthub.uiscreens.IntroSliderScreen
 import com.example.projecthub.uiscreens.LoginScreen
 import com.example.projecthub.uiscreens.RegisterScreen
+import com.example.projecthub.uiscreens.ResetPasswordScreen
 import com.example.projecthub.viewmodel.AdminSettingsViewModel
 import com.example.projecthub.viewmodel.AuthViewModel
 
 class MainActivity : ComponentActivity() {
 
+    private var passwordRecoveryIntent by mutableStateOf<Intent?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        passwordRecoveryIntent = intent.takeIf { it.isPasswordRecoveryIntent() }
 
         setContent {
             val settingsViewModel: AdminSettingsViewModel = viewModel()
@@ -53,18 +63,71 @@ class MainActivity : ComponentActivity() {
             ) {
                 AppSettingsProvider(settings = settings) {
                     val authViewModel: AuthViewModel = viewModel()
-                    var currentScreen by remember { mutableStateOf("login") }
+                    var currentScreen by remember {
+                        mutableStateOf(if (passwordRecoveryIntent != null) "resetPassword" else "loading")
+                    }
+                    val routeAfterAuthentication = {
+                        authViewModel.shouldShowIntroForCurrentUser { shouldShowIntro ->
+                            currentScreen = if (shouldShowIntro) "intro" else "home"
+                        }
+                    }
+
+                    LaunchedEffect(Unit) {
+                        if (passwordRecoveryIntent != null) {
+                            return@LaunchedEffect
+                        }
+
+                        authViewModel.restoreSession { restored ->
+                            if (restored) {
+                                routeAfterAuthentication()
+                            } else {
+                                currentScreen = "login"
+                            }
+                        }
+                    }
+
+                    LaunchedEffect(passwordRecoveryIntent) {
+                        val recoveryIntent = passwordRecoveryIntent ?: return@LaunchedEffect
+                        currentScreen = "resetPassword"
+                        authViewModel.handlePasswordRecoveryDeepLink(recoveryIntent) {
+                            currentScreen = "resetPassword"
+                        }
+                    }
 
                     when (currentScreen) {
+                        "loading" -> Box(
+                            modifier = androidx.compose.ui.Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+
+                        "resetPassword" -> ResetPasswordScreen(
+                            authViewModel = authViewModel,
+                            onPasswordChanged = {
+                                passwordRecoveryIntent = null
+                                currentScreen = "login"
+                            }
+                        )
+
                         "login" -> LoginScreen(
                             authViewModel = authViewModel,
                             onGoToRegister = { currentScreen = "register" },
-                            onLoginSuccess = { currentScreen = "home" }
+                            onLoginSuccess = { routeAfterAuthentication() }
                         )
 
                         "register" -> RegisterScreen(
                             authViewModel = authViewModel,
                             onGoToLogin = { currentScreen = "login" }
+                        )
+
+                        "intro" -> IntroSliderScreen(
+                            role = authViewModel.currentUser?.role.orEmpty(),
+                            onFinished = {
+                                authViewModel.markIntroSeenForCurrentUser {
+                                    currentScreen = "home"
+                                }
+                            }
                         )
 
                         "home" -> {
@@ -95,6 +158,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+
+        if (intent.isPasswordRecoveryIntent()) {
+            passwordRecoveryIntent = intent
+        }
+    }
+
     private fun requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
         if (AppNotificationHelper.canPostNotifications(this)) return
@@ -104,5 +176,10 @@ class MainActivity : ComponentActivity() {
             arrayOf(Manifest.permission.POST_NOTIFICATIONS),
             42
         )
+    }
+
+    private fun Intent.isPasswordRecoveryIntent(): Boolean {
+        val data = data ?: return false
+        return data.scheme == "projecthub" && data.host == "reset-password"
     }
 }

@@ -1,6 +1,7 @@
 package com.example.projecthub.viewmodel
 
 import android.app.Application
+import android.content.Intent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.projecthub.local.database.DatabaseProvider
 import com.example.projecthub.remote.supabase.models.UserDto
 import com.example.projecthub.repository.UserRepository
+import com.example.projecthub.settings.OnboardingRepository
 import io.github.jan.supabase.auth.exception.AuthErrorCode
 import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.auth.exception.AuthWeakPasswordException
@@ -23,6 +25,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         userDao = database.userDao(),
         syncQueueDao = database.syncQueueDao()
     )
+    private val onboardingRepository = OnboardingRepository(application)
 
     var message by mutableStateOf("")
         private set
@@ -33,11 +36,45 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     var isLoading by mutableStateOf(false)
         private set
 
+    var isRestoringSession by mutableStateOf(true)
+        private set
+
+    var isRecoverySessionReady by mutableStateOf(false)
+        private set
+
     var jwt by mutableStateOf<String?>(null)
         private set
 
     var currentUser by mutableStateOf<UserDto?>(null)
         private set
+
+    fun restoreSession(onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            isRestoringSession = true
+            message = ""
+
+            val result = repository.restoreSession()
+
+            if (result.isSuccess) {
+                val authenticatedUser = result.getOrNull()
+                currentUser = authenticatedUser?.user
+                jwt = authenticatedUser?.jwt
+                isLoggedIn = authenticatedUser != null
+                isRestoringSession = false
+                onResult(authenticatedUser != null)
+            } else {
+                currentUser = null
+                jwt = null
+                isLoggedIn = false
+                message = authErrorMessage(
+                    result.exceptionOrNull(),
+                    fallback = "Sessao expirada. Inicia sessao novamente."
+                )
+                isRestoringSession = false
+                onResult(false)
+            }
+        }
+    }
 
     fun register(
         nome: String,
@@ -108,8 +145,110 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun sendPasswordResetEmail(
+        email: String,
+        onResult: (Boolean, String) -> Unit
+    ) {
+        viewModelScope.launch {
+            isLoading = true
+            message = ""
+            val result = repository.sendPasswordResetEmail(email.trim())
+            isLoading = false
+
+            if (result.isSuccess) {
+                message = "Email de recuperaÃ§Ã£o enviado. Verifica a tua caixa de entrada."
+                onResult(true, message)
+            } else {
+                message = authErrorMessage(
+                    result.exceptionOrNull(),
+                    fallback = "NÃ£o foi possÃ­vel enviar o email de recuperaÃ§Ã£o."
+                )
+                onResult(false, message)
+            }
+        }
+    }
+
+    fun handlePasswordRecoveryDeepLink(intent: Intent, onReady: () -> Unit) {
+        isRecoverySessionReady = false
+        message = ""
+
+        repository.handlePasswordRecoveryDeepLink(intent) {
+            jwt = repository.currentJwt()
+            isRecoverySessionReady = true
+            onReady()
+        }
+    }
+
+    fun updatePasswordAfterRecovery(
+        newPassword: String,
+        confirmPassword: String,
+        onResult: (Boolean, String) -> Unit
+    ) {
+        viewModelScope.launch {
+            if (newPassword.length < 8 || !newPassword.any(Char::isLetter) || !newPassword.any(Char::isDigit)) {
+                val error = "A palavra-passe deve ter pelo menos 8 caracteres, letras e numeros."
+                message = error
+                onResult(false, error)
+                return@launch
+            }
+
+            if (newPassword != confirmPassword) {
+                val error = "As palavras-passe nao coincidem."
+                message = error
+                onResult(false, error)
+                return@launch
+            }
+
+            isLoading = true
+            message = ""
+
+            val result = repository.updatePasswordAfterRecovery(newPassword)
+            isLoading = false
+
+            if (result.isSuccess) {
+                currentUser = null
+                jwt = null
+                isLoggedIn = false
+                isRecoverySessionReady = false
+                message = "Palavra-passe alterada com sucesso. Ja podes iniciar sessao."
+                onResult(true, message)
+            } else {
+                message = authErrorMessage(
+                    result.exceptionOrNull(),
+                    fallback = "Nao foi possivel alterar a palavra-passe."
+                )
+                onResult(false, message)
+            }
+        }
+    }
+
     fun updateCurrentUser(user: UserDto) {
         currentUser = user
+    }
+
+    fun shouldShowIntroForCurrentUser(onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val user = currentUser
+            if (user == null) {
+                onResult(false)
+                return@launch
+            }
+
+            val userKey = user.id?.toString() ?: user.email
+            val hasSeenIntro = onboardingRepository.hasSeenIntro(userKey, user.role)
+            onResult(!hasSeenIntro)
+        }
+    }
+
+    fun markIntroSeenForCurrentUser(onResult: () -> Unit = {}) {
+        viewModelScope.launch {
+            val user = currentUser
+            if (user != null) {
+                val userKey = user.id?.toString() ?: user.email
+                onboardingRepository.markIntroSeen(userKey, user.role)
+            }
+            onResult()
+        }
     }
 
     private fun authErrorMessage(error: Throwable?, fallback: String): String {

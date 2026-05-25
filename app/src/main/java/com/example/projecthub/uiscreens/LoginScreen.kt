@@ -28,11 +28,13 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
+    var showPasswordResetDialog by remember { mutableStateOf(false) }
     val isLoading = authViewModel.isLoading
     val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
     val isFormValid = isEmailValid && password.length >= 6
     val language = currentAppSettings().language
     val goToRegister = rememberSoundClick(onGoToRegister)
+    val forgotPasswordClick = rememberSoundClick { showPasswordResetDialog = true }
     val loginClick = rememberSoundClick {
         if (email.isNotBlank() && !isEmailValid) {
             message = language.t("login.invalidEmail")
@@ -125,6 +127,15 @@ fun LoginScreen(
             Text(language.t("login.createAccount"))
         }
 
+        TextButton(
+            onClick = forgotPasswordClick,
+            enabled = !isLoading,
+            colors = ButtonDefaults.textButtonColors(contentColor = AuthAccent),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(language.t("login.forgotPassword"))
+        }
+
         if (message.isNotEmpty()) {
             Spacer(modifier = Modifier.height(12.dp))
             Text(
@@ -138,4 +149,100 @@ fun LoginScreen(
             )
         }
     }
+
+    if (showPasswordResetDialog) {
+        PasswordResetDialog(
+            initialEmail = email,
+            isLoading = isLoading,
+            onDismiss = { showPasswordResetDialog = false },
+            onSend = { resetEmail ->
+                authViewModel.sendPasswordResetEmail(resetEmail) { success, resultMessage ->
+                    message = resultMessage
+                    if (success) {
+                        showPasswordResetDialog = false
+                    }
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun PasswordResetDialog(
+    initialEmail: String,
+    isLoading: Boolean,
+    onDismiss: () -> Unit,
+    onSend: (String) -> Unit
+) {
+    val language = currentAppSettings().language
+    var resetEmail by remember(initialEmail) { mutableStateOf(initialEmail.trim()) }
+    var localError by remember { mutableStateOf("") }
+    val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(resetEmail.trim()).matches()
+
+    AlertDialog(
+        onDismissRequest = {
+            if (!isLoading) onDismiss()
+        },
+        title = {
+            Text(language.t("login.resetTitle"))
+        },
+        text = {
+            Column {
+                Text(
+                    text = language.t("login.resetDescription"),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = resetEmail,
+                    onValueChange = {
+                        resetEmail = it
+                        localError = ""
+                    },
+                    label = { Text(language.t("login.email")) },
+                    singleLine = true,
+                    isError = localError.isNotBlank(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Done
+                    ),
+                    colors = authTextFieldColors(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                if (localError.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = localError,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = !isLoading,
+                onClick = rememberSoundClick {
+                    if (!isEmailValid) {
+                        localError = language.t("login.invalidEmail")
+                    } else {
+                        onSend(resetEmail.trim())
+                    }
+                }
+            ) {
+                Text(language.t("login.resetSend"))
+            }
+        },
+        dismissButton = {
+            TextButton(
+                enabled = !isLoading,
+                onClick = rememberSoundClick(onDismiss)
+            ) {
+                Text(language.t("common.cancel"))
+            }
+        }
+    )
 }

@@ -11,7 +11,10 @@ object SupabaseClientProvider {
         supabaseUrl = "https://ypttthmsfcbexoimpjii.supabase.co",
         supabaseKey = "sb_publishable_5LkO7kRnkX83F8a-qi5UpQ_0zxGV4Lt"
     ) {
-        install(Auth)
+        install(Auth) {
+            scheme = "projecthub"
+            host = "reset-password"
+        }
         install(Postgrest)
         install(Storage)
     }
