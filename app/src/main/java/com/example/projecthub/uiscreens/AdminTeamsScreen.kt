@@ -52,8 +52,6 @@ import com.example.projecthub.viewmodel.AdminTeamsViewModel
 import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val TeamsAccent = AuthAccent
-private val TeamsInk = ProjectHubColors.Ink
-private val TeamsMuted = ProjectHubColors.Muted
 private val TeamsGreen = ProjectHubColors.SuccessDark
 private val TeamsOrange = ProjectHubColors.Warning
 private val TeamsRed = ProjectHubColors.DangerDark
@@ -88,8 +86,8 @@ fun AdminTeamsScreen(
     userToDelete?.let { user ->
         AlertDialog(
             onDismissRequest = { userToDelete = null },
-            title = { Text("Remover utilizador") },
-            text = { Text("Tens a certeza que queres remover \"${user.name}\"? Esta ação elimina o acesso e os dados associados ao utilizador.") },
+            title = { Text(language.t("teams.removeTitle")) },
+            text = { Text(language.t("teams.removeQuestion").format(user.name)) },
             confirmButton = {
                 TextButton(
                     onClick = rememberSoundClick {
@@ -115,13 +113,13 @@ private fun TeamsHeader() {
     Column {
         Text(
             text = language.t("teams.title"),
-            color = TeamsInk,
+            color = ProjectHubColors.Ink,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 24.sp
         )
         Text(
             text = language.t("teams.subtitle"),
-            color = TeamsMuted,
+            color = ProjectHubColors.Muted,
             fontSize = 14.sp
         )
     }
@@ -160,7 +158,7 @@ private fun TeamBadge(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Row(
@@ -186,7 +184,7 @@ private fun TeamBadge(
 
             Text(
                 text = label,
-                color = TeamsInk,
+                color = ProjectHubColors.Ink,
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp,
                 maxLines = 2,
@@ -207,7 +205,7 @@ private fun TeamFilters(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -379,8 +377,8 @@ private fun TeamUserList(
 
                 if (state.visibleUsers.isEmpty()) {
                     Text(
-                        text = "Nenhum utilizador corresponde aos filtros.",
-                        color = TeamsMuted,
+                        text = language.t("teams.noMatching"),
+                        color = ProjectHubColors.Muted,
                         fontSize = 15.sp
                     )
                 } else {
@@ -413,7 +411,7 @@ private fun TeamUserCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -438,18 +436,18 @@ private fun TeamUserCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = user.name,
-                        color = TeamsInk,
+                        color = ProjectHubColors.Ink,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 16.sp
                     )
                     Text(
                         text = "@${user.username}",
-                        color = TeamsMuted,
+                        color = ProjectHubColors.Muted,
                         fontSize = 13.sp
                     )
                     Text(
                         text = user.email,
-                        color = TeamsMuted,
+                        color = ProjectHubColors.Muted,
                         fontSize = 13.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -468,7 +466,7 @@ private fun TeamUserCard(
                     } else {
                         user.projectNames.joinToString(limit = 2, truncated = "+")
                     },
-                    color = TeamsMuted
+                    color = ProjectHubColors.Muted
                 )
             }
 
@@ -568,7 +566,7 @@ private fun UserRoleEditor(
                 )
             } else {
                 Text(
-                    text = "Remover",
+                    text = language.t("teams.remove"),
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp
                 )

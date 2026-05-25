@@ -27,7 +27,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.projecthub.remote.supabase.models.TarefaDto
+import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.viewmodel.UtilizadorDashboardState
 import com.example.projecthub.viewmodel.UtilizadorProjectItem
@@ -42,6 +44,7 @@ fun UtilizadorProjectsSection(
     onOpenHistory: (Int) -> Unit,
     onBack: () -> Unit
 ) {
+    val language = currentAppSettings().language
     if (projectHistoryId != null) {
         val item = state.projects.firstOrNull { it.project.id == projectHistoryId }
         when {
@@ -66,12 +69,12 @@ fun UtilizadorProjectsSection(
                     onClick = rememberSoundClick(onBack),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("< Voltar aos projetos", color = AuthAccent, fontWeight = FontWeight.Bold)
+                    Text(language.t("user.projects.back"), color = AuthAccent, fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.height(18.dp))
                 ProjectMessageCard(
-                    title = "Projeto nao encontrado",
-                    detail = "Nao foi possivel encontrar este projeto nos teus projetos atribuidos."
+                    title = language.t("user.projects.notFoundTitle"),
+                    detail = language.t("user.projects.notFoundDetail")
                 )
             }
         }
@@ -80,14 +83,14 @@ fun UtilizadorProjectsSection(
 
     Column {
         Text(
-            text = "Projetos Atribuidos",
+            text = language.t("user.projects.title"),
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Projetos associados ao teu utilizador",
+            text = language.t("user.projects.subtitle"),
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
             fontSize = 13.sp
         )
@@ -95,7 +98,7 @@ fun UtilizadorProjectsSection(
 
         if (state.errorMessage != null) {
             ProjectMessageCard(
-                title = "Estado dos projetos",
+                title = language.t("user.projects.stateTitle"),
                 detail = state.errorMessage
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -115,8 +118,8 @@ fun UtilizadorProjectsSection(
 
             state.projects.isEmpty() -> {
                 ProjectMessageCard(
-                    title = "Sem projetos atribuidos",
-                    detail = "Quando fores associado a um projeto, ele aparece aqui."
+                    title = language.t("user.projects.emptyTitle"),
+                    detail = language.t("user.projects.emptyDetail")
                 )
             }
 
@@ -140,6 +143,7 @@ private fun UserProjectCard(
     item: UtilizadorProjectItem,
     onClick: () -> Unit
 ) {
+    val language = currentAppSettings().language
     val project = item.project
 
     Card(
@@ -180,9 +184,9 @@ private fun UserProjectCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                ProjectMeta(label = "Inicio", value = project.data_inicio.toUiDate(), modifier = Modifier.weight(1f))
-                ProjectMeta(label = "Fim", value = project.data_fim.toUiDate(), modifier = Modifier.weight(1f))
-                ProjectMeta(label = "Tarefas", value = item.tasksCount.toString(), modifier = Modifier.weight(1f))
+                ProjectMeta(label = language.t("common.start"), value = project.data_inicio.toUiDate(), modifier = Modifier.weight(1f))
+                ProjectMeta(label = language.t("common.end"), value = project.data_fim.toUiDate(), modifier = Modifier.weight(1f))
+                ProjectMeta(label = language.t("user.projects.tasks"), value = item.tasksCount.toString(), modifier = Modifier.weight(1f))
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -197,19 +201,19 @@ private fun UserProjectCard(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     ProjectMetric(
-                        label = "Concluidas",
+                        label = language.t("common.completed"),
                         value = item.completedTasks.toString(),
                         color = ProjectHubColors.Success,
                         modifier = Modifier.weight(1f)
                     )
                     ProjectMetric(
-                        label = "Atrasadas",
+                        label = language.t("user.projects.late"),
                         value = item.lateTasks.toString(),
                         color = ProjectHubColors.Danger,
                         modifier = Modifier.weight(1f)
                     )
                     ProjectMetric(
-                        label = "Progresso",
+                        label = language.t("common.progress"),
                         value = projectProgress(item),
                         color = AuthAccent,
                         modifier = Modifier.weight(1f)
@@ -222,7 +226,7 @@ private fun UserProjectCard(
                     modifier = Modifier.padding(start = 12.dp)
                 ) {
                     Text(
-                        text = "Ver historico",
+                        text = language.t("user.projects.viewHistory"),
                         color = AuthAccent,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.ExtraBold
@@ -238,12 +242,13 @@ private fun ProjectTaskHistoryPage(
     item: UtilizadorProjectItem,
     onBack: () -> Unit
 ) {
+    val language = currentAppSettings().language
     Column {
         OutlinedButton(
             onClick = rememberSoundClick(onBack),
             shape = RoundedCornerShape(8.dp)
         ) {
-            Text("< Voltar aos projetos", color = AuthAccent, fontWeight = FontWeight.Bold)
+            Text(language.t("user.projects.back"), color = AuthAccent, fontWeight = FontWeight.Bold)
         }
 
         Spacer(modifier = Modifier.height(18.dp))
@@ -262,7 +267,7 @@ private fun ProjectTaskHistoryPage(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Historico de tarefas concluidas neste projeto",
+                    text = language.t("user.projects.historySubtitle"),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold
@@ -279,19 +284,19 @@ private fun ProjectTaskHistoryPage(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             ProjectMetric(
-                label = "Concluidas",
+                label = language.t("common.completed"),
                 value = item.completedTasks.toString(),
                 color = ProjectHubColors.Success,
                 modifier = Modifier.weight(1f)
             )
             ProjectMetric(
-                label = "Total",
+                label = language.t("common.total"),
                 value = item.tasksCount.toString(),
                 color = AuthAccent,
                 modifier = Modifier.weight(1f)
             )
             ProjectMetric(
-                label = "Progresso",
+                label = language.t("common.progress"),
                 value = projectProgress(item),
                 color = ProjectHubColors.InfoLight,
                 modifier = Modifier.weight(1f)
@@ -302,8 +307,8 @@ private fun ProjectTaskHistoryPage(
 
         if (item.completedTaskHistory.isEmpty()) {
             ProjectMessageCard(
-                title = "Sem tarefas concluidas",
-                detail = "Ainda nao concluíste tarefas neste projeto."
+                title = language.t("user.projects.noCompletedTitle"),
+                detail = language.t("user.projects.noCompletedDetail")
             )
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -317,6 +322,7 @@ private fun ProjectTaskHistoryPage(
 
 @Composable
 private fun CompletedTaskHistoryRow(task: TarefaDto) {
+    val language = currentAppSettings().language
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -340,9 +346,9 @@ private fun CompletedTaskHistoryRow(task: TarefaDto) {
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                ProjectMeta(label = "Estado", value = task.status, modifier = Modifier.weight(1f))
-                ProjectMeta(label = "Inicio", value = task.data_inicio.toUiDate(), modifier = Modifier.weight(1f))
-                ProjectMeta(label = "Fim", value = task.data_fim.toUiDate(), modifier = Modifier.weight(1f))
+                ProjectMeta(label = language.t("common.status"), value = task.status, modifier = Modifier.weight(1f))
+                ProjectMeta(label = language.t("common.start"), value = task.data_inicio.toUiDate(), modifier = Modifier.weight(1f))
+                ProjectMeta(label = language.t("common.end"), value = task.data_fim.toUiDate(), modifier = Modifier.weight(1f))
             }
         }
     }

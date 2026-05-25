@@ -36,6 +36,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.navigation.AppRoutes
 import com.example.projecthub.remote.supabase.models.UserDto
+import com.example.projecthub.settings.currentAppSettings
+import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.viewmodel.GestorDashboardState
 import com.example.projecthub.viewmodel.GestorDashboardViewModel
@@ -105,13 +107,14 @@ private fun PlaceholderSection(title: String) {
 
 @Composable
 private fun DashboardHeader() {
+    val language = currentAppSettings().language
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
             Text(
-                text = "Gestor Dashboard",
+                text = language.t("manager.dashboard.title"),
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
@@ -122,6 +125,7 @@ private fun DashboardHeader() {
 
 @Composable
 private fun DashboardContent(state: GestorDashboardState) {
+    val language = currentAppSettings().language
     when {
         state.isLoading -> {
             Box(
@@ -136,8 +140,8 @@ private fun DashboardContent(state: GestorDashboardState) {
 
         state.errorMessage != null -> {
             MetricCard(
-                label = "Estado da Dashboard",
-                value = "Erro",
+                label = language.t("dashboard.state"),
+                value = language.t("dashboard.error"),
                 accent = GestorRed,
                 detail = state.errorMessage,
                 icon = GestorDashboardIcon.Warning
@@ -146,26 +150,26 @@ private fun DashboardContent(state: GestorDashboardState) {
 
         else -> {
             MetricCard(
-                label = "Projetos do gestor",
+                label = language.t("manager.dashboard.projects"),
                 value = state.totalProjects.toString(),
                 accent = GestorOrange,
-                detail = "Projetos atribuídos ao gestor",
+                detail = language.t("manager.dashboard.projectsDetail"),
                 icon = GestorDashboardIcon.Projects
             )
             Spacer(modifier = Modifier.height(12.dp))
             MetricCard(
-                label = "Tarefas concluídas",
+                label = language.t("common.completed"),
                 value = state.completedTasks.toString(),
                 accent = GestorAccent,
-                detail = "Tarefas finalizadas nos seus projetos",
+                detail = language.t("manager.dashboard.completedDetail"),
                 icon = GestorDashboardIcon.Completed
             )
             Spacer(modifier = Modifier.height(12.dp))
             MetricCard(
-                label = "Tarefas em progresso",
+                label = language.t("common.inProgress"),
                 value = state.inProgressTasks.toString(),
                 accent = GestorRed,
-                detail = "Tarefas atualmente em desenvolvimento",
+                detail = language.t("manager.dashboard.progressDetail"),
                 icon = GestorDashboardIcon.Pending
             )
         }

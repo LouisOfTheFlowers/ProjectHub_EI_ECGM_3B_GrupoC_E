@@ -45,7 +45,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.settings.currentAppSettings
+import com.example.projecthub.settings.t
 import com.example.projecthub.viewmodel.GestorProjectTaskGroup
 import com.example.projecthub.viewmodel.GestorTaskListItem
 import com.example.projecthub.viewmodel.GestorTaskProjectOption
@@ -59,8 +62,6 @@ import java.time.format.DateTimeFormatter
 import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val GestorTasksAccent = AuthAccent
-private val GestorTasksInk = ProjectHubColors.Ink
-private val GestorTasksMuted = ProjectHubColors.Muted
 private val GestorTasksGreen = ProjectHubColors.Success
 private val GestorTasksOrange = ProjectHubColors.Warning
 private val GestorTasksRed = ProjectHubColors.Danger
@@ -72,14 +73,53 @@ fun GestorTasksScreen(
     viewModel: GestorTasksViewModel = viewModel()
 ) {
     val state = viewModel.state
+    val language = currentAppSettings().language
     var isCreatingTask by remember { mutableStateOf(false) }
     var taskToDelete by remember { mutableStateOf<GestorTaskListItem?>(null) }
     var taskToEdit by remember { mutableStateOf<GestorTaskListItem?>(null) }
+<<<<<<< Updated upstream
+=======
+    var taskToView by remember { mutableStateOf<GestorTaskListItem?>(null) }
+    var taskToViewObservations by remember { mutableStateOf<GestorTaskListItem?>(null) }
+>>>>>>> Stashed changes
 
     LaunchedEffect(gestorId) {
         viewModel.loadTasks(gestorId)
     }
 
+<<<<<<< Updated upstream
+=======
+    taskToView?.let { task ->
+        LaunchedEffect(task.id) {
+            viewModel.loadTaskInfo(task)
+        }
+
+        GestorTaskInfoPage(
+            state = state.detailState,
+            onBack = {
+                viewModel.clearTaskInfo()
+                taskToView = null
+            }
+        )
+        return
+    }
+
+    taskToViewObservations?.let { task ->
+        LaunchedEffect(task.id) {
+            viewModel.loadTaskInfo(task)
+        }
+
+        GestorTaskObservationsPage(
+            state = state.detailState,
+            onBack = {
+                viewModel.clearTaskInfo()
+                taskToViewObservations = null
+            }
+        )
+        return
+    }
+
+>>>>>>> Stashed changes
     if (isCreatingTask) {
         GestorAddTaskScreen(
             state = state,
@@ -109,14 +149,14 @@ fun GestorTasksScreen(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Gestao de Tarefas",
-                    color = GestorTasksInk,
+                    text = language.t("tasks.managementTitle"),
+                    color = ProjectHubColors.Ink,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 24.sp
                 )
                 Text(
-                    text = "Cria tarefas e acompanha os responsaveis por projeto",
-                    color = GestorTasksMuted,
+                    text = language.t("tasks.managementSubtitle"),
+                    color = ProjectHubColors.Muted,
                     fontSize = 14.sp
                 )
             }
@@ -132,7 +172,7 @@ fun GestorTasksScreen(
                 ),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Nova", fontWeight = FontWeight.Bold)
+                Text(language.t("tasks.add"), fontWeight = FontWeight.Bold)
             }
         }
 
@@ -152,7 +192,13 @@ fun GestorTasksScreen(
                 viewModel.clearCreateError()
                 taskToEdit = it
             },
+<<<<<<< Updated upstream
             onDeleteTask = { taskToDelete = it }
+=======
+            onDeleteTask = { taskToDelete = it },
+            onMoreInfo = { taskToView = it },
+            onObservations = { taskToViewObservations = it }
+>>>>>>> Stashed changes
         )
         }
     }
@@ -160,8 +206,8 @@ fun GestorTasksScreen(
     taskToDelete?.let { task ->
         AlertDialog(
             onDismissRequest = { taskToDelete = null },
-            title = { Text("Eliminar tarefa") },
-            text = { Text("Queres eliminar \"${task.title}\"?") },
+            title = { Text(language.t("tasks.deleteTitle")) },
+            text = { Text(language.t("tasks.deleteQuestion").format(task.title)) },
             confirmButton = {
                 TextButton(
                     onClick = rememberSoundClick {
@@ -169,12 +215,12 @@ fun GestorTasksScreen(
                         taskToDelete = null
                     }
                 ) {
-                    Text("Eliminar", color = GestorTasksRed, fontWeight = FontWeight.Bold)
+                    Text(language.t("common.delete"), color = GestorTasksRed, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = rememberSoundClick { taskToDelete = null }) {
-                    Text("Cancelar")
+                    Text(currentAppSettings().language.t("common.cancel"))
                 }
             }
         )
@@ -221,7 +267,7 @@ private fun SmallStat(title: String, value: String, accent: Color, modifier: Mod
     Card(
         modifier = modifier.height(72.dp),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(
@@ -230,7 +276,7 @@ private fun SmallStat(title: String, value: String, accent: Color, modifier: Mod
                 .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.Center
         ) {
-            Text(title, color = GestorTasksMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            Text(title, color = ProjectHubColors.Muted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
             Text(value, color = accent, fontSize = 23.sp, fontWeight = FontWeight.ExtraBold)
         }
     }
@@ -247,12 +293,12 @@ private fun TaskFilters(
         onValueChange = onSearchChange,
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
-        placeholder = { Text("Pesquisar tarefas...") },
+        placeholder = { Text(currentAppSettings().language.t("tasks.searchManager")) },
         shape = RoundedCornerShape(8.dp),
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White,
-            disabledContainerColor = Color.White,
+            focusedContainerColor = ProjectHubColors.LightSurface,
+            unfocusedContainerColor = ProjectHubColors.LightSurface,
+            disabledContainerColor = ProjectHubColors.LightSurface,
             focusedIndicatorColor = ProjectHubColors.BorderSoft,
             unfocusedIndicatorColor = ProjectHubColors.BorderSoft
         )
@@ -279,24 +325,24 @@ private fun StatusDropdown(
                 .height(52.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
-                .background(Color.White)
+                .background(ProjectHubColors.LightSurface)
                 .clickable(onClick = rememberSoundClick { expanded = true })
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(selected.label, color = GestorTasksInk, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-            Text(if (expanded) "^" else "v", color = GestorTasksMuted, fontWeight = FontWeight.Bold)
+            Text(selected.label, color = ProjectHubColors.Ink, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+            Text(if (expanded) "^" else "v", color = ProjectHubColors.Muted, fontWeight = FontWeight.Bold)
         }
 
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.background(Color.White)
+            modifier = Modifier.background(ProjectHubColors.LightSurface)
         ) {
             GestorTaskStatusFilter.entries.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option.label, color = GestorTasksInk) },
+                    text = { Text(option.label, color = ProjectHubColors.Ink) },
                     onClick = {
                         expanded = false
                         onOptionSelected(option)
@@ -312,7 +358,13 @@ private fun TaskProjectList(
     state: GestorTasksState,
     onToggleProject: (Int) -> Unit,
     onEditTask: (GestorTaskListItem) -> Unit,
+<<<<<<< Updated upstream
     onDeleteTask: (GestorTaskListItem) -> Unit
+=======
+    onDeleteTask: (GestorTaskListItem) -> Unit,
+    onMoreInfo: (GestorTaskListItem) -> Unit,
+    onObservations: (GestorTaskListItem) -> Unit
+>>>>>>> Stashed changes
 ) {
     when {
         state.isLoading -> Box(
@@ -329,10 +381,10 @@ private fun TaskProjectList(
         state.projectGroups.isEmpty() -> Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
             elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
         ) {
-            Text("Nao existem tarefas para os filtros selecionados.", color = GestorTasksMuted, modifier = Modifier.padding(18.dp))
+            Text(currentAppSettings().language.t("tasks.noFiltered"), color = ProjectHubColors.Muted, modifier = Modifier.padding(18.dp))
         }
 
         else -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -341,7 +393,13 @@ private fun TaskProjectList(
                     group = group,
                     onToggleProject = onToggleProject,
                     onEditTask = onEditTask,
+<<<<<<< Updated upstream
                     onDeleteTask = onDeleteTask
+=======
+                    onDeleteTask = onDeleteTask,
+                    onMoreInfo = onMoreInfo,
+                    onObservations = onObservations
+>>>>>>> Stashed changes
                 )
             }
         }
@@ -353,12 +411,18 @@ private fun ProjectTaskGroupCard(
     group: GestorProjectTaskGroup,
     onToggleProject: (Int) -> Unit,
     onEditTask: (GestorTaskListItem) -> Unit,
+<<<<<<< Updated upstream
     onDeleteTask: (GestorTaskListItem) -> Unit
+=======
+    onDeleteTask: (GestorTaskListItem) -> Unit,
+    onMoreInfo: (GestorTaskListItem) -> Unit,
+    onObservations: (GestorTaskListItem) -> Unit
+>>>>>>> Stashed changes
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -370,27 +434,33 @@ private fun ProjectTaskGroupCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(group.projectName, color = GestorTasksInk, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                    Text(group.projectName, color = ProjectHubColors.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                     Text(
-                        "${group.totalTasks} tarefas | ${group.completedTasks} concluidas | ${group.inProgressTasks} em progresso | ${group.pendingTasks} pendentes",
-                        color = GestorTasksMuted,
+                        currentAppSettings().language.t("tasks.groupSummary").format(group.totalTasks, group.completedTasks, group.inProgressTasks, group.pendingTasks),
+                        color = ProjectHubColors.Muted,
                         fontSize = 12.sp
                     )
                 }
-                Text(if (group.isExpanded) "^" else "v", color = GestorTasksMuted, fontWeight = FontWeight.Bold)
+                Text(if (group.isExpanded) "^" else "v", color = ProjectHubColors.Muted, fontWeight = FontWeight.Bold)
             }
 
             if (group.isExpanded) {
                 Spacer(modifier = Modifier.height(12.dp))
                 if (group.visibleTasks.isEmpty()) {
-                    Text("Sem tarefas visiveis neste projeto.", color = GestorTasksMuted)
+                    Text(currentAppSettings().language.t("tasks.noVisible"), color = ProjectHubColors.Muted)
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         group.visibleTasks.forEach { task ->
                             TaskRow(
                                 task = task,
                                 onEditTask = onEditTask,
+<<<<<<< Updated upstream
                                 onDeleteTask = onDeleteTask
+=======
+                                onDeleteTask = onDeleteTask,
+                                onMoreInfo = onMoreInfo,
+                                onObservations = onObservations
+>>>>>>> Stashed changes
                             )
                         }
                     }
@@ -404,7 +474,13 @@ private fun ProjectTaskGroupCard(
 private fun TaskRow(
     task: GestorTaskListItem,
     onEditTask: (GestorTaskListItem) -> Unit,
+<<<<<<< Updated upstream
     onDeleteTask: (GestorTaskListItem) -> Unit
+=======
+    onDeleteTask: (GestorTaskListItem) -> Unit,
+    onMoreInfo: (GestorTaskListItem) -> Unit,
+    onObservations: (GestorTaskListItem) -> Unit
+>>>>>>> Stashed changes
 ) {
     Column(
         modifier = Modifier
@@ -419,32 +495,448 @@ private fun TaskRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(task.title, color = GestorTasksInk, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
-                Text(task.description, color = GestorTasksMuted, fontSize = 12.sp)
+                Text(task.title, color = ProjectHubColors.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
+                Text(task.description, color = ProjectHubColors.Muted, fontSize = 12.sp)
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 StatusPill(task.statusLabel)
+<<<<<<< Updated upstream
+=======
+                TaskTextAction(currentAppSettings().language.t("common.moreInfo"), GestorTasksBlue) { onMoreInfo(task) }
+>>>>>>> Stashed changes
                 TaskActionIcon("✏", GestorTasksAccent) { onEditTask(task) }
                 TaskActionIcon("X", GestorTasksRed) { onDeleteTask(task) }
             }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-        Text("Inicio: ${task.startDate}   Prazo: ${task.dueDate}", color = ProjectHubColors.Slate, fontSize = 12.sp)
+        Text("${currentAppSettings().language.t("common.start")}: ${task.startDate}   ${currentAppSettings().language.t("common.deadline")}: ${task.dueDate}", color = ProjectHubColors.Slate, fontSize = 12.sp)
         Spacer(modifier = Modifier.height(8.dp))
-        Text("Associada a:", color = GestorTasksInk, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        Text(currentAppSettings().language.t("tasks.assignedTo"), color = ProjectHubColors.Ink, fontWeight = FontWeight.Bold, fontSize = 13.sp)
         if (task.assignees.isEmpty()) {
-            Text("Sem utilizadores associados.", color = GestorTasksMuted, fontSize = 12.sp)
+            Text(currentAppSettings().language.t("tasks.noAssignees"), color = ProjectHubColors.Muted, fontSize = 12.sp)
         } else {
-            Text(task.assignees.joinToString { it.name }, color = GestorTasksMuted, fontSize = 12.sp)
+            Text(task.assignees.joinToString { it.name }, color = ProjectHubColors.Muted, fontSize = 12.sp)
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        TaskTextAction(currentAppSettings().language.t("user.tasks.observations"), GestorTasksAccent) { onObservations(task)}
+    }
+}
+
+@Composable
+<<<<<<< Updated upstream
+=======
+private fun GestorTaskInfoPage(
+    state: GestorTaskInfoState,
+    onBack: () -> Unit
+) {
+    var showObservations by remember { mutableStateOf(false) }
+
+    if (showObservations) {
+        GestorTaskObservationsPage(
+            state = state,
+            onBack = { showObservations = false }
+        )
+        return
+    }
+
+    Column {
+        TextButton(
+            onClick = rememberSoundClick(onBack),
+            colors = ButtonDefaults.textButtonColors(contentColor = ProjectHubColors.Ink)
+        ) {
+            Text(currentAppSettings().language.t("addTask.back"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        when {
+            state.isLoading -> Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = GestorTasksAccent)
+            }
+
+            state.errorMessage != null -> TaskInfoMessageCard(
+                title = currentAppSettings().language.t("tasks.detailsTitle"),
+                detail = state.errorMessage
+            )
+
+            state.task == null -> TaskInfoMessageCard(
+                title = currentAppSettings().language.t("user.tasks.notFoundTitle"),
+                detail = currentAppSettings().language.t("user.tasks.notFoundDetail")
+            )
+
+            else -> state.task?.let { task ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = task.title,
+                            color = ProjectHubColors.Ink,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 24.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = currentAppSettings().language.t("tasks.detailsAndObservations"),
+                            color = ProjectHubColors.Muted,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    StatusPill(task.statusLabel)
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(task.description, color = ProjectHubColors.Muted, fontSize = 14.sp)
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            TaskInfoMeta(currentAppSettings().language.t("common.start"), task.startDate.toInputDateText(), Modifier.weight(1f))
+                            TaskInfoMeta(currentAppSettings().language.t("common.deadline"), task.dueDate.toInputDateText(), Modifier.weight(1f))
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        TaskInfoMeta(
+                            label = currentAppSettings().language.t("tasks.responsibles"),
+                            value = task.assignees.takeIf { it.isNotEmpty() }
+                                ?.joinToString { it.name } ?: currentAppSettings().language.t("tasks.noAssignees"),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        TaskInfoMeta(
+                            label = currentAppSettings().language.t("tasks.records"),
+                            value = state.recordsCount.toString(),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        TaskTextAction("Ver observações", GestorTasksAccent) {
+                            showObservations = true
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
+private fun GestorTaskObservationsPage(
+    state: GestorTaskInfoState,
+    onBack: () -> Unit
+) {
+    var selectedObservation by remember { mutableStateOf<GestorTaskInfoObservation?>(null) }
+
+    selectedObservation?.let { observation ->
+        GestorTaskObservationDetailPage(
+            task = state.task,
+            observation = observation,
+            onBack = { selectedObservation = null }
+        )
+        return
+    }
+
+    Column {
+        TextButton(
+            onClick = rememberSoundClick(onBack),
+            colors = ButtonDefaults.textButtonColors(contentColor = ProjectHubColors.Ink)
+        ) {
+            Text(currentAppSettings().language.t("addTask.back"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        when {
+            state.isLoading -> Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = GestorTasksAccent)
+            }
+
+            state.errorMessage != null -> TaskInfoMessageCard(
+                title = currentAppSettings().language.t("tasks.observationsTitle"),
+                detail = state.errorMessage
+            )
+
+            state.task == null -> TaskInfoMessageCard(
+                title = currentAppSettings().language.t("user.tasks.notFoundTitle"),
+                detail = currentAppSettings().language.t("user.tasks.notFoundDetail")
+            )
+
+            else -> state.task?.let { task ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = task.title,
+                            color = ProjectHubColors.Ink,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 24.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = currentAppSettings().language.t("tasks.observationsSubtitle"),
+                            color = ProjectHubColors.Muted,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    StatusPill(task.statusLabel)
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                if (state.observations.isEmpty()) {
+                    TaskInfoMessageCard(
+                        title = currentAppSettings().language.t("user.tasks.noObservationsTitle"),
+                        detail = currentAppSettings().language.t("user.tasks.noObservationsDetail")
+                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        state.observations.forEach { observation ->
+                            TaskObservationListRow(
+                                observation = observation,
+                                onClick = { selectedObservation = observation }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GestorTaskObservationDetailPage(
+    task: GestorTaskListItem?,
+    observation: GestorTaskInfoObservation,
+    onBack: () -> Unit
+) {
+    Column {
+        TextButton(
+            onClick = rememberSoundClick(onBack),
+            colors = ButtonDefaults.textButtonColors(contentColor = ProjectHubColors.Ink)
+        ) {
+            Text(currentAppSettings().language.t("tasks.backObservations"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = task?.title ?: currentAppSettings().language.t("tasks.observation"),
+            color = ProjectHubColors.Ink,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 24.sp
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = currentAppSettings().language.t("tasks.observationDetail"),
+            color = ProjectHubColors.Muted,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = observation.text,
+                    color = ProjectHubColors.Ink,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.sp
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    TaskInfoMeta("Utilizador", observation.userName, Modifier.weight(1f))
+                    TaskInfoMeta("Data", observation.date, Modifier.weight(1f))
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    TaskInfoMeta("Conclusão", "${observation.completionPercent}%", Modifier.weight(1f))
+                    TaskInfoMeta("Horas", observation.spentHours?.let { "$it h" } ?: "-", Modifier.weight(1f))
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                TaskInfoMeta("Local", observation.local, Modifier.fillMaxWidth())
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Text(
+            text = currentAppSettings().language.t("common.photos"),
+            color = ProjectHubColors.Ink,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 18.sp
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+
+        if (observation.photoUrls.isEmpty()) {
+            TaskInfoMessageCard(
+                title = "Sem fotos",
+                detail = "Esta observação não tem fotos anexadas."
+            )
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                observation.photoUrls.forEach { photoUrl ->
+                    AsyncImage(
+                        model = photoUrl,
+                        contentDescription = currentAppSettings().language.t("profile.photoDescription"),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(190.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(ProjectHubColors.SurfaceSoft)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TaskInfoMeta(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(label, color = ProjectHubColors.Muted, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+        Spacer(modifier = Modifier.height(3.dp))
+        Text(value, color = ProjectHubColors.Slate, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+    }
+}
+
+@Composable
+private fun TaskObservationListRow(
+    observation: GestorTaskInfoObservation,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(ProjectHubColors.SurfaceSoft)
+            .clickable(onClick = rememberSoundClick(onClick))
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text = observation.text,
+            color = ProjectHubColors.Ink,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 13.sp
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = "${observation.userName} | ${observation.date} | ${observation.completionPercent}% | ${observation.photoUrls.size} fotos",
+            color = ProjectHubColors.Muted,
+            fontSize = 12.sp
+        )
+    }
+}
+
+@Composable
+private fun TaskObservationRow(observation: GestorTaskInfoObservation) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(ProjectHubColors.SurfaceSoft)
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text = observation.text,
+            color = ProjectHubColors.Ink,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 13.sp
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = "${observation.userName} | ${observation.date} | ${observation.completionPercent}%",
+            color = ProjectHubColors.Muted,
+            fontSize = 12.sp
+        )
+        observation.spentHours?.let { hours ->
+            Text(
+                text = currentAppSettings().language.t("tasks.timeSpent").format(hours),
+                color = ProjectHubColors.Muted,
+                fontSize = 12.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun TaskInfoMessageCard(
+    title: String,
+    detail: String
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(title, color = ProjectHubColors.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(detail, color = ProjectHubColors.Muted, fontSize = 13.sp)
+        }
+    }
+}
+
+@Composable
+private fun TaskTextAction(
+    label: String,
+    color: Color,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .height(32.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(color.copy(alpha = 0.12f))
+            .clickable(onClick = rememberSoundClick(onClick))
+            .padding(horizontal = 9.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(label, color = color, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+    }
+}
+
+@Composable
+>>>>>>> Stashed changes
 private fun TaskActionIcon(
     icon: String,
     color: Color,
@@ -465,7 +957,7 @@ private fun TaskActionIcon(
 @Composable
 private fun StatusPill(status: String) {
     val color = when (status) {
-        "Concluida" -> GestorTasksGreen
+        "Concluída" -> GestorTasksGreen
         "Em progresso" -> GestorTasksBlue
         "Atrasada" -> GestorTasksRed
         else -> GestorTasksOrange
@@ -501,38 +993,38 @@ private fun EditGestorTaskDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Editar tarefa") },
+        title = { Text(currentAppSettings().language.t("tasks.editTitle")) },
         text = {
             Column {
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("Titulo") },
+                    label = { Text(currentAppSettings().language.t("tasks.titleField")) },
                     singleLine = true
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Descricao") }
+                    label = { Text(currentAppSettings().language.t("tasks.descriptionField")) }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 EditTaskDatePickerField(
                     value = startDate,
-                    label = "Inicio",
+                    label = currentAppSettings().language.t("common.start"),
                     onClick = { activeDateField = EditTaskDateField.Start }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 EditTaskDatePickerField(
                     value = endDate,
-                    label = "Prazo",
+                    label = currentAppSettings().language.t("common.deadline"),
                     onClick = { activeDateField = EditTaskDateField.End }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                Text("Utilizadores", color = GestorTasksInk, fontWeight = FontWeight.Bold)
+                Text(currentAppSettings().language.t("common.users"), color = ProjectHubColors.Ink, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(6.dp))
                 if (users.isEmpty()) {
-                    Text("Este projeto ainda nao tem utilizadores associados.", color = GestorTasksMuted, fontSize = 13.sp)
+                    Text(currentAppSettings().language.t("common.noProjectUsers"), color = ProjectHubColors.Muted, fontSize = 13.sp)
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         users.forEach { user ->
@@ -568,7 +1060,7 @@ private fun EditGestorTaskDialog(
         },
         dismissButton = {
             TextButton(onClick = rememberSoundClick(onDismiss)) {
-                Text("Cancelar")
+                Text(currentAppSettings().language.t("common.cancel"))
             }
         }
     )
@@ -595,7 +1087,7 @@ private fun EditTaskDatePickerField(
     onClick: () -> Unit
 ) {
     Column {
-        Text(label, color = GestorTasksInk, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        Text(label, color = ProjectHubColors.Ink, fontWeight = FontWeight.Bold, fontSize = 13.sp)
         Spacer(modifier = Modifier.height(4.dp))
         Row(
         modifier = Modifier
@@ -610,10 +1102,10 @@ private fun EditTaskDatePickerField(
     ) {
         Text(
             text = value.ifBlank { "dd/mm/aaaa" },
-            color = if (value.isBlank()) GestorTasksMuted else GestorTasksInk,
+            color = if (value.isBlank()) ProjectHubColors.Muted else ProjectHubColors.Ink,
             fontWeight = FontWeight.SemiBold
         )
-        Text("Calendario", color = GestorTasksMuted, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        Text(currentAppSettings().language.t("settings.dateFormat"), color = ProjectHubColors.Muted, fontWeight = FontWeight.Bold, fontSize = 12.sp)
     }
     }
 }
@@ -638,12 +1130,12 @@ private fun EditTaskDatePickerDialog(
                     }
                 }
             ) {
-                Text("OK")
+	                Text(currentAppSettings().language.t("common.ok"))
             }
         },
         dismissButton = {
             TextButton(onClick = rememberSoundClick(onDismiss)) {
-                Text("Cancelar")
+                Text(currentAppSettings().language.t("common.cancel"))
             }
         }
     ) {
@@ -688,26 +1180,26 @@ private fun AddGestorTaskDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nova tarefa") },
+        title = { Text(currentAppSettings().language.t("tasks.newTitle")) },
         text = {
             Column {
-                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Titulo") }, singleLine = true)
+                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text(currentAppSettings().language.t("tasks.titleField")) }, singleLine = true)
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Descricao") })
+                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text(currentAppSettings().language.t("tasks.descriptionField")) })
                 Spacer(modifier = Modifier.height(8.dp))
                 ProjectDropdown(state.projects, selectedProjectId) {
                     selectedProjectId = it
                     selectedUserIds = emptySet()
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(value = startDate, onValueChange = { startDate = it }, label = { Text("Inicio dd/mm/aaaa") }, singleLine = true)
+                OutlinedTextField(value = startDate, onValueChange = { startDate = it }, label = { Text("${currentAppSettings().language.t("common.start")} dd/mm/aaaa") }, singleLine = true)
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(value = endDate, onValueChange = { endDate = it }, label = { Text("Prazo dd/mm/aaaa") }, singleLine = true)
+                OutlinedTextField(value = endDate, onValueChange = { endDate = it }, label = { Text("${currentAppSettings().language.t("common.deadline")} dd/mm/aaaa") }, singleLine = true)
                 Spacer(modifier = Modifier.height(12.dp))
-                Text("Utilizadores", color = GestorTasksInk, fontWeight = FontWeight.Bold)
+                Text(currentAppSettings().language.t("common.users"), color = ProjectHubColors.Ink, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(6.dp))
                 if (availableUsers.isEmpty()) {
-                    Text("Este projeto ainda nao tem utilizadores associados.", color = GestorTasksMuted, fontSize = 13.sp)
+                    Text(currentAppSettings().language.t("common.noProjectUsers"), color = ProjectHubColors.Muted, fontSize = 13.sp)
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         availableUsers.forEach { user ->
@@ -738,12 +1230,12 @@ private fun AddGestorTaskDialog(
                     onCreate(title, description, selectedProjectId, startDate, endDate, selectedUserIds)
                 }
             ) {
-                Text(if (isSaving) "A criar..." else "Criar", color = GestorTasksAccent, fontWeight = FontWeight.Bold)
+                Text(if (isSaving) currentAppSettings().language.t("common.creating") else currentAppSettings().language.t("common.create"), color = GestorTasksAccent, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = rememberSoundClick(onDismiss)) {
-                Text("Cancelar")
+                Text(currentAppSettings().language.t("common.cancel"))
             }
         }
     )
@@ -770,14 +1262,14 @@ private fun ProjectDropdown(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(selected?.name ?: "Seleciona o projeto", color = GestorTasksInk, fontWeight = FontWeight.SemiBold)
-            Text(if (expanded) "^" else "v", color = GestorTasksMuted, fontWeight = FontWeight.Bold)
+            Text(selected?.name ?: "Seleciona o projeto", color = ProjectHubColors.Ink, fontWeight = FontWeight.SemiBold)
+            Text(if (expanded) "^" else "v", color = ProjectHubColors.Muted, fontWeight = FontWeight.Bold)
         }
 
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.background(Color.White)) {
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.background(ProjectHubColors.LightSurface)) {
             projects.forEach { project ->
                 DropdownMenuItem(
-                    text = { Text(project.name, color = GestorTasksInk) },
+                    text = { Text(project.name, color = ProjectHubColors.Ink) },
                     onClick = {
                         expanded = false
                         onProjectSelected(project.id)
@@ -815,6 +1307,6 @@ private fun UserCheckRow(
             if (checked) Text("✓", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
         }
         Spacer(modifier = Modifier.width(10.dp))
-        Text(user.name, color = GestorTasksInk, fontWeight = FontWeight.SemiBold)
+        Text(user.name, color = ProjectHubColors.Ink, fontWeight = FontWeight.SemiBold)
     }
 }

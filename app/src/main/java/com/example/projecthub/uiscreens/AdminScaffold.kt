@@ -70,7 +70,7 @@ fun AdminScaffold(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .border(5.dp, AdminScaffoldAccent)
+                .border(5.dp, ProjectHubColors.HeaderBackground)
                 .background(MaterialTheme.colorScheme.surface)
         ) {
             AdminTopBar(
@@ -115,7 +115,7 @@ private fun AdminTopBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(AdminScaffoldAccent)
+            .background(ProjectHubColors.HeaderBackground)
             .statusBarsPadding()
             .height(62.dp)
             .padding(horizontal = 18.dp),
@@ -129,12 +129,12 @@ private fun AdminTopBar(
                 .clickable(onClick = onMenuClick),
             contentAlignment = Alignment.Center
         ) {
-            MenuIcon(color = Color.White)
+            MenuIcon(color = ProjectHubColors.HeaderContent)
         }
 
         Text(
             text = "Project Hub",
-            color = Color.White,
+            color = ProjectHubColors.HeaderContent,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 21.sp
         )
@@ -211,7 +211,7 @@ private fun AdminSidebar(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(Color.White)
+                    .background(ProjectHubColors.LightSurface)
                     .padding(5.dp)
             )
 
@@ -225,7 +225,7 @@ private fun AdminSidebar(
                     fontSize = 20.sp
                 )
                 Text(
-                    text = "Admin",
+                    text = language.t("role.admin"),
                     color = ProjectHubColors.SidebarMutedText,
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp

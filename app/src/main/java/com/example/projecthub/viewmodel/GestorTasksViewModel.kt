@@ -6,6 +6,11 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projecthub.remote.supabase.models.TarefaDto
+<<<<<<< Updated upstream
+=======
+import com.example.projecthub.repository.ObservacaoFotoRepository
+import com.example.projecthub.repository.ObservacaoRepository
+>>>>>>> Stashed changes
 import com.example.projecthub.repository.ProjetoRepository
 import com.example.projecthub.repository.ProjetoUserRepository
 import com.example.projecthub.repository.TarefaRepository
@@ -20,7 +25,7 @@ enum class GestorTaskStatusFilter(val label: String) {
     All("Todas"),
     Pending("Pendentes"),
     InProgress("Em progresso"),
-    Completed("Concluidas")
+    Completed("Concluídas")
 }
 
 data class GestorTaskProjectOption(
@@ -55,6 +60,28 @@ data class GestorTaskListItem(
     val isDelayed: Boolean
 )
 
+<<<<<<< Updated upstream
+=======
+data class GestorTaskInfoObservation(
+    val id: Int?,
+    val text: String,
+    val userName: String,
+    val date: String,
+    val local: String,
+    val completionPercent: Int,
+    val spentHours: Float?,
+    val photoUrls: List<String>
+)
+
+data class GestorTaskInfoState(
+    val task: GestorTaskListItem? = null,
+    val observations: List<GestorTaskInfoObservation> = emptyList(),
+    val recordsCount: Int = 0,
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
+)
+
+>>>>>>> Stashed changes
 data class GestorProjectTaskGroup(
     val projectId: Int,
     val projectName: String,
@@ -88,6 +115,12 @@ class GestorTasksViewModel(
     private val tarefaRepository: TarefaRepository = TarefaRepository(),
     private val projetoUserRepository: ProjetoUserRepository = ProjetoUserRepository(),
     private val tarefaUserRepository: TarefaUserRepository = TarefaUserRepository(),
+<<<<<<< Updated upstream
+=======
+    private val registoTarefaRepository: RegistoTarefaRepository = RegistoTarefaRepository(),
+    private val observacaoRepository: ObservacaoRepository = ObservacaoRepository(),
+    private val observacaoFotoRepository: ObservacaoFotoRepository = ObservacaoFotoRepository(),
+>>>>>>> Stashed changes
     private val userRemoteDataSource: UserRemoteDataSource = UserRemoteDataSource()
 ) : ViewModel() {
 
@@ -106,7 +139,7 @@ class GestorTasksViewModel(
         if (gestorId == null) {
             state = GestorTasksState(
                 isLoading = false,
-                errorMessage = "Nao foi possivel identificar o gestor autenticado."
+                errorMessage = "Não foi possível identificar o gestor autenticado."
             )
             return
         }
@@ -122,7 +155,7 @@ class GestorTasksViewModel(
             if (projectsResult.isFailure || tasksResult.isFailure || taskUsersResult.isFailure || usersResult.isFailure) {
                 state = state.copy(
                     isLoading = false,
-                    errorMessage = "Nao foi possivel carregar as tarefas."
+                    errorMessage = "Não foi possível carregar as tarefas."
                 )
                 return@launch
             }
@@ -201,6 +234,75 @@ class GestorTasksViewModel(
         applyFilters()
     }
 
+<<<<<<< Updated upstream
+=======
+    fun loadTaskInfo(task: GestorTaskListItem) {
+        viewModelScope.launch {
+            state = state.copy(
+                detailState = GestorTaskInfoState(
+                    task = task,
+                    isLoading = true
+                )
+            )
+
+            val recordsResult = registoTarefaRepository.getRegistosByTarefa(task.id)
+            val observationsResult = observacaoRepository.getObservacoes()
+            val photosResult = observacaoFotoRepository.getFotos()
+            val usersResult = runCatching { userRemoteDataSource.getUsers() }
+
+            if (recordsResult.isFailure || observationsResult.isFailure || usersResult.isFailure) {
+                state = state.copy(
+                    detailState = GestorTaskInfoState(
+                        task = task,
+                        isLoading = false,
+                        errorMessage = "Não foi possível carregar os detalhes da tarefa."
+                    )
+                )
+                return@launch
+            }
+
+            val usersById = usersResult.getOrDefault(emptyList())
+                .mapNotNull { user -> user.id?.let { it to user } }
+                .toMap()
+            val records = recordsResult.getOrDefault(emptyList())
+            val recordsById = records.mapNotNull { record -> record.id?.let { it to record } }.toMap()
+            val photosByObservation = photosResult.getOrDefault(emptyList()).groupBy { it.observacao_id }
+            val observations = observationsResult
+                .getOrDefault(emptyList())
+                .mapNotNull { observation ->
+                    val record = recordsById[observation.registo_id] ?: return@mapNotNull null
+                    val user = usersById[record.user_id]
+                    val userName = user?.nome?.ifBlank { user.username } ?: "Utilizador ${record.user_id}"
+
+                    GestorTaskInfoObservation(
+                        id = observation.id,
+                        text = observation.texto,
+                        userName = userName,
+                        date = (observation.created_at ?: record.created_at ?: record.data).toUiDateText(),
+                        local = record.local?.takeIf { it.isNotBlank() } ?: "-",
+                        completionPercent = record.taxa_conclusao,
+                        spentHours = record.tempo_gasto,
+                        photoUrls = observation.id?.let { photosByObservation[it].orEmpty().map { photo -> photo.foto_url } }.orEmpty()
+                    )
+                }
+                .sortedByDescending { it.date }
+
+            state = state.copy(
+                detailState = GestorTaskInfoState(
+                    task = task,
+                    observations = observations,
+                    recordsCount = records.size,
+                    isLoading = false
+                )
+            )
+        }
+    }
+
+    fun clearTaskInfo() {
+        state = state.copy(detailState = GestorTaskInfoState())
+    }
+
+>>>>>>> Stashed changes
     fun clearCreateError() {
         state = state.copy(createErrorMessage = null)
     }
@@ -220,13 +322,13 @@ class GestorTasksViewModel(
             val endDate = endDateText.toInputLocalDateOrNull()
 
             val validationError = when {
-                title.isBlank() -> "Indica o titulo da tarefa."
-                description.isBlank() -> "Indica a descricao da tarefa."
+                title.isBlank() -> "Indica o título da tarefa."
+                description.isBlank() -> "Indica a descrição da tarefa."
                 projectId == null -> "Seleciona o projeto da tarefa."
-                startDate == null -> "Indica a data de inicio no formato dd/mm/aaaa."
+                startDate == null -> "Indica a data de início no formato dd/mm/aaaa."
                 endDate == null -> "Indica a data de fim no formato dd/mm/aaaa."
-                startDate.isAfter(endDate) -> "A data de inicio nao pode ser depois da data de fim."
-                userIds.isEmpty() -> "Associa pelo menos um utilizador a tarefa."
+                startDate.isAfter(endDate) -> "A data de início não pode ser depois da data de fim."
+                userIds.isEmpty() -> "Associa pelo menos um utilizador à tarefa."
                 else -> null
             }
 
@@ -250,7 +352,7 @@ class GestorTasksViewModel(
                 state = state.copy(
                     isCreating = false,
                     createErrorMessage = createResult.exceptionOrNull()?.message
-                        ?: "Nao foi possivel criar a tarefa."
+                        ?: "Não foi possível criar a tarefa."
                 )
                 return@launch
             }
@@ -261,7 +363,7 @@ class GestorTasksViewModel(
                     state = state.copy(
                         isCreating = false,
                         createErrorMessage = associateResult.exceptionOrNull()?.message
-                            ?: "Nao foi possivel associar utilizadores a tarefa."
+                            ?: "Não foi possível associar utilizadores à tarefa."
                     )
                     return@launch
                 }
@@ -282,7 +384,7 @@ class GestorTasksViewModel(
             } else {
                 state = state.copy(
                     errorMessage = result.exceptionOrNull()?.message
-                        ?: "Nao foi possivel eliminar a tarefa."
+                        ?: "Não foi possível eliminar a tarefa."
                 )
             }
         }
@@ -303,12 +405,12 @@ class GestorTasksViewModel(
             val endDate = endDateText.toInputLocalDateOrNull()
 
             val validationError = when {
-                title.isBlank() -> "Indica o titulo da tarefa."
-                description.isBlank() -> "Indica a descricao da tarefa."
-                startDate == null -> "Indica a data de inicio no formato dd/mm/aaaa."
+                title.isBlank() -> "Indica o título da tarefa."
+                description.isBlank() -> "Indica a descrição da tarefa."
+                startDate == null -> "Indica a data de início no formato dd/mm/aaaa."
                 endDate == null -> "Indica a data de fim no formato dd/mm/aaaa."
-                startDate.isAfter(endDate) -> "A data de inicio nao pode ser depois da data de fim."
-                userIds.isEmpty() -> "Associa pelo menos um utilizador a tarefa."
+                startDate.isAfter(endDate) -> "A data de início não pode ser depois da data de fim."
+                userIds.isEmpty() -> "Associa pelo menos um utilizador à tarefa."
                 else -> null
             }
 
@@ -333,7 +435,7 @@ class GestorTasksViewModel(
                 state = state.copy(
                     isCreating = false,
                     createErrorMessage = updateResult.exceptionOrNull()?.message
-                        ?: "Nao foi possivel atualizar a tarefa."
+                        ?: "Não foi possível atualizar a tarefa."
                 )
                 return@launch
             }
@@ -348,7 +450,7 @@ class GestorTasksViewModel(
                     state = state.copy(
                         isCreating = false,
                         createErrorMessage = result.exceptionOrNull()?.message
-                            ?: "Nao foi possivel remover utilizadores da tarefa."
+                            ?: "Não foi possível remover utilizadores da tarefa."
                     )
                     return@launch
                 }
@@ -360,7 +462,7 @@ class GestorTasksViewModel(
                     state = state.copy(
                         isCreating = false,
                         createErrorMessage = result.exceptionOrNull()?.message
-                            ?: "Nao foi possivel associar utilizadores a tarefa."
+                            ?: "Não foi possível associar utilizadores à tarefa."
                     )
                     return@launch
                 }
@@ -433,9 +535,9 @@ class GestorTasksViewModel(
             id = id ?: 0,
             projectId = projeto_id,
             title = titulo,
-            description = descricao?.takeIf { it.isNotBlank() } ?: "Sem descricao",
+            description = descricao?.takeIf { it.isNotBlank() } ?: "Sem descrição",
             statusLabel = when {
-                isCompleted -> "Concluida"
+                isCompleted -> "Concluída"
                 isDelayed -> "Atrasada"
                 isInProgress -> "Em progresso"
                 else -> "Pendente"

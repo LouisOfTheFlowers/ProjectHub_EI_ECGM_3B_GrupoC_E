@@ -39,7 +39,7 @@ class ProfileViewModel(
     fun sendEmailChangeCode() {
         val currentUser = state.user
         if (currentUser == null) {
-            state = state.copy(errorMessage = "Nao foi possivel identificar a tua conta.")
+            state = state.copy(errorMessage = "Não foi possível identificar a tua conta.")
             return
         }
 
@@ -59,7 +59,7 @@ class ProfileViewModel(
                 state.copy(
                     isSendingEmailCode = false,
                     emailCodeSent = true,
-                    message = "Enviamos um codigo para ${currentUser.email}."
+                    message = "Enviámos um código para ${currentUser.email}."
                 )
             } else {
                 state.copy(
@@ -67,7 +67,7 @@ class ProfileViewModel(
                     emailCodeSent = false,
                     errorMessage = accountErrorMessage(
                         result.exceptionOrNull(),
-                        "Nao foi possivel enviar o codigo para o email atual."
+                        "Não foi possível enviar o código para o email atual."
                     )
                 )
             }
@@ -82,7 +82,7 @@ class ProfileViewModel(
         val userId = currentUser?.id
 
         if (currentUser == null || userId == null) {
-            state = state.copy(errorMessage = "Nao foi possivel identificar a tua conta.")
+            state = state.copy(errorMessage = "Não foi possível identificar a tua conta.")
             return
         }
 
@@ -109,7 +109,7 @@ class ProfileViewModel(
                 state = state.copy(
                     isSaving = false,
                     errorMessage = result.exceptionOrNull()?.message
-                        ?: "Nao foi possivel atualizar a foto de perfil."
+                        ?: "Não foi possível atualizar a foto de perfil."
                 )
             }
         }
@@ -122,13 +122,13 @@ class ProfileViewModel(
     ) {
         val currentUser = state.user
         if (currentUser == null) {
-            state = state.copy(errorMessage = "Nao foi possivel identificar a tua conta.")
+            state = state.copy(errorMessage = "Não foi possível identificar a tua conta.")
             return
         }
 
         val trimmedEmail = newEmail.trim()
         if (!trimmedEmail.contains("@") || !trimmedEmail.contains(".")) {
-            state = state.copy(errorMessage = "Insere um email valido.")
+            state = state.copy(errorMessage = "Insere um email válido.")
             return
         }
 
@@ -139,7 +139,7 @@ class ProfileViewModel(
 
         val trimmedCode = verificationCode.trim()
         if (trimmedCode.isBlank()) {
-            state = state.copy(errorMessage = "Insere o codigo enviado para o email atual.")
+            state = state.copy(errorMessage = "Insere o código enviado para o email atual.")
             return
         }
 
@@ -157,7 +157,7 @@ class ProfileViewModel(
                     user = updatedUser,
                     isSaving = false,
                     emailCodeSent = false,
-                    message = "Email atualizado. Se o Supabase pedir confirmacao, confirma no teu email."
+                    message = "Email atualizado. Se o Supabase pedir confirmação, confirma no teu email."
                 )
                 onUserUpdated(updatedUser)
             } else {
@@ -165,7 +165,7 @@ class ProfileViewModel(
                     isSaving = false,
                     errorMessage = accountErrorMessage(
                         result.exceptionOrNull(),
-                        "Nao foi possivel alterar o email."
+                        "Não foi possível alterar o email."
                     )
                 )
             }
@@ -179,7 +179,7 @@ class ProfileViewModel(
     ) {
         val currentUser = state.user
         if (currentUser == null) {
-            state = state.copy(errorMessage = "Nao foi possivel identificar a tua conta.")
+            state = state.copy(errorMessage = "Não foi possível identificar a tua conta.")
             return
         }
 
@@ -194,7 +194,7 @@ class ProfileViewModel(
         }
 
         if (newPassword != confirmPassword) {
-            state = state.copy(errorMessage = "A confirmacao da palavra-passe nao coincide.")
+            state = state.copy(errorMessage = "A confirmação da palavra-passe não coincide.")
             return
         }
 
@@ -216,7 +216,7 @@ class ProfileViewModel(
                     isSaving = false,
                     errorMessage = accountErrorMessage(
                         result.exceptionOrNull(),
-                        "Nao foi possivel alterar a palavra-passe."
+                        "Não foi possível alterar a palavra-passe."
                     )
                 )
             }
@@ -226,7 +226,7 @@ class ProfileViewModel(
     fun deleteAccount(onDeleted: () -> Unit) {
         val currentUser = state.user
         if (currentUser == null) {
-            state = state.copy(errorMessage = "Nao foi possivel identificar a tua conta.")
+            state = state.copy(errorMessage = "Não foi possível identificar a tua conta.")
             return
         }
 
@@ -245,7 +245,7 @@ class ProfileViewModel(
                     isDeleting = false,
                     errorMessage = accountErrorMessage(
                         result.exceptionOrNull(),
-                        "Nao foi possivel eliminar a conta."
+                        "Não foi possível eliminar a conta."
                     )
                 )
             }
@@ -258,16 +258,16 @@ class ProfileViewModel(
         return when {
             rawMessage.contains("invalid login", ignoreCase = true) ||
                 rawMessage.contains("invalid credentials", ignoreCase = true) ->
-                "A palavra-passe antiga nao esta correta."
+                "A palavra-passe antiga não está correta."
 
             rawMessage.contains("nonce", ignoreCase = true) ||
                 rawMessage.contains("token", ignoreCase = true) ||
                 rawMessage.contains("otp", ignoreCase = true) ->
-                "O codigo inserido nao e valido ou expirou."
+                "O código inserido não é válido ou expirou."
 
             rawMessage.contains("email", ignoreCase = true) &&
                 rawMessage.contains("exists", ignoreCase = true) ->
-                "Ja existe uma conta com esse email."
+                "Já existe uma conta com esse email."
 
             rawMessage.contains("user_update_own_email", ignoreCase = true) ->
                 "Aplica a migration de perfil no Supabase antes de alterar o email."

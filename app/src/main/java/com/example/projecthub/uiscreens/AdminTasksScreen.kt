@@ -57,8 +57,6 @@ import java.time.format.DateTimeParseException
 import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val TasksAccent = AuthAccent
-private val TasksInk = ProjectHubColors.Ink
-private val TasksMuted = ProjectHubColors.Muted
 private val TasksGreen = ProjectHubColors.Success
 private val TasksOrange = ProjectHubColors.Warning
 private val TasksRed = ProjectHubColors.Danger
@@ -123,13 +121,13 @@ private fun TasksHeader(onAddTask: () -> Unit) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = language.t("tasks.title"),
-                color = TasksInk,
+                color = ProjectHubColors.Ink,
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 24.sp
             )
             Text(
                 text = language.t("tasks.subtitle"),
-                color = TasksMuted,
+                color = ProjectHubColors.Muted,
                 fontSize = 14.sp
             )
         }
@@ -187,7 +185,7 @@ private fun CompactStatCard(
     Card(
         modifier = modifier.height(82.dp),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(
@@ -196,7 +194,7 @@ private fun CompactStatCard(
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.Center
         ) {
-            Text(text = title, color = TasksMuted, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+            Text(text = title, color = ProjectHubColors.Muted, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
             Text(text = value, color = accent, fontWeight = FontWeight.ExtraBold, fontSize = 27.sp)
         }
     }
@@ -212,7 +210,7 @@ private fun TaskFilters(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -256,13 +254,13 @@ private fun StatusDropdown(
         ) {
             Text(
                 text = selected.label,
-                color = TasksInk,
+                color = ProjectHubColors.Ink,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp
             )
             Text(
                 text = if (expanded) "^" else "v",
-                color = TasksMuted,
+                color = ProjectHubColors.Muted,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp
             )
@@ -271,14 +269,14 @@ private fun StatusDropdown(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.background(Color.White)
+            modifier = Modifier.background(ProjectHubColors.LightSurface)
         ) {
             AdminTaskStatusFilter.entries.forEach { option ->
                 DropdownMenuItem(
                     text = {
                         Text(
                             text = option.label,
-                            color = TasksInk,
+                            color = ProjectHubColors.Ink,
                             fontWeight = if (option == selected) FontWeight.Bold else FontWeight.Medium
                         )
                     },
@@ -321,8 +319,8 @@ private fun TaskProjectList(
 
         state.projectGroups.isEmpty() -> {
             Text(
-                text = "Ainda nÃ£o existem projetos para listar tarefas.",
-                color = TasksMuted,
+                text = language.t("tasks.noProjects"),
+                color = ProjectHubColors.Muted,
                 fontSize = 15.sp
             )
         }
@@ -348,7 +346,7 @@ private fun ProjectTaskSection(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column {
@@ -379,13 +377,13 @@ private fun ProjectTaskSection(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = group.projectName,
-                        color = TasksInk,
+                        color = ProjectHubColors.Ink,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 17.sp
                     )
                     Text(
-                        text = "${group.visibleTasks.size} visÃ­veis Â· ${group.pendingTasks} pendentes Â· ${group.completedTasks} completadas",
-                        color = TasksMuted,
+                        text = language.t("tasks.visibleSummary").format(group.visibleTasks.size, group.pendingTasks, group.completedTasks),
+                        color = ProjectHubColors.Muted,
                         fontSize = 12.sp
                     )
                 }
@@ -405,9 +403,9 @@ private fun ProjectTaskSection(
             if (group.isExpanded) {
                 if (group.visibleTasks.isEmpty()) {
                     Text(
-                        text = "Nenhuma tarefa corresponde aos filtros.",
+                        text = language.t("tasks.noMatching"),
                         modifier = Modifier.padding(start = 14.dp, end = 14.dp, bottom = 14.dp),
-                        color = TasksMuted,
+                        color = ProjectHubColors.Muted,
                         fontSize = 14.sp
                     )
                 } else {
@@ -452,14 +450,14 @@ private fun TaskCard(task: AdminTaskListItem) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = task.title,
-                        color = TasksInk,
+                        color = ProjectHubColors.Ink,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 16.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = task.description,
-                        color = TasksMuted,
+                        color = ProjectHubColors.Muted,
                         fontSize = 13.sp
                     )
                 }
@@ -472,8 +470,8 @@ private fun TaskCard(task: AdminTaskListItem) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            TaskInfoRow("Inicio", task.startDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
-            TaskInfoRow("Prazo", task.dueDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
+            TaskInfoRow(currentAppSettings().language.t("common.start"), task.startDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
+            TaskInfoRow(currentAppSettings().language.t("common.deadline"), task.dueDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
         }
     }
 }
@@ -534,7 +532,7 @@ private fun TaskInfoRow(label: String, value: String) {
     ) {
         Text(
             text = label,
-            color = TasksMuted,
+            color = ProjectHubColors.Muted,
             fontSize = 13.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -542,7 +540,7 @@ private fun TaskInfoRow(label: String, value: String) {
         )
         Text(
             text = value,
-            color = TasksInk,
+            color = ProjectHubColors.Ink,
             fontWeight = FontWeight.SemiBold,
             fontSize = 13.sp,
             maxLines = 1,

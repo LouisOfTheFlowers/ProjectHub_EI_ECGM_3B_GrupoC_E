@@ -166,7 +166,10 @@ fun SettingsScreen(
                 Button(
                     onClick = {
                         playClick()
-                        AppNotificationHelper.showTestNotification(context)
+                        AppNotificationHelper.showTestNotification(
+                            context = context,
+                            message = language.t("settings.testNotificationText")
+                        )
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = SettingsAccent),
                     shape = RoundedCornerShape(8.dp)

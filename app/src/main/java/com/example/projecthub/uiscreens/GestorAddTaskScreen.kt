@@ -43,7 +43,9 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.settings.t
 import com.example.projecthub.viewmodel.GestorTaskProjectOption
 import com.example.projecthub.viewmodel.GestorTaskUserOption
 import com.example.projecthub.viewmodel.GestorTasksState
@@ -53,8 +55,6 @@ import java.time.format.DateTimeFormatter
 import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val GestorAddTaskAccent = AuthAccent
-private val GestorAddTaskInk = ProjectHubColors.Ink
-private val GestorAddTaskMuted = ProjectHubColors.Muted
 private val GestorAddTaskRed = ProjectHubColors.Danger
 
 @Composable
@@ -63,6 +63,7 @@ fun GestorAddTaskScreen(
     onBack: () -> Unit,
     onCreate: (String, String, Int?, String, String, Set<Int>) -> Unit
 ) {
+    val language = currentAppSettings().language
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedProject by remember { mutableStateOf<GestorTaskProjectOption?>(null) }
@@ -80,9 +81,9 @@ fun GestorAddTaskScreen(
     Column {
         TextButton(
             onClick = backClick,
-            colors = ButtonDefaults.textButtonColors(contentColor = GestorAddTaskInk)
+            colors = ButtonDefaults.textButtonColors(contentColor = ProjectHubColors.Ink)
         ) {
-            Text("< Voltar às Tarefas", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(language.t("addTask.back"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -90,13 +91,13 @@ fun GestorAddTaskScreen(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
             elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
         ) {
             Column(modifier = Modifier.padding(18.dp)) {
                 Text(
-                    text = "Adicionar Nova Tarefa",
-                    color = GestorAddTaskInk,
+                    text = language.t("addTask.title"),
+                    color = ProjectHubColors.Ink,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 25.sp
                 )
@@ -113,7 +114,7 @@ fun GestorAddTaskScreen(
                         capitalization = KeyboardCapitalization.Sentences,
                         keyboardType = KeyboardType.Text
                     ),
-                    placeholder = { Text("Ex: Preparar documentação") }
+                    placeholder = { Text(language.t("addTask.titlePlaceholder")) }
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -129,7 +130,7 @@ fun GestorAddTaskScreen(
                         capitalization = KeyboardCapitalization.Sentences,
                         keyboardType = KeyboardType.Text
                     ),
-                    placeholder = { Text("Descreve o objetivo da tarefa...") }
+                    placeholder = { Text(language.t("addTask.descriptionPlaceholder")) }
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -207,7 +208,7 @@ fun GestorAddTaskScreen(
                             color = Color.White
                         )
                     } else {
-                        Text("Criar Tarefa", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(language.t("addTask.submit"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
 
@@ -218,14 +219,14 @@ fun GestorAddTaskScreen(
                     enabled = !state.isCreating,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = ProjectHubColors.Disabled,
-                        contentColor = GestorAddTaskInk
+                        contentColor = ProjectHubColors.Ink
                     ),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
                 ) {
-                    Text("Cancelar", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(language.t("common.cancel"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
         }
@@ -250,7 +251,7 @@ fun GestorAddTaskScreen(
 private fun FormLabel(text: String) {
     Text(
         text = text,
-        color = GestorAddTaskInk,
+        color = ProjectHubColors.Ink,
         fontWeight = FontWeight.Bold,
         fontSize = 15.sp,
         modifier = Modifier.padding(bottom = 6.dp)
@@ -280,13 +281,13 @@ private fun GestorProjectDropdown(
         ) {
             Text(
                 text = selectedProject?.name ?: "Selecione um projeto",
-                color = if (selectedProject == null) GestorAddTaskMuted else GestorAddTaskInk,
+                color = if (selectedProject == null) ProjectHubColors.Muted else ProjectHubColors.Ink,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp
             )
             Text(
                 text = if (expanded) "^" else "v",
-                color = GestorAddTaskMuted,
+                color = ProjectHubColors.Muted,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -294,14 +295,14 @@ private fun GestorProjectDropdown(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.background(Color.White)
+            modifier = Modifier.background(ProjectHubColors.LightSurface)
         ) {
             projects.forEach { project ->
                 DropdownMenuItem(
                     text = {
                         Text(
                             text = project.name,
-                            color = GestorAddTaskInk,
+                            color = ProjectHubColors.Ink,
                             fontWeight = FontWeight.Medium
                         )
                     },
@@ -361,7 +362,7 @@ private fun UserMultiSelect(
                             }
                         }
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text(user.name, color = GestorAddTaskInk, fontWeight = FontWeight.SemiBold)
+                        Text(user.name, color = ProjectHubColors.Ink, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -381,7 +382,7 @@ private fun DisabledBox(text: String) {
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = text, color = GestorAddTaskMuted, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+        Text(text = text, color = ProjectHubColors.Muted, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
     }
 }
 
@@ -409,13 +410,13 @@ private fun GestorTaskDatePickerField(
     ) {
         Text(
             text = value.ifBlank { "dd/mm/aaaa" },
-            color = if (value.isBlank()) GestorAddTaskMuted else GestorAddTaskInk,
+            color = if (value.isBlank()) ProjectHubColors.Muted else ProjectHubColors.Ink,
             fontWeight = FontWeight.SemiBold,
             fontSize = 15.sp
         )
         Text(
-            text = "Formato de data",
-            color = GestorAddTaskMuted,
+            text = currentAppSettings().language.t("settings.dateFormat"),
+            color = ProjectHubColors.Muted,
             fontWeight = FontWeight.Bold,
             fontSize = 13.sp
         )
@@ -442,12 +443,12 @@ private fun GestorTaskDatePickerDialog(
                     }
                 }
             ) {
-                Text("OK")
+                Text(currentAppSettings().language.t("common.ok"))
             }
         },
         dismissButton = {
             TextButton(onClick = rememberSoundClick(onDismiss)) {
-                Text("Cancelar")
+                Text(currentAppSettings().language.t("common.cancel"))
             }
         }
     ) {

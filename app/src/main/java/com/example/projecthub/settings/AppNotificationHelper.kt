@@ -39,7 +39,10 @@ object AppNotificationHelper {
             ) == PackageManager.PERMISSION_GRANTED
     }
 
-    fun showTestNotification(context: Context) {
+    fun showTestNotification(
+        context: Context,
+        message: String = "As notificações estão ativas."
+    ) {
         createChannels(context)
 
         if (!canPostNotifications(context)) return
@@ -47,7 +50,7 @@ object AppNotificationHelper {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("ProjectHub")
-            .setContentText("As notificações estão ativas.")
+            .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
             .build()

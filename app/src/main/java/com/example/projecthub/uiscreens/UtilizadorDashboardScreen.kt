@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.navigation.AppRoutes
 import com.example.projecthub.remote.supabase.models.UserDto
+import com.example.projecthub.settings.currentAppSettings
+import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.viewmodel.UtilizadorDashboardState
 import com.example.projecthub.viewmodel.UtilizadorDashboardViewModel
@@ -126,16 +128,17 @@ fun UtilizadorDashboardScreen(
 
 @Composable
 private fun UtilizadorDashboardHeader() {
+    val language = currentAppSettings().language
     Column {
         Text(
-            text = "Utilizador Dashboard",
+            text = language.t("user.dashboard.title"),
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Resumo das tuas tarefas atribuídas",
+            text = language.t("user.dashboard.subtitle"),
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
             fontSize = 13.sp
         )
@@ -144,6 +147,7 @@ private fun UtilizadorDashboardHeader() {
 
 @Composable
 private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
+    val language = currentAppSettings().language
     when {
         state.isLoading -> {
             Box(
@@ -158,8 +162,8 @@ private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
 
         state.errorMessage != null -> {
             UserMetricCard(
-                label = "Estado da Dashboard",
-                value = "Erro",
+                label = language.t("dashboard.state"),
+                value = language.t("dashboard.error"),
                 accent = UtilizadorRed,
                 detail = state.errorMessage,
                 icon = UserDashboardIcon.Warning
@@ -168,34 +172,34 @@ private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
 
         else -> {
             UserMetricCard(
-                label = "Tarefas em progresso",
+                label = language.t("common.inProgress"),
                 value = state.inProgressTasks.toString(),
                 accent = UtilizadorBlue,
-                detail = "Tarefas que já começaram",
+                detail = language.t("user.dashboard.progressDetail"),
                 icon = UserDashboardIcon.Progress
             )
             Spacer(modifier = Modifier.height(12.dp))
             UserMetricCard(
-                label = "Tarefas concluídas",
+                label = language.t("common.completed"),
                 value = state.completedTasks.toString(),
                 accent = UtilizadorGreen,
-                detail = "Tarefas finalizadas por ti",
+                detail = language.t("user.dashboard.completedDetail"),
                 icon = UserDashboardIcon.Completed
             )
             Spacer(modifier = Modifier.height(12.dp))
             UserMetricCard(
-                label = "Tarefas pendentes",
+                label = language.t("common.pending"),
                 value = state.pendingTasks.toString(),
                 accent = UtilizadorOrange,
-                detail = "Tarefas ainda por iniciar",
+                detail = language.t("user.dashboard.pendingDetail"),
                 icon = UserDashboardIcon.Pending
             )
             Spacer(modifier = Modifier.height(12.dp))
             UserMetricCard(
-                label = "Tarefas em atraso",
+                label = language.t("common.delayed"),
                 value = state.lateTasks.toString(),
                 accent = UtilizadorRed,
-                detail = "Tarefas cujo prazo já passou",
+                detail = language.t("user.dashboard.lateDetail"),
                 icon = UserDashboardIcon.Late
             )
         }
