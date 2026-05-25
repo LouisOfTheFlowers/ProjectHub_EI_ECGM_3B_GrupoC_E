@@ -298,6 +298,7 @@ private fun ReportExportCard(
     card: AdminReportCard,
     onExport: () -> Unit
 ) {
+    val language = currentAppSettings().language
     val accent = when (card.type) {
         AdminReportExportType.Users -> ReportsAccent
         AdminReportExportType.Projects -> ReportsBlue

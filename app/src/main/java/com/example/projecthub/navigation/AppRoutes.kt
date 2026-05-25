@@ -3,6 +3,8 @@ package com.example.projecthub.navigation
 object AppRoutes {
     const val Login = "login"
     const val Register = "register"
+    const val Intro = "intro"
+    const val ResetPassword = "reset-password"
 
     const val AdminDashboard = "admin/dashboard"
     const val AdminProjects = "admin/projects"

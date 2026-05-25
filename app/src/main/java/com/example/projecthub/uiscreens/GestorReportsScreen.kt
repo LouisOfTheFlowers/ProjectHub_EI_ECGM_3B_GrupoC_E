@@ -307,6 +307,7 @@ private fun GestorReportExportCard(
     card: GestorReportCard,
     onExport: () -> Unit
 ) {
+    val language = currentAppSettings().language
     val accent = when (card.type) {
         GestorReportExportType.Users -> GestorReportsAccent
         GestorReportExportType.Projects -> GestorReportsBlue

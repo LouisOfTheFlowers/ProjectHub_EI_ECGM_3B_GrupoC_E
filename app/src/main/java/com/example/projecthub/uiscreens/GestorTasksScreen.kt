@@ -50,6 +50,7 @@ import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.viewmodel.GestorProjectTaskGroup
+import com.example.projecthub.viewmodel.GestorTaskInfoObservation
 import com.example.projecthub.viewmodel.GestorTaskInfoState
 import com.example.projecthub.viewmodel.GestorTaskListItem
 import com.example.projecthub.viewmodel.GestorTaskProjectOption
@@ -630,6 +631,259 @@ private fun TaskRow(
             color = GestorTasksAccent
         ) {
             onObservations(task)
+        }
+    }
+}
+
+@Composable
+private fun GestorTaskInfoPage(
+    state: GestorTaskInfoState,
+    onBack: () -> Unit
+) {
+    val language = currentAppSettings().language
+
+    Column {
+        TextButton(
+            onClick = rememberSoundClick(onBack),
+            colors = ButtonDefaults.textButtonColors(contentColor = ProjectHubColors.Ink)
+        ) {
+            Text(language.t("user.tasks.back"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        when {
+            state.isLoading -> Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = GestorTasksAccent)
+            }
+
+            state.errorMessage != null -> TaskInfoMessageCard(
+                title = language.t("tasks.details"),
+                detail = state.errorMessage
+            )
+
+            state.task == null -> TaskInfoMessageCard(
+                title = language.t("tasks.notFound"),
+                detail = language.t("tasks.noMatching")
+            )
+
+            else -> state.task?.let { task ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = task.title,
+                            color = ProjectHubColors.Ink,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 24.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = language.t("tasks.detailsSubtitle"),
+                            color = ProjectHubColors.Muted,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    StatusPill(task.statusLabel)
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(task.description, color = ProjectHubColors.Muted, fontSize = 14.sp)
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            TaskInfoMeta(language.t("common.start"), task.startDate.toInputDateText(), Modifier.weight(1f))
+                            TaskInfoMeta(language.t("common.deadline"), task.dueDate.toInputDateText(), Modifier.weight(1f))
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        TaskInfoMeta(
+                            label = language.t("tasks.assignedTo"),
+                            value = task.assignees.takeIf { it.isNotEmpty() }
+                                ?.joinToString { it.name }
+                                ?: language.t("tasks.noAssignees"),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        TaskInfoMeta(
+                            label = language.t("tasks.records"),
+                            value = state.recordsCount.toString(),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                TaskObservationsSection(
+                    observations = state.observations
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun GestorTaskObservationsPage(
+    state: GestorTaskInfoState,
+    onBack: () -> Unit
+) {
+    val language = currentAppSettings().language
+
+    Column {
+        TextButton(
+            onClick = rememberSoundClick(onBack),
+            colors = ButtonDefaults.textButtonColors(contentColor = ProjectHubColors.Ink)
+        ) {
+            Text(language.t("user.tasks.back"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        when {
+            state.isLoading -> Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = GestorTasksAccent)
+            }
+
+            state.errorMessage != null -> TaskInfoMessageCard(
+                title = language.t("user.tasks.observations"),
+                detail = state.errorMessage
+            )
+
+            state.task == null -> TaskInfoMessageCard(
+                title = language.t("tasks.notFound"),
+                detail = language.t("tasks.noMatching")
+            )
+
+            else -> {
+                Text(
+                    text = state.task.title,
+                    color = ProjectHubColors.Ink,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 24.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = language.t("user.tasks.observations"),
+                    color = ProjectHubColors.Muted,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+                TaskObservationsSection(observations = state.observations)
+            }
+        }
+    }
+}
+
+@Composable
+private fun TaskObservationsSection(
+    observations: List<GestorTaskInfoObservation>
+) {
+    val language = currentAppSettings().language
+
+    Text(
+        text = language.t("user.tasks.observations"),
+        color = ProjectHubColors.Ink,
+        fontWeight = FontWeight.ExtraBold,
+        fontSize = 18.sp
+    )
+    Spacer(modifier = Modifier.height(10.dp))
+
+    if (observations.isEmpty()) {
+        TaskInfoMessageCard(
+            title = language.t("user.tasks.noObservationsTitle"),
+            detail = language.t("user.tasks.noObservationsDetail")
+        )
+    } else {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            observations.forEach { observation ->
+                TaskObservationRow(observation = observation)
+            }
+        }
+    }
+}
+
+@Composable
+private fun TaskInfoMeta(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(label, color = ProjectHubColors.Muted, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+        Spacer(modifier = Modifier.height(3.dp))
+        Text(value, color = ProjectHubColors.Slate, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+    }
+}
+
+@Composable
+private fun TaskObservationRow(observation: GestorTaskInfoObservation) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(ProjectHubColors.SurfaceSoft)
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text = observation.text,
+            color = ProjectHubColors.Ink,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 13.sp
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = "${observation.userName} | ${observation.date} | ${observation.completionPercent}%",
+            color = ProjectHubColors.Muted,
+            fontSize = 12.sp
+        )
+        observation.spentHours?.let { hours ->
+            Text(
+                text = "${currentAppSettings().language.t("user.tasks.spentHours")}: $hours h",
+                color = ProjectHubColors.Muted,
+                fontSize = 12.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun TaskInfoMessageCard(
+    title: String,
+    detail: String
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(title, color = ProjectHubColors.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(detail, color = ProjectHubColors.Muted, fontSize = 13.sp)
         }
     }
 }

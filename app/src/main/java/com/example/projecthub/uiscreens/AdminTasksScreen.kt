@@ -342,6 +342,7 @@ private fun ProjectTaskSection(
     group: AdminProjectTaskGroup,
     onToggleProject: () -> Unit
 ) {
+    val language = currentAppSettings().language
     val toggleClick = rememberSoundClick(onToggleProject)
     Card(
         modifier = Modifier.fillMaxWidth(),
