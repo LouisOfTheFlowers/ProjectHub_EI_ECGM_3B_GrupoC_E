@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,9 +50,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
+import com.example.projecthub.viewmodel.AdminProjectInfoObservation
+import com.example.projecthub.viewmodel.AdminProjectInfoState
+import com.example.projecthub.viewmodel.AdminProjectInfoTask
 import com.example.projecthub.viewmodel.AdminProjectListItem
 import com.example.projecthub.viewmodel.AdminProjectManager
 import com.example.projecthub.viewmodel.AdminProjectsState
@@ -95,6 +100,11 @@ fun AdminProjectsScreen(
                 )
             }
         )
+    } else if (state.detailState.project != null) {
+        AdminProjectDetailPage(
+            state = state.detailState,
+            onBack = viewModel::clearProjectInfo
+        )
     } else {
         ProjectsPage(
             state = state,
@@ -105,6 +115,8 @@ fun AdminProjectsScreen(
             onSearchChange = viewModel::updateSearchQuery,
             onStatusChange = viewModel::updateStatusFilter,
             onCoordinatorChange = viewModel::updateCoordinatorFilter,
+            onToggleProject = viewModel::toggleProject,
+            onMoreInfo = viewModel::loadProjectInfo,
             onDeleteProject = { projectToDelete = it },
             onEditProject = {
                 viewModel.clearCreateError()
@@ -168,6 +180,8 @@ private fun ProjectsPage(
     onSearchChange: (String) -> Unit,
     onStatusChange: (String) -> Unit,
     onCoordinatorChange: (String) -> Unit,
+    onToggleProject: (Int) -> Unit,
+    onMoreInfo: (AdminProjectListItem) -> Unit,
     onDeleteProject: (AdminProjectListItem) -> Unit,
     onEditProject: (AdminProjectListItem) -> Unit
 ) {
@@ -264,6 +278,8 @@ private fun ProjectsPage(
                 state.visibleProjects.forEach { project ->
                     ProjectListCard(
                         project = project,
+                        onToggle = { onToggleProject(project.id) },
+                        onMoreInfo = { onMoreInfo(project) },
                         onDelete = { onDeleteProject(project) },
                         onEdit = { onEditProject(project) }
                     )
@@ -452,9 +468,12 @@ private fun FilterDropdown(
 @Composable
 private fun ProjectListCard(
     project: AdminProjectListItem,
+    onToggle: () -> Unit,
+    onMoreInfo: () -> Unit,
     onDelete: () -> Unit,
     onEdit: () -> Unit
 ) {
+    val language = currentAppSettings().language
     val statusColor = when {
         project.isCompleted -> ProjectsAccent
         project.isDelayed -> ProjectsRed
@@ -469,7 +488,9 @@ private fun ProjectListCard(
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = rememberSoundClick(onToggle)),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
@@ -499,19 +520,48 @@ private fun ProjectListCard(
                         fontSize = 12.sp
                     )
                     Spacer(modifier = Modifier.height(8.dp))
+<<<<<<< Updated upstream
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         ActionIconButton("?", ProjectsAccent, onEdit)
                         ActionIconButton("X", ProjectsRed, onDelete)
                     }
+=======
+                    Text(
+                        text = if (project.isExpanded) "^" else "v",
+                        color = ProjectHubColors.Muted,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+>>>>>>> Stashed changes
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            if (project.isExpanded) {
+                Spacer(modifier = Modifier.height(12.dp))
 
-            ProjectInfoRow("Gestor", project.coordinator)
-            ProjectInfoRow("Pessoas", project.memberCount.toString())
-            ProjectInfoRow("Início", project.startDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
-            ProjectInfoRow("Prazo", project.dueDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
+                ProjectInfoRow(language.t("addProject.manager"), project.coordinator)
+                ProjectInfoRow(language.t("manager.projects.participants"), project.memberCount.toString())
+                ProjectInfoRow(language.t("common.start"), project.startDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
+                ProjectInfoRow(language.t("common.deadline"), project.dueDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = rememberSoundClick(onMoreInfo),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = ProjectsAccent,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(language.t("common.moreInfo"), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
+                    ActionIconButton("✎", ProjectsAccent, onEdit)
+                    ActionIconButton("X", ProjectsRed, onDelete)
+                }
+            }
         }
     }
 }
@@ -566,6 +616,270 @@ private fun ActionIconButton(
             fontSize = 16.sp
         )
     }
+}
+
+@Composable
+private fun AdminProjectDetailPage(
+    state: AdminProjectInfoState,
+    onBack: () -> Unit
+) {
+    val language = currentAppSettings().language
+    val project = state.project
+
+    Column {
+        TextButton(
+            onClick = rememberSoundClick(onBack),
+            colors = ButtonDefaults.textButtonColors(contentColor = ProjectsAccent)
+        ) {
+            Text(language.t("manager.projects.back"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        when {
+            state.isLoading -> Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = ProjectsAccent)
+            }
+
+            state.errorMessage != null -> AdminProjectMessageCard(
+                title = language.t("manager.projects.detailsTitle"),
+                detail = state.errorMessage
+            )
+
+            project == null -> AdminProjectMessageCard(
+                title = language.t("manager.projects.notFoundTitle"),
+                detail = language.t("manager.projects.notFoundDetail")
+            )
+
+            else -> {
+                Text(
+                    text = project.name,
+                    color = ProjectHubColors.Ink,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 24.sp
+                )
+                Text(
+                    text = language.t("manager.projects.detailsSubtitle"),
+                    color = ProjectHubColors.Muted,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                AdminProjectDetailsCard(project = project)
+                Spacer(modifier = Modifier.height(12.dp))
+                AdminProjectParticipantsCard(participants = state.participants)
+                Spacer(modifier = Modifier.height(12.dp))
+                AdminProjectRatingsCard(participants = state.participants)
+                Spacer(modifier = Modifier.height(12.dp))
+                AdminProjectTasksCard(tasks = state.tasks)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AdminProjectDetailsCard(project: AdminProjectListItem) {
+    val language = currentAppSettings().language
+    AdminProjectSectionCard(title = language.t("manager.projects.detailsTitle")) {
+        Text(project.description, color = ProjectHubColors.Muted, fontSize = 14.sp)
+        Spacer(modifier = Modifier.height(12.dp))
+        ProjectInfoRow(language.t("addProject.manager"), project.coordinator)
+        ProjectInfoRow(language.t("common.status"), project.statusLabel)
+        ProjectInfoRow(language.t("common.start"), project.startDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
+        ProjectInfoRow(language.t("common.deadline"), project.dueDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
+    }
+}
+
+@Composable
+private fun AdminProjectParticipantsCard(participants: List<com.example.projecthub.viewmodel.AdminProjectInfoParticipant>) {
+    val language = currentAppSettings().language
+    AdminProjectSectionCard(title = language.t("manager.projects.participants")) {
+        if (participants.isEmpty()) {
+            Text(language.t("manager.projects.noParticipants"), color = ProjectHubColors.Muted, fontSize = 14.sp)
+        } else {
+            participants.forEach { participant ->
+                Text(participant.name, color = ProjectHubColors.Ink, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text(participant.email, color = ProjectHubColors.Muted, fontSize = 12.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun AdminProjectRatingsCard(participants: List<com.example.projecthub.viewmodel.AdminProjectInfoParticipant>) {
+    val language = currentAppSettings().language
+    val ratedParticipants = participants.filter { it.rating != null || !it.comment.isNullOrBlank() }
+
+    AdminProjectSectionCard(title = language.t("admin.projects.ratings")) {
+        if (ratedParticipants.isEmpty()) {
+            Text(language.t("manager.team.noRatings"), color = ProjectHubColors.Muted, fontSize = 14.sp)
+        } else {
+            ratedParticipants.forEach { participant ->
+                Text(
+                    text = "${participant.name}: ${participant.rating ?: 0} / 5",
+                    color = ProjectHubColors.Ink,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+                participant.comment?.takeIf { it.isNotBlank() }?.let { comment ->
+                    Text(comment, color = ProjectHubColors.Muted, fontSize = 12.sp)
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun AdminProjectTasksCard(tasks: List<AdminProjectInfoTask>) {
+    val language = currentAppSettings().language
+    AdminProjectSectionCard(title = language.t("reports.tasks")) {
+        if (tasks.isEmpty()) {
+            AdminProjectMessageText(
+                title = language.t("manager.projects.noTasksTitle"),
+                detail = language.t("manager.projects.noTasksDetail")
+            )
+        } else {
+            tasks.forEach { task ->
+                AdminProjectTaskBlock(task = task)
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun AdminProjectTaskBlock(task: AdminProjectInfoTask) {
+    val language = currentAppSettings().language
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(ProjectHubColors.SurfaceSoft)
+            .padding(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(task.title, color = ProjectHubColors.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
+                Text(task.description, color = ProjectHubColors.Muted, fontSize = 12.sp)
+            }
+            Text(
+                text = task.statusLabel,
+                color = ProjectsAccent,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        ProjectInfoRow(language.t("common.start"), task.startDate)
+        ProjectInfoRow(language.t("common.deadline"), task.dueDate)
+        ProjectInfoRow(
+            language.t("tasks.responsibles"),
+            task.assignees.takeIf { it.isNotEmpty() }?.joinToString() ?: language.t("tasks.noAssignees")
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = language.t("user.tasks.observations"),
+            color = ProjectHubColors.Ink,
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp
+        )
+
+        if (task.observations.isEmpty()) {
+            Text(language.t("user.tasks.noObservationsDetail"), color = ProjectHubColors.Muted, fontSize = 12.sp)
+        } else {
+            task.observations.forEach { observation ->
+                AdminProjectObservationBlock(observation = observation)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AdminProjectObservationBlock(observation: AdminProjectInfoObservation) {
+    val language = currentAppSettings().language
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(ProjectHubColors.LightSurface)
+            .padding(10.dp)
+    ) {
+        Text(observation.text, color = ProjectHubColors.Ink, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = "${observation.userName} | ${observation.date} | ${observation.completionPercent}%",
+            color = ProjectHubColors.Muted,
+            fontSize = 12.sp
+        )
+        observation.spentHours?.let { hours ->
+            Text(language.t("tasks.timeSpent").format(hours), color = ProjectHubColors.Muted, fontSize = 12.sp)
+        }
+        if (observation.photoUrls.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            AsyncImage(
+                model = observation.photoUrls.first(),
+                contentDescription = language.t("profile.photoDescription"),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .clip(RoundedCornerShape(8.dp))
+            )
+        }
+    }
+}
+
+@Composable
+private fun AdminProjectSectionCard(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(title, color = ProjectHubColors.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp)
+            Spacer(modifier = Modifier.height(10.dp))
+            content()
+        }
+    }
+}
+
+@Composable
+private fun AdminProjectMessageCard(
+    title: String,
+    detail: String
+) {
+    AdminProjectSectionCard(title = title) {
+        Text(detail, color = ProjectHubColors.Muted, fontSize = 13.sp)
+    }
+}
+
+@Composable
+private fun AdminProjectMessageText(
+    title: String,
+    detail: String
+) {
+    Text(title, color = ProjectHubColors.Ink, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+    Text(detail, color = ProjectHubColors.Muted, fontSize = 12.sp)
 }
 
 @Composable

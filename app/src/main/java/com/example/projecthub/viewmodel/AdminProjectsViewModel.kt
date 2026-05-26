@@ -7,8 +7,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projecthub.remote.supabase.UserRemoteDataSource
 import com.example.projecthub.remote.supabase.models.ProjetoDto
+import com.example.projecthub.remote.supabase.models.TarefaDto
+import com.example.projecthub.repository.AvaliacaoRepository
+import com.example.projecthub.repository.ObservacaoFotoRepository
+import com.example.projecthub.repository.ObservacaoRepository
 import com.example.projecthub.repository.ProjetoRepository
 import com.example.projecthub.repository.ProjetoUserRepository
+import com.example.projecthub.repository.RegistoTarefaRepository
+import com.example.projecthub.repository.TarefaRepository
+import com.example.projecthub.repository.TarefaUserRepository
 import kotlinx.coroutines.launch
 import java.text.Normalizer
 import java.time.LocalDate
@@ -32,7 +39,46 @@ data class AdminProjectListItem(
     val memberCount: Int,
     val isCompleted: Boolean,
     val isDelayed: Boolean,
-    val isInProgress: Boolean
+    val isInProgress: Boolean,
+    val isExpanded: Boolean = false
+)
+
+data class AdminProjectInfoParticipant(
+    val id: Int,
+    val name: String,
+    val email: String,
+    val rating: Int?,
+    val comment: String?
+)
+
+data class AdminProjectInfoObservation(
+    val id: Int?,
+    val text: String,
+    val userName: String,
+    val date: String,
+    val local: String,
+    val completionPercent: Int,
+    val spentHours: Float?,
+    val photoUrls: List<String>
+)
+
+data class AdminProjectInfoTask(
+    val id: Int,
+    val title: String,
+    val description: String,
+    val statusLabel: String,
+    val startDate: String,
+    val dueDate: String,
+    val assignees: List<String>,
+    val observations: List<AdminProjectInfoObservation>
+)
+
+data class AdminProjectInfoState(
+    val project: AdminProjectListItem? = null,
+    val participants: List<AdminProjectInfoParticipant> = emptyList(),
+    val tasks: List<AdminProjectInfoTask> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
 )
 
 data class AdminProjectsState(
@@ -49,12 +95,19 @@ data class AdminProjectsState(
     val isLoading: Boolean = true,
     val isCreating: Boolean = false,
     val createErrorMessage: String? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val detailState: AdminProjectInfoState = AdminProjectInfoState()
 )
 
 class AdminProjectsViewModel(
     private val projetoRepository: ProjetoRepository = ProjetoRepository(),
     private val projetoUserRepository: ProjetoUserRepository = ProjetoUserRepository(),
+    private val tarefaRepository: TarefaRepository = TarefaRepository(),
+    private val tarefaUserRepository: TarefaUserRepository = TarefaUserRepository(),
+    private val registoTarefaRepository: RegistoTarefaRepository = RegistoTarefaRepository(),
+    private val observacaoRepository: ObservacaoRepository = ObservacaoRepository(),
+    private val observacaoFotoRepository: ObservacaoFotoRepository = ObservacaoFotoRepository(),
+    private val avaliacaoRepository: AvaliacaoRepository = AvaliacaoRepository(),
     private val userRemoteDataSource: UserRemoteDataSource = UserRemoteDataSource()
 ) : ViewModel() {
 
@@ -105,8 +158,14 @@ class AdminProjectsViewModel(
             val projectMemberCounts = projectMemberCountsResult
                 .getOrDefault(emptyMap())
                 .ifEmpty { directProjectMemberCounts }
+            val oldExpandedIds = state.projects
+                .filter { it.isExpanded }
+                .map { it.id }
+                .toSet()
+
             val projects = projectsResult.getOrDefault(emptyList())
                 .mapNotNull { projeto -> projeto.toListItem(usersById, projectMemberCounts) }
+                .map { project -> project.copy(isExpanded = project.id in oldExpandedIds) }
                 .sortedBy { it.name }
 
             state = state.copy(
@@ -140,6 +199,170 @@ class AdminProjectsViewModel(
     fun updateCoordinatorFilter(coordinator: String) {
         state = state.copy(selectedCoordinator = coordinator)
         applyFilters()
+    }
+
+    fun toggleProject(projectId: Int) {
+        state = state.copy(
+            projects = state.projects.map { project ->
+                if (project.id == projectId) project.copy(isExpanded = !project.isExpanded) else project
+            }
+        )
+        applyFilters()
+    }
+
+    fun loadProjectInfo(project: AdminProjectListItem) {
+        viewModelScope.launch {
+            state = state.copy(
+                detailState = AdminProjectInfoState(
+                    project = project,
+                    isLoading = true
+                )
+            )
+
+            val tasksResult = tarefaRepository.getTarefasByProjeto(project.id)
+            val projectUsersResult = projetoUserRepository.getUsersByProjeto(project.id)
+            val taskUsersResult = tarefaUserRepository.getTarefaUsers()
+            val ratingsResult = avaliacaoRepository.getAvaliacoesByProjeto(project.id)
+            val recordsResult = registoTarefaRepository.getRegistos()
+            val observationsResult = observacaoRepository.getObservacoes()
+            val photosResult = observacaoFotoRepository.getFotos()
+            val usersResult = runCatching { userRemoteDataSource.getUsers() }
+
+            if (
+                tasksResult.isFailure ||
+                projectUsersResult.isFailure ||
+                taskUsersResult.isFailure ||
+                ratingsResult.isFailure ||
+                recordsResult.isFailure ||
+                observationsResult.isFailure ||
+                photosResult.isFailure ||
+                usersResult.isFailure
+            ) {
+                state = state.copy(
+                    detailState = AdminProjectInfoState(
+                        project = project,
+                        isLoading = false,
+                        errorMessage = "Não foi possível carregar os detalhes do projeto."
+                    )
+                )
+                return@launch
+            }
+
+            val usersById = usersResult
+                .getOrDefault(emptyList())
+                .mapNotNull { user -> user.id?.let { id -> id to user } }
+                .toMap()
+
+            val ratingsByUser = ratingsResult
+                .getOrDefault(emptyList())
+                .associateBy { it.user_id }
+
+            val participants = projectUsersResult
+                .getOrDefault(emptyList())
+                .mapNotNull { relation ->
+                    val user = usersById[relation.user_id] ?: return@mapNotNull null
+                    val rating = ratingsByUser[relation.user_id]
+
+                    AdminProjectInfoParticipant(
+                        id = relation.user_id,
+                        name = user.nome.ifBlank { user.username },
+                        email = user.email,
+                        rating = rating?.classificacao,
+                        comment = rating?.comentario
+                    )
+                }
+                .sortedBy { it.name.lowercase() }
+
+            val tasks = tasksResult
+                .getOrDefault(emptyList())
+                .sortedBy { it.titulo.lowercase() }
+
+            val taskIds = tasks.mapNotNull { it.id }.toSet()
+            val taskUsersByTask = taskUsersResult
+                .getOrDefault(emptyList())
+                .filter { it.tarefa_id in taskIds }
+                .groupBy { it.tarefa_id }
+
+            val records = recordsResult
+                .getOrDefault(emptyList())
+                .filter { it.tarefa_id in taskIds }
+
+            val recordsById = records
+                .mapNotNull { record -> record.id?.let { id -> id to record } }
+                .toMap()
+
+            val photosByObservation = photosResult
+                .getOrDefault(emptyList())
+                .groupBy { it.observacao_id }
+
+            val observationsByTask = observationsResult
+                .getOrDefault(emptyList())
+                .mapNotNull { observation ->
+                    val record = recordsById[observation.registo_id] ?: return@mapNotNull null
+                    val user = usersById[record.user_id]
+                    val userName = user?.nome?.ifBlank { user.username }
+                        ?: "Utilizador ${record.user_id}"
+
+                    record.tarefa_id to AdminProjectInfoObservation(
+                        id = observation.id,
+                        text = observation.texto,
+                        userName = userName,
+                        date = (observation.created_at ?: record.created_at ?: record.data).toUiDateText(),
+                        local = record.local?.takeIf { it.isNotBlank() } ?: "-",
+                        completionPercent = record.taxa_conclusao,
+                        spentHours = record.tempo_gasto,
+                        photoUrls = observation.id
+                            ?.let { observationId ->
+                                photosByObservation[observationId]
+                                    .orEmpty()
+                                    .map { photo -> photo.foto_url }
+                            }
+                            .orEmpty()
+                    )
+                }
+                .groupBy(
+                    keySelector = { it.first },
+                    valueTransform = { it.second }
+                )
+
+            val infoTasks = tasks.mapNotNull { task ->
+                val taskId = task.id ?: return@mapNotNull null
+                val assignees = taskUsersByTask[taskId]
+                    .orEmpty()
+                    .mapNotNull { relation ->
+                        usersById[relation.user_id]?.let { user ->
+                            user.nome.ifBlank { user.username }
+                        }
+                    }
+                    .sortedBy { it.lowercase() }
+
+                AdminProjectInfoTask(
+                    id = taskId,
+                    title = task.titulo,
+                    description = task.descricao?.takeIf { it.isNotBlank() } ?: "Sem descrição",
+                    statusLabel = task.toTaskStatusLabel(),
+                    startDate = task.data_inicio.toUiDateText(),
+                    dueDate = task.data_fim.toUiDateText(),
+                    assignees = assignees,
+                    observations = observationsByTask[taskId]
+                        .orEmpty()
+                        .sortedByDescending { it.date }
+                )
+            }
+
+            state = state.copy(
+                detailState = AdminProjectInfoState(
+                    project = project,
+                    participants = participants,
+                    tasks = infoTasks,
+                    isLoading = false
+                )
+            )
+        }
+    }
+
+    fun clearProjectInfo() {
+        state = state.copy(detailState = AdminProjectInfoState())
     }
 
     fun clearCreateError() {
@@ -363,6 +586,28 @@ class AdminProjectsViewModel(
 
     private fun String.toLocalDateOrNull(): LocalDate? {
         return runCatching { LocalDate.parse(take(10)) }.getOrNull()
+    }
+
+    private fun String?.toUiDateText(): String {
+        val date = this?.take(10)?.let { value ->
+            runCatching { LocalDate.parse(value) }.getOrNull()
+        } ?: return "-"
+
+        return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+    }
+
+    private fun TarefaDto.toTaskStatusLabel(): String {
+        return when {
+            status.isCompletedStatus() -> "Concluída"
+            isLate() -> "Atrasada"
+            status.isInProgressStatus() -> "Em progresso"
+            else -> "Pendente"
+        }
+    }
+
+    private fun TarefaDto.isLate(): Boolean {
+        val dueDate = data_fim?.toLocalDateOrNull() ?: return false
+        return !status.isCompletedStatus() && dueDate.isBefore(LocalDate.now())
     }
 
     private fun String.parseProjectDateOrNull(): LocalDate? {
