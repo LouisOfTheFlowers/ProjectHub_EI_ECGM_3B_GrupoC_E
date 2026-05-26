@@ -20,6 +20,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -29,10 +30,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.R
 import com.example.projecthub.navigation.AppRoutes
 import com.example.projecthub.remote.supabase.models.UserDto
 import com.example.projecthub.settings.currentAppSettings
@@ -310,42 +313,18 @@ private fun UserMetricIcon(
     icon: UserDashboardIcon,
     color: Color
 ) {
-    Canvas(modifier = Modifier.size(24.dp)) {
-        val stroke = Stroke(width = 2.6.dp.toPx(), cap = StrokeCap.Round)
-
-        when (icon) {
-            UserDashboardIcon.Progress -> {
-                drawRoundRect(
-                    color = color,
-                    topLeft = Offset(size.width * 0.18f, size.height * 0.2f),
-                    size = androidx.compose.ui.geometry.Size(size.width * 0.64f, size.height * 0.6f),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx(), 4.dp.toPx()),
-                    style = stroke
-                )
-                drawLine(color = color, start = Offset(size.width * 0.34f, size.height * 0.42f), end = Offset(size.width * 0.7f, size.height * 0.42f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color = color, start = Offset(size.width * 0.34f, size.height * 0.6f), end = Offset(size.width * 0.58f, size.height * 0.6f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-
-            UserDashboardIcon.Completed -> {
-                drawCircle(color = color, style = stroke)
-                drawLine(color = color, start = Offset(size.width * 0.28f, size.height * 0.52f), end = Offset(size.width * 0.44f, size.height * 0.68f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color = color, start = Offset(size.width * 0.44f, size.height * 0.68f), end = Offset(size.width * 0.74f, size.height * 0.34f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-
-            UserDashboardIcon.Pending -> {
-                drawCircle(color = color, radius = size.width * 0.36f, center = Offset(size.width * 0.5f, size.height * 0.5f), style = stroke)
-                drawLine(color = color, start = Offset(size.width * 0.5f, size.height * 0.28f), end = Offset(size.width * 0.5f, size.height * 0.52f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color = color, start = Offset(size.width * 0.5f, size.height * 0.52f), end = Offset(size.width * 0.64f, size.height * 0.62f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-
-            UserDashboardIcon.Late,
-            UserDashboardIcon.Warning -> {
-                drawLine(color = color, start = Offset(size.width * 0.5f, size.height * 0.16f), end = Offset(size.width * 0.12f, size.height * 0.82f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color = color, start = Offset(size.width * 0.5f, size.height * 0.16f), end = Offset(size.width * 0.88f, size.height * 0.82f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color = color, start = Offset(size.width * 0.12f, size.height * 0.82f), end = Offset(size.width * 0.88f, size.height * 0.82f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color = color, start = Offset(size.width * 0.5f, size.height * 0.38f), end = Offset(size.width * 0.5f, size.height * 0.58f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawCircle(color = color, radius = 1.5.dp.toPx(), center = Offset(size.width * 0.5f, size.height * 0.7f))
-            }
-        }
+    val iconRes = when (icon) {
+        UserDashboardIcon.Late -> R.drawable.ic_warning_24
+        UserDashboardIcon.Pending -> R.drawable.ic_tasks_24
+        UserDashboardIcon.Completed -> R.drawable.ic_check_circle_24
+        UserDashboardIcon.Progress -> R.drawable.ic_trending_up_24
+        UserDashboardIcon.Warning -> R.drawable.ic_warning_24
     }
+
+    Icon(
+        painter = painterResource(iconRes),
+        contentDescription = null,
+        tint = color,
+        modifier = Modifier.size(24.dp)
+    )
 }

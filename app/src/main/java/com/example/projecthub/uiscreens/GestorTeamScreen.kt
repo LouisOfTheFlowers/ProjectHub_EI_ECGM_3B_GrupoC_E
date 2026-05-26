@@ -25,6 +25,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,15 +35,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
+import com.example.projecthub.R
 import com.example.projecthub.viewmodel.GestorTeamMemberItem
 import com.example.projecthub.viewmodel.GestorTeamProjectOption
 import com.example.projecthub.viewmodel.GestorTeamState
@@ -229,11 +230,9 @@ private fun ProjectDropdown(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp
             )
-            Text(
-                text = if (expanded) "^" else "v",
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
+            AppExpandIcon(
+                expanded = expanded,
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
             )
         }
 
@@ -433,27 +432,12 @@ private fun RatingStars(
     Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
         repeat(5) { index ->
             val filled = rating >= index + 0.5
-            Canvas(modifier = Modifier.size(14.dp)) {
-                val center = Offset(size.width / 2f, size.height / 2f)
-                val radius = size.minDimension * 0.43f
-                val points = List(10) { pointIndex ->
-                    val angle = Math.toRadians((pointIndex * 36.0) - 90.0)
-                    val pointRadius = if (pointIndex % 2 == 0) radius else radius * 0.45f
-                    Offset(
-                        x = center.x + kotlin.math.cos(angle).toFloat() * pointRadius,
-                        y = center.y + kotlin.math.sin(angle).toFloat() * pointRadius
-                    )
-                }
-                val path = androidx.compose.ui.graphics.Path().apply {
-                    moveTo(points.first().x, points.first().y)
-                    points.drop(1).forEach { lineTo(it.x, it.y) }
-                    close()
-                }
-                drawPath(
-                    path = path,
-                    color = if (filled) color else color.copy(alpha = 0.25f)
-                )
-            }
+            Icon(
+                painter = painterResource(R.drawable.ic_star_24),
+                contentDescription = null,
+                tint = if (filled) color else color.copy(alpha = 0.25f),
+                modifier = Modifier.size(14.dp)
+            )
         }
     }
 }
@@ -461,3 +445,4 @@ private fun RatingStars(
 private fun Double.formatRating(): String {
     return String.format(Locale.US, "%.1f", this)
 }
+

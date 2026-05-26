@@ -27,6 +27,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -42,6 +43,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,6 +53,7 @@ import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
+import com.example.projecthub.R
 import com.example.projecthub.viewmodel.GestorProjectInfoObservation
 import com.example.projecthub.viewmodel.GestorProjectInfoState
 import com.example.projecthub.viewmodel.GestorProjectInfoTask
@@ -85,6 +88,12 @@ fun GestorProjectsScreen(
 
     LaunchedEffect(gestorId) {
         viewModel.loadProjects(gestorId)
+    }
+
+    LaunchedEffect(state.actionMessage) {
+        if (state.actionMessage != null && projectToComplete != null) {
+            projectToComplete = null
+        }
     }
 
     projectToView?.let { project ->
@@ -182,7 +191,6 @@ fun GestorProjectsScreen(
                     ratings = ratings,
                     gestorId = gestorId
                 )
-                projectToComplete = null
             }
         )
     }
@@ -250,12 +258,7 @@ private fun StatusDropdown(
                 fontSize = 15.sp
             )
 
-            Text(
-                text = if (expanded) "^" else "v",
-                color = ProjectHubColors.Muted,
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp
-            )
+            AppExpandIcon(expanded = expanded)
         }
 
         DropdownMenu(
@@ -413,11 +416,8 @@ private fun ProjectCard(
 
                         Spacer(modifier = Modifier.width(10.dp))
 
-                        Text(
-                            text = if (project.isExpanded) "^" else "v",
-                            color = ProjectHubColors.Muted,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 18.sp,
+                        AppExpandIcon(
+                            expanded = project.isExpanded,
                             modifier = Modifier.clickable(onClick = toggleClick)
                         )
                     }
@@ -428,12 +428,9 @@ private fun ProjectCard(
                         StatusPill(project.statusLabel)
 
                         if (!project.isCompleted) {
-                            val canCompleteProject = project.totalTasks == project.completedTasks
-
                             Spacer(modifier = Modifier.width(8.dp))
 
                             CompleteIconButton(
-                                enabled = canCompleteProject,
                                 onClick = {
                                     onCompleteProject(project)
                                 }
@@ -1229,7 +1226,8 @@ private fun CompleteIconButton(
     onClick: () -> Unit
 ) {
     AppActionIconButton(
-        icon = "✓",
+        painter = painterResource(R.drawable.ic_check_circle_24),
+        contentDescription = currentAppSettings().language.t("common.complete"),
         color = GestorProjectsGreen,
         onClick = onClick,
         enabled = enabled
@@ -1508,11 +1506,7 @@ private fun UserDropdown(
                 fontSize = 14.sp
             )
 
-            Text(
-                text = if (expanded) "^" else "v",
-                color = ProjectHubColors.Muted,
-                fontWeight = FontWeight.Bold
-            )
+            AppExpandIcon(expanded = expanded)
         }
 
         DropdownMenu(
@@ -1553,63 +1547,12 @@ private fun UserDropdown(
 private fun TeamIcon(
     color: Color
 ) {
-    Canvas(modifier = Modifier.size(22.dp)) {
-        val stroke = Stroke(
-            width = 2.1.dp.toPx(),
-            cap = StrokeCap.Round
-        )
-
-        drawCircle(
-            color = color,
-            radius = size.width * 0.13f,
-            center = Offset(
-                x = size.width * 0.38f,
-                y = size.height * 0.34f
-            ),
-            style = stroke
-        )
-
-        drawCircle(
-            color = color,
-            radius = size.width * 0.11f,
-            center = Offset(
-                x = size.width * 0.65f,
-                y = size.height * 0.42f
-            ),
-            style = stroke
-        )
-
-        drawArc(
-            color = color,
-            startAngle = 200f,
-            sweepAngle = 140f,
-            useCenter = false,
-            topLeft = Offset(
-                x = size.width * 0.18f,
-                y = size.height * 0.52f
-            ),
-            size = androidx.compose.ui.geometry.Size(
-                width = size.width * 0.38f,
-                height = size.height * 0.28f
-            ),
-            style = stroke
-        )
-
-        drawArc(
-            color = color,
-            startAngle = 215f,
-            sweepAngle = 110f,
-            useCenter = false,
-            topLeft = Offset(
-                x = size.width * 0.52f,
-                y = size.height * 0.6f
-            ),
-            size = androidx.compose.ui.geometry.Size(
-                width = size.width * 0.3f,
-                height = size.height * 0.2f
-            ),
-            style = stroke
-        )
-    }
+    Icon(
+        painter = painterResource(R.drawable.ic_group_24),
+        contentDescription = null,
+        tint = color,
+        modifier = Modifier.size(22.dp)
+    )
 }
+
 

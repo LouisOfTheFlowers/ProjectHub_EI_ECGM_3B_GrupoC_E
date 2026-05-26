@@ -1,6 +1,5 @@
-﻿package com.example.projecthub.uiscreens
+package com.example.projecthub.uiscreens
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,6 +27,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
@@ -41,16 +41,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.projecthub.R
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
@@ -390,7 +389,7 @@ private fun ProjectFilters(
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 FilterDropdown(
                     label = state.selectedStatus,
-                    options = listOf("Todos", "ConcluÃ­dos", "Em progresso", "Atrasados"),
+                    options = listOf("Todos", "Concluídos", "Em progresso", "Atrasados"),
                     modifier = Modifier.weight(1f),
                     onOptionSelected = onStatusChange
                 )
@@ -433,12 +432,7 @@ private fun FilterDropdown(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp
             )
-            Text(
-                text = if (expanded) "^" else "v",
-                color = ProjectHubColors.Muted,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
+            AppExpandIcon(expanded = expanded)
         }
 
         DropdownMenu(
@@ -520,12 +514,7 @@ private fun ProjectListCard(
                         fontSize = 12.sp
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = if (project.isExpanded) "^" else "v",
-                        color = ProjectHubColors.Muted,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
+                    AppExpandIcon(expanded = project.isExpanded)
                 }
             }
 
@@ -551,8 +540,18 @@ private fun ProjectListCard(
                     ) {
                         Text(language.t("common.moreInfo"), fontWeight = FontWeight.Bold, fontSize = 13.sp)
                     }
-                    ActionIconButton("✎", ProjectsAccent, onEdit)
-                    ActionIconButton("X", ProjectsRed, onDelete)
+                    AppActionIconButton(
+                        painter = painterResource(R.drawable.ic_edit_24),
+                        contentDescription = language.t("common.edit"),
+                        color = ProjectsAccent,
+                        onClick = onEdit
+                    )
+                    AppActionIconButton(
+                        painter = painterResource(R.drawable.ic_delete_24),
+                        contentDescription = language.t("common.delete"),
+                        color = ProjectsRed,
+                        onClick = onDelete
+                    )
                 }
             }
         }
@@ -585,19 +584,6 @@ private fun ProjectInfoRow(label: String, value: String) {
             modifier = Modifier.padding(start = 12.dp)
         )
     }
-}
-
-@Composable
-private fun ActionIconButton(
-    icon: String,
-    color: Color,
-    onClick: () -> Unit
-) {
-    AppActionIconButton(
-        icon = icon,
-        color = color,
-        onClick = onClick
-    )
 }
 
 @Composable
@@ -720,9 +706,9 @@ private fun AdminProjectRatingsCard(participants: List<com.example.projecthub.vi
                         text = participant.rating
                             ?.let { rating ->
                                 val clamped = rating.coerceIn(0, 5)
-                                "${"★".repeat(clamped)}${"☆".repeat(5 - clamped)} $clamped/5"
+                                "${"?".repeat(clamped)}${"?".repeat(5 - clamped)} $clamped/5"
                             }
-                            ?: "☆☆☆☆☆ 0/5",
+                            ?: "????? 0/5",
                         color = participant.rating?.let { ProjectHubColors.Rating } ?: ProjectHubColors.Muted,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp
@@ -975,7 +961,7 @@ private fun EditProjectDialog(
                             color = ProjectHubColors.Ink,
                             fontWeight = FontWeight.SemiBold
                         )
-                        Text("v", color = ProjectHubColors.Muted, fontWeight = FontWeight.Bold)
+                        AppExpandIcon(expanded = false)
                     }
 
                     DropdownMenu(
@@ -1109,85 +1095,18 @@ private fun ProjectStatIcon(
     icon: ProjectStatIcon,
     color: Color
 ) {
-    Canvas(modifier = Modifier.size(24.dp)) {
-        val stroke = Stroke(width = 2.6.dp.toPx(), cap = StrokeCap.Round)
-
-        when (icon) {
-            ProjectStatIcon.Completed -> {
-                drawCircle(color = color, style = stroke)
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.28f, size.height * 0.52f),
-                    end = Offset(size.width * 0.44f, size.height * 0.68f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.44f, size.height * 0.68f),
-                    end = Offset(size.width * 0.74f, size.height * 0.34f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-            }
-
-            ProjectStatIcon.Trend -> {
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.18f, size.height * 0.7f),
-                    end = Offset(size.width * 0.42f, size.height * 0.48f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.42f, size.height * 0.48f),
-                    end = Offset(size.width * 0.56f, size.height * 0.6f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.56f, size.height * 0.6f),
-                    end = Offset(size.width * 0.82f, size.height * 0.3f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.66f, size.height * 0.3f),
-                    end = Offset(size.width * 0.82f, size.height * 0.3f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.82f, size.height * 0.3f),
-                    end = Offset(size.width * 0.82f, size.height * 0.46f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-            }
-
-            ProjectStatIcon.Clock -> {
-                drawCircle(color = color, style = stroke)
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.5f, size.height * 0.5f),
-                    end = Offset(size.width * 0.5f, size.height * 0.28f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.5f, size.height * 0.5f),
-                    end = Offset(size.width * 0.68f, size.height * 0.62f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-            }
-        }
+    val iconRes = when (icon) {
+        ProjectStatIcon.Completed -> R.drawable.ic_check_circle_24
+        ProjectStatIcon.Trend -> R.drawable.ic_trending_up_24
+        ProjectStatIcon.Clock -> R.drawable.ic_schedule_24
     }
+
+    Icon(
+        painter = painterResource(iconRes),
+        contentDescription = null,
+        tint = color,
+        modifier = Modifier.size(24.dp)
+    )
 }
 
 private fun String.toProjectLocalDateOrNull(): LocalDate? {

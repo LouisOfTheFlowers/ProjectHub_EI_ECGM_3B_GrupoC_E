@@ -215,11 +215,7 @@ private fun ProjectDropdown(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp
             )
-            Text(
-                text = if (expanded) "^" else "v",
-                color = ProjectHubColors.Muted,
-                fontWeight = FontWeight.Bold
-            )
+            AppExpandIcon(expanded = expanded)
         }
 
         DropdownMenu(

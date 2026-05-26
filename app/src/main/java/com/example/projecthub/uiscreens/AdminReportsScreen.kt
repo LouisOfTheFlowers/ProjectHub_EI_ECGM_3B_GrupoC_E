@@ -24,6 +24,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,6 +38,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,6 +47,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
+import com.example.projecthub.R
 import com.example.projecthub.viewmodel.AdminReportCard
 import com.example.projecthub.viewmodel.AdminReportExport
 import com.example.projecthub.viewmodel.AdminReportExportType
@@ -395,122 +398,31 @@ private fun ReportTypeIcon(
     type: AdminReportExportType,
     color: Color
 ) {
-    Canvas(modifier = Modifier.size(24.dp)) {
-        val stroke = Stroke(width = 2.4.dp.toPx(), cap = StrokeCap.Round)
-
-        when (type) {
-            AdminReportExportType.Users -> {
-                drawCircle(
-                    color = color,
-                    radius = size.width * 0.14f,
-                    center = Offset(size.width * 0.38f, size.height * 0.34f),
-                    style = stroke
-                )
-                drawCircle(
-                    color = color,
-                    radius = size.width * 0.12f,
-                    center = Offset(size.width * 0.66f, size.height * 0.42f),
-                    style = stroke
-                )
-                drawArc(
-                    color = color,
-                    startAngle = 205f,
-                    sweepAngle = 130f,
-                    useCenter = false,
-                    topLeft = Offset(size.width * 0.14f, size.height * 0.5f),
-                    size = androidx.compose.ui.geometry.Size(size.width * 0.45f, size.height * 0.28f),
-                    style = stroke
-                )
-                drawArc(
-                    color = color,
-                    startAngle = 215f,
-                    sweepAngle = 110f,
-                    useCenter = false,
-                    topLeft = Offset(size.width * 0.5f, size.height * 0.58f),
-                    size = androidx.compose.ui.geometry.Size(size.width * 0.34f, size.height * 0.2f),
-                    style = stroke
-                )
-            }
-
-            AdminReportExportType.Projects -> {
-                drawRoundRect(
-                    color = color,
-                    topLeft = Offset(size.width * 0.18f, size.height * 0.24f),
-                    size = androidx.compose.ui.geometry.Size(size.width * 0.64f, size.height * 0.54f),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx(), 4.dp.toPx()),
-                    style = stroke
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.3f, size.height * 0.42f),
-                    end = Offset(size.width * 0.7f, size.height * 0.42f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.3f, size.height * 0.6f),
-                    end = Offset(size.width * 0.58f, size.height * 0.6f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-            }
-
-            AdminReportExportType.Tasks -> {
-                listOf(0.3f, 0.5f, 0.7f).forEach { y ->
-                    drawCircle(
-                        color = color,
-                        radius = 1.8.dp.toPx(),
-                        center = Offset(size.width * 0.2f, size.height * y)
-                    )
-                    drawLine(
-                        color = color,
-                        start = Offset(size.width * 0.34f, size.height * y),
-                        end = Offset(size.width * 0.82f, size.height * y),
-                        strokeWidth = stroke.width,
-                        cap = StrokeCap.Round
-                    )
-                }
-            }
-        }
+    val iconRes = when (type) {
+        AdminReportExportType.Users -> R.drawable.ic_group_24
+        AdminReportExportType.Projects -> R.drawable.ic_folder_24
+        AdminReportExportType.Tasks -> R.drawable.ic_tasks_24
     }
+
+    Icon(
+        painter = painterResource(iconRes),
+        contentDescription = null,
+        tint = color,
+        modifier = Modifier.size(24.dp)
+    )
 }
 
 @Composable
 private fun ExportIcon(color: Color) {
-    Canvas(modifier = Modifier.size(18.dp)) {
-        val strokeWidth = 2.2.dp.toPx()
-        drawLine(
-            color = color,
-            start = Offset(size.width * 0.5f, size.height * 0.18f),
-            end = Offset(size.width * 0.5f, size.height * 0.62f),
-            strokeWidth = strokeWidth,
-            cap = StrokeCap.Round
-        )
-        drawLine(
-            color = color,
-            start = Offset(size.width * 0.32f, size.height * 0.46f),
-            end = Offset(size.width * 0.5f, size.height * 0.64f),
-            strokeWidth = strokeWidth,
-            cap = StrokeCap.Round
-        )
-        drawLine(
-            color = color,
-            start = Offset(size.width * 0.68f, size.height * 0.46f),
-            end = Offset(size.width * 0.5f, size.height * 0.64f),
-            strokeWidth = strokeWidth,
-            cap = StrokeCap.Round
-        )
-        drawLine(
-            color = color,
-            start = Offset(size.width * 0.22f, size.height * 0.82f),
-            end = Offset(size.width * 0.78f, size.height * 0.82f),
-            strokeWidth = strokeWidth,
-            cap = StrokeCap.Round
-        )
-    }
+    Icon(
+        painter = painterResource(R.drawable.ic_download_24),
+        contentDescription = null,
+        tint = color,
+        modifier = Modifier.size(18.dp)
+    )
 }
 
 private fun Float.formatOneDecimal(): String {
     return String.format(java.util.Locale.US, "%.1f", this)
 }
+

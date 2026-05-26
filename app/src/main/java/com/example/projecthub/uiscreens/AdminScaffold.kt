@@ -29,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -302,108 +303,35 @@ private fun SidebarItemIcon(
     icon: SidebarIcon,
     color: Color
 ) {
-    Canvas(modifier = Modifier.size(24.dp)) {
-        val stroke = Stroke(width = 2.2.dp.toPx(), cap = StrokeCap.Round)
-
-        when (icon) {
-            SidebarIcon.Dashboard -> {
-                val cell = size.width * 0.26f
-                listOf(
-                    Offset(size.width * 0.18f, size.height * 0.18f),
-                    Offset(size.width * 0.56f, size.height * 0.18f),
-                    Offset(size.width * 0.18f, size.height * 0.56f),
-                    Offset(size.width * 0.56f, size.height * 0.56f)
-                ).forEach { topLeft ->
-                    drawRoundRect(
-                        color = color,
-                        topLeft = topLeft,
-                        size = Size(cell, cell),
-                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.dp.toPx(), 2.dp.toPx()),
-                        style = stroke
-                    )
-                }
-            }
-
-            SidebarIcon.Projects -> {
-                drawRoundRect(
-                    color = color,
-                    topLeft = Offset(size.width * 0.14f, size.height * 0.28f),
-                    size = Size(size.width * 0.72f, size.height * 0.5f),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx(), 3.dp.toPx()),
-                    style = stroke
-                )
-                drawLine(color = color, start = Offset(size.width * 0.26f, size.height * 0.28f), end = Offset(size.width * 0.34f, size.height * 0.16f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color = color, start = Offset(size.width * 0.34f, size.height * 0.16f), end = Offset(size.width * 0.5f, size.height * 0.16f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-
-            SidebarIcon.Tasks -> {
-                listOf(0.28f, 0.5f, 0.72f).forEach { y ->
-                    drawCircle(color = color, radius = 1.8.dp.toPx(), center = Offset(size.width * 0.2f, size.height * y))
-                    drawLine(color = color, start = Offset(size.width * 0.34f, size.height * y), end = Offset(size.width * 0.82f, size.height * y), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                }
-            }
-
-            SidebarIcon.Teams -> {
-                drawCircle(color = color, radius = size.width * 0.12f, center = Offset(size.width * 0.42f, size.height * 0.34f), style = stroke)
-                drawCircle(color = color, radius = size.width * 0.1f, center = Offset(size.width * 0.68f, size.height * 0.42f), style = stroke)
-                drawArc(color = color, startAngle = 200f, sweepAngle = 140f, useCenter = false, topLeft = Offset(size.width * 0.22f, size.height * 0.5f), size = Size(size.width * 0.38f, size.height * 0.28f), style = stroke)
-                drawArc(color = color, startAngle = 215f, sweepAngle = 110f, useCenter = false, topLeft = Offset(size.width * 0.54f, size.height * 0.58f), size = Size(size.width * 0.3f, size.height * 0.2f), style = stroke)
-            }
-
-            SidebarIcon.Reports -> {
-                listOf(0.26f, 0.48f, 0.7f).forEachIndexed { index, x ->
-                    val barHeight = listOf(0.28f, 0.48f, 0.66f)[index]
-                    drawLine(color = color, start = Offset(size.width * x, size.height * 0.82f), end = Offset(size.width * x, size.height * (0.82f - barHeight)), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                }
-                drawLine(color = color, start = Offset(size.width * 0.14f, size.height * 0.84f), end = Offset(size.width * 0.86f, size.height * 0.84f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-
-            SidebarIcon.Settings -> {
-                drawCircle(color = color, radius = size.width * 0.18f, center = Offset(size.width * 0.5f, size.height * 0.5f), style = stroke)
-                listOf(0f, 60f, 120f, 180f, 240f, 300f).forEach { degrees ->
-                    val radians = Math.toRadians(degrees.toDouble())
-                    val inner = Offset(
-                        x = size.width * (0.5f + kotlin.math.cos(radians).toFloat() * 0.28f),
-                        y = size.height * (0.5f + kotlin.math.sin(radians).toFloat() * 0.28f)
-                    )
-                    val outer = Offset(
-                        x = size.width * (0.5f + kotlin.math.cos(radians).toFloat() * 0.38f),
-                        y = size.height * (0.5f + kotlin.math.sin(radians).toFloat() * 0.38f)
-                    )
-                    drawLine(color = color, start = inner, end = outer, strokeWidth = stroke.width, cap = StrokeCap.Round)
-                }
-            }
-
-            SidebarIcon.Logout -> {
-                drawLine(color = color, start = Offset(size.width * 0.2f, size.height * 0.2f), end = Offset(size.width * 0.2f, size.height * 0.8f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color = color, start = Offset(size.width * 0.2f, size.height * 0.2f), end = Offset(size.width * 0.48f, size.height * 0.2f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color = color, start = Offset(size.width * 0.2f, size.height * 0.8f), end = Offset(size.width * 0.48f, size.height * 0.8f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color = color, start = Offset(size.width * 0.42f, size.height * 0.5f), end = Offset(size.width * 0.82f, size.height * 0.5f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color = color, start = Offset(size.width * 0.68f, size.height * 0.34f), end = Offset(size.width * 0.84f, size.height * 0.5f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color = color, start = Offset(size.width * 0.68f, size.height * 0.66f), end = Offset(size.width * 0.84f, size.height * 0.5f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-        }
+    val iconRes = when (icon) {
+        SidebarIcon.Dashboard -> R.drawable.ic_dashboard_24
+        SidebarIcon.Projects -> R.drawable.ic_folder_24
+        SidebarIcon.Teams -> R.drawable.ic_group_24
+        SidebarIcon.Tasks -> R.drawable.ic_tasks_24
+        SidebarIcon.Logout -> R.drawable.ic_logout_24
+        SidebarIcon.Settings -> R.drawable.ic_settings_24
+        SidebarIcon.Reports -> R.drawable.ic_bar_chart_24
     }
-}
 
+    Icon(
+        painter = painterResource(iconRes),
+        contentDescription = null,
+        tint = color,
+        modifier = Modifier.size(24.dp)
+    )
+}
 @Composable
 private fun MenuIcon(
     modifier: Modifier = Modifier,
     color: Color
 ) {
-    Canvas(modifier = modifier.size(28.dp)) {
-        val strokeWidth = 2.6.dp.toPx()
-        val startX = size.width * 0.18f
-        val endX = size.width * 0.82f
-
-        listOf(0.3f, 0.5f, 0.7f).forEach { yPosition ->
-            drawLine(
-                color = color,
-                start = Offset(startX, size.height * yPosition),
-                end = Offset(endX, size.height * yPosition),
-                strokeWidth = strokeWidth,
-                cap = StrokeCap.Round
-            )
-        }
-    }
+    Icon(
+        painter = painterResource(R.drawable.ic_menu_24),
+        contentDescription = null,
+        tint = color,
+        modifier = modifier.size(28.dp)
+    )
 }
+
+
+

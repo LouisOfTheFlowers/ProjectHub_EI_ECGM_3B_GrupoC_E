@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -27,11 +28,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.projecthub.R
 import com.example.projecthub.ui.theme.ProjectHubColors
 
 @Composable
@@ -298,6 +302,57 @@ fun AppActionIconButton(
             fontWeight = FontWeight.ExtraBold,
             fontSize = 16.sp,
             maxLines = 1
+        )
+    }
+}
+
+@Composable
+fun AppExpandIcon(
+    expanded: Boolean,
+    modifier: Modifier = Modifier,
+    tint: Color = ProjectHubColors.Muted
+) {
+    Icon(
+        painter = painterResource(
+            id = if (expanded) R.drawable.ic_expand_less_24 else R.drawable.ic_expand_more_24
+        ),
+        contentDescription = null,
+        tint = tint,
+        modifier = modifier.size(18.dp)
+    )
+}
+
+@Composable
+fun AppActionIconButton(
+    painter: Painter,
+    contentDescription: String?,
+    color: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    val containerColor = if (enabled) color.copy(alpha = 0.12f) else ProjectHubColors.Disabled
+    val contentColor = if (enabled) color else ProjectHubColors.Muted
+
+    Box(
+        modifier = modifier
+            .size(34.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(containerColor)
+            .then(
+                if (enabled) {
+                    Modifier.clickable(onClick = rememberSoundClick(onClick))
+                } else {
+                    Modifier
+                }
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painter,
+            contentDescription = contentDescription,
+            tint = contentColor,
+            modifier = Modifier.size(18.dp)
         )
     }
 }

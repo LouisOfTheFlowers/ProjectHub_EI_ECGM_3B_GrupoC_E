@@ -25,6 +25,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,6 +39,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -46,6 +48,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
+import com.example.projecthub.R
 import com.example.projecthub.viewmodel.AdminProjectTaskGroup
 import com.example.projecthub.viewmodel.AdminTaskListItem
 import com.example.projecthub.viewmodel.AdminTaskStatusFilter
@@ -258,12 +261,7 @@ private fun StatusDropdown(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp
             )
-            Text(
-                text = if (expanded) "^" else "v",
-                color = ProjectHubColors.Muted,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
+            AppExpandIcon(expanded = expanded)
         }
 
         DropdownMenu(
@@ -489,36 +487,12 @@ private fun CompletionIcon(
             .background(color.copy(alpha = 0.14f)),
         contentAlignment = Alignment.Center
     ) {
-        Canvas(modifier = Modifier.size(21.dp)) {
-            val stroke = Stroke(width = 2.4.dp.toPx(), cap = StrokeCap.Round)
-
-            if (isCompleted) {
-                drawCircle(color = color, style = stroke)
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.28f, size.height * 0.52f),
-                    end = Offset(size.width * 0.44f, size.height * 0.68f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.44f, size.height * 0.68f),
-                    end = Offset(size.width * 0.76f, size.height * 0.34f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-            } else {
-                drawCircle(color = color, style = stroke)
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.34f, size.height * 0.5f),
-                    end = Offset(size.width * 0.66f, size.height * 0.5f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-            }
-        }
+        Icon(
+            painter = painterResource(if (isCompleted) R.drawable.ic_check_circle_24 else R.drawable.ic_schedule_24),
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(21.dp)
+        )
     }
 }
 
@@ -565,3 +539,6 @@ private fun String.toDisplayDate(pattern: String = "dd/MM/yyyy"): String {
 
     return date.format(DateTimeFormatter.ofPattern(pattern))
 }
+
+
+

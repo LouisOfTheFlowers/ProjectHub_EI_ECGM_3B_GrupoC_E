@@ -26,6 +26,7 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -41,10 +42,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.R
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
@@ -356,11 +360,7 @@ private fun StatusDropdown(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp
             )
-            Text(
-                text = if (expanded) "^" else "v",
-                color = ProjectHubColors.Muted,
-                fontWeight = FontWeight.Bold
-            )
+            AppExpandIcon(expanded = expanded)
         }
 
         DropdownMenu(
@@ -492,11 +492,7 @@ private fun ProjectTaskGroupCard(
                     )
                 }
 
-                Text(
-                    text = if (group.isExpanded) "^" else "v",
-                    color = ProjectHubColors.Muted,
-                    fontWeight = FontWeight.Bold
-                )
+                AppExpandIcon(expanded = group.isExpanded)
             }
 
             if (group.isExpanded) {
@@ -573,14 +569,16 @@ private fun TaskRow(
                 }
 
                 TaskActionIcon(
-                    icon = "✎",
+                    painter = painterResource(R.drawable.ic_edit_24),
+                    contentDescription = currentAppSettings().language.t("common.edit"),
                     color = GestorTasksAccent
                 ) {
                     onEditTask(task)
                 }
 
                 TaskActionIcon(
-                    icon = "X",
+                    painter = painterResource(R.drawable.ic_delete_24),
+                    contentDescription = currentAppSettings().language.t("common.delete"),
                     color = GestorTasksRed
                 ) {
                     onDeleteTask(task)
@@ -906,7 +904,8 @@ private fun TaskTextAction(
 
 @Composable
 private fun TaskActionIcon(
-    icon: String,
+    painter: Painter,
+    contentDescription: String?,
     color: Color,
     onClick: () -> Unit
 ) {
@@ -918,11 +917,11 @@ private fun TaskActionIcon(
             .clickable(onClick = rememberSoundClick(onClick)),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = icon,
-            color = color,
-            fontWeight = FontWeight.Bold,
-            fontSize = 15.sp
+        Icon(
+            painter = painter,
+            contentDescription = contentDescription,
+            tint = color,
+            modifier = Modifier.size(17.dp)
         )
     }
 }
@@ -1352,11 +1351,7 @@ private fun ProjectDropdown(
                 fontWeight = FontWeight.SemiBold
             )
 
-            Text(
-                text = if (expanded) "^" else "v",
-                color = ProjectHubColors.Muted,
-                fontWeight = FontWeight.Bold
-            )
+            AppExpandIcon(expanded = expanded)
         }
 
         DropdownMenu(

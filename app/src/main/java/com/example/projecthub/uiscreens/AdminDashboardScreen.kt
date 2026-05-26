@@ -20,6 +20,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,10 +30,12 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.R
 import com.example.projecthub.navigation.AppRoutes
 import com.example.projecthub.remote.supabase.models.UserDto
 import com.example.projecthub.settings.AppLanguage
@@ -256,120 +259,17 @@ private fun MetricIcon(
     icon: DashboardIcon,
     color: Color
 ) {
-    Canvas(modifier = Modifier.size(24.dp)) {
-        val stroke = Stroke(width = 2.6.dp.toPx(), cap = StrokeCap.Round)
-
-        when (icon) {
-            DashboardIcon.Completed -> {
-                drawCircle(color = color, style = stroke)
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.28f, size.height * 0.52f),
-                    end = Offset(size.width * 0.44f, size.height * 0.68f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.44f, size.height * 0.68f),
-                    end = Offset(size.width * 0.74f, size.height * 0.34f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-            }
-
-            DashboardIcon.Users -> {
-                drawCircle(
-                    color = color,
-                    radius = size.width * 0.16f,
-                    center = Offset(size.width * 0.42f, size.height * 0.36f),
-                    style = stroke
-                )
-                drawArc(
-                    color = color,
-                    startAngle = 205f,
-                    sweepAngle = 130f,
-                    useCenter = false,
-                    topLeft = Offset(size.width * 0.2f, size.height * 0.48f),
-                    size = Size(size.width * 0.45f, size.height * 0.34f),
-                    style = stroke
-                )
-                drawCircle(
-                    color = color,
-                    radius = size.width * 0.12f,
-                    center = Offset(size.width * 0.66f, size.height * 0.42f),
-                    style = stroke
-                )
-                drawArc(
-                    color = color,
-                    startAngle = 215f,
-                    sweepAngle = 110f,
-                    useCenter = false,
-                    topLeft = Offset(size.width * 0.52f, size.height * 0.55f),
-                    size = Size(size.width * 0.34f, size.height * 0.24f),
-                    style = stroke
-                )
-            }
-
-            DashboardIcon.Pending -> {
-                drawRoundRect(
-                    color = color,
-                    topLeft = Offset(size.width * 0.22f, size.height * 0.2f),
-                    size = Size(size.width * 0.56f, size.height * 0.64f),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx(), 4.dp.toPx()),
-                    style = stroke
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.35f, size.height * 0.4f),
-                    end = Offset(size.width * 0.65f, size.height * 0.4f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.35f, size.height * 0.58f),
-                    end = Offset(size.width * 0.58f, size.height * 0.58f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-            }
-
-            DashboardIcon.Warning -> {
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.5f, size.height * 0.16f),
-                    end = Offset(size.width * 0.12f, size.height * 0.82f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.5f, size.height * 0.16f),
-                    end = Offset(size.width * 0.88f, size.height * 0.82f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.12f, size.height * 0.82f),
-                    end = Offset(size.width * 0.88f, size.height * 0.82f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.5f, size.height * 0.38f),
-                    end = Offset(size.width * 0.5f, size.height * 0.58f),
-                    strokeWidth = stroke.width,
-                    cap = StrokeCap.Round
-                )
-                drawCircle(
-                    color = color,
-                    radius = 1.5.dp.toPx(),
-                    center = Offset(size.width * 0.5f, size.height * 0.7f)
-                )
-            }
-        }
+    val iconRes = when (icon) {
+        DashboardIcon.Users -> R.drawable.ic_group_24
+        DashboardIcon.Warning -> R.drawable.ic_warning_24
+        DashboardIcon.Pending -> R.drawable.ic_tasks_24
+        DashboardIcon.Completed -> R.drawable.ic_check_circle_24
     }
+
+    Icon(
+        painter = painterResource(iconRes),
+        contentDescription = null,
+        tint = color,
+        modifier = Modifier.size(24.dp)
+    )
 }
