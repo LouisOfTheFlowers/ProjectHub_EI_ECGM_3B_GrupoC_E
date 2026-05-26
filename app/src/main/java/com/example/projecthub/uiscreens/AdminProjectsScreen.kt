@@ -1,4 +1,4 @@
-package com.example.projecthub.uiscreens
+﻿package com.example.projecthub.uiscreens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -390,7 +390,7 @@ private fun ProjectFilters(
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 FilterDropdown(
                     label = state.selectedStatus,
-                    options = listOf("Todos", "Concluídos", "Em progresso", "Atrasados"),
+                    options = listOf("Todos", "ConcluÃ­dos", "Em progresso", "Atrasados"),
                     modifier = Modifier.weight(1f),
                     onOptionSelected = onStatusChange
                 )
@@ -520,19 +520,12 @@ private fun ProjectListCard(
                         fontSize = 12.sp
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-<<<<<<< Updated upstream
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        ActionIconButton("✎", ProjectsAccent, onEdit)
-                        ActionIconButton("X", ProjectsRed, onDelete)
-                    }
-=======
                     Text(
                         text = if (project.isExpanded) "^" else "v",
                         color = ProjectHubColors.Muted,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
->>>>>>> Stashed changes
                 }
             }
 
@@ -705,19 +698,36 @@ private fun AdminProjectParticipantsCard(participants: List<com.example.projecth
 @Composable
 private fun AdminProjectRatingsCard(participants: List<com.example.projecthub.viewmodel.AdminProjectInfoParticipant>) {
     val language = currentAppSettings().language
-    val ratedParticipants = participants.filter { it.rating != null || !it.comment.isNullOrBlank() }
 
     AdminProjectSectionCard(title = language.t("admin.projects.ratings")) {
-        if (ratedParticipants.isEmpty()) {
+        if (participants.isEmpty()) {
             Text(language.t("manager.team.noRatings"), color = ProjectHubColors.Muted, fontSize = 14.sp)
         } else {
-            ratedParticipants.forEach { participant ->
-                Text(
-                    text = "${participant.name}: ${participant.rating ?: 0} / 5",
-                    color = ProjectHubColors.Ink,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
+            participants.forEach { participant ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = participant.name,
+                        color = ProjectHubColors.Ink,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = participant.rating
+                            ?.let { rating ->
+                                val clamped = rating.coerceIn(0, 5)
+                                "${"★".repeat(clamped)}${"☆".repeat(5 - clamped)} $clamped/5"
+                            }
+                            ?: "☆☆☆☆☆ 0/5",
+                        color = participant.rating?.let { ProjectHubColors.Rating } ?: ProjectHubColors.Muted,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                }
                 participant.comment?.takeIf { it.isNotBlank() }?.let { comment ->
                     Text(comment, color = ProjectHubColors.Muted, fontSize = 12.sp)
                 }
@@ -1205,3 +1215,4 @@ private fun LocalDate.toEpochMillis(): Long {
         .toInstant(ZoneOffset.UTC)
         .toEpochMilli()
 }
+

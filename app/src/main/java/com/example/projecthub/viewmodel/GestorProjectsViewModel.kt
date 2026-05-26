@@ -135,6 +135,7 @@ class GestorProjectsViewModel(
 
             val projectsResult = projetoRepository.getProjetosByGestor(gestorId)
             val tasksResult = tarefaRepository.getTarefas()
+            val taskUsersResult = tarefaUserRepository.getTarefaUsers()
             val ratingsResult = avaliacaoRepository.getAvaliacoes()
             val usersResult = runCatching {
                 userRemoteDataSource.getUsers()
@@ -143,6 +144,7 @@ class GestorProjectsViewModel(
             if (
                 projectsResult.isFailure ||
                 tasksResult.isFailure ||
+                taskUsersResult.isFailure ||
                 ratingsResult.isFailure ||
                 usersResult.isFailure
             ) {
@@ -164,6 +166,21 @@ class GestorProjectsViewModel(
                 .getOrDefault(emptyList())
                 .filter { it.projeto_id in projectIds }
                 .groupBy { it.projeto_id }
+            val taskProjectById = tasksByProject
+                .values
+                .flatten()
+                .mapNotNull { task -> task.id?.let { taskId -> taskId to task.projeto_id } }
+                .toMap()
+            val taskUsersByProject = taskUsersResult
+                .getOrDefault(emptyList())
+                .mapNotNull { relation ->
+                    val projectId = taskProjectById[relation.tarefa_id] ?: return@mapNotNull null
+                    projectId to relation.user_id
+                }
+                .groupBy(
+                    keySelector = { it.first },
+                    valueTransform = { it.second }
+                )
 
             val projectUsersByProject = projectUsers
                 .filter { it.projeto_id in projectIds }
@@ -206,7 +223,10 @@ class GestorProjectsViewModel(
                 .mapNotNull { project ->
                     project.toListItem(
                         tasks = tasksByProject[project.id].orEmpty(),
-                        memberIds = projectUsersByProject[project.id].orEmpty().map { it.user_id },
+                        memberIds = (
+                            projectUsersByProject[project.id].orEmpty().map { it.user_id } +
+                                taskUsersByProject[project.id].orEmpty()
+                            ),
                         usersById = usersById,
                         ratingsByProjectAndUser = ratingsByProjectAndUser,
                         isExpanded = project.id in oldExpandedIds

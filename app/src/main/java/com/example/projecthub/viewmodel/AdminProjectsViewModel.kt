@@ -125,9 +125,17 @@ class AdminProjectsViewModel(
             val projectsResult = projetoRepository.getProjetos()
             val projectUsersResult = projetoUserRepository.getProjetoUsers()
             val projectMemberCountsResult = projetoUserRepository.getProjectMemberCounts()
+            val tasksResult = tarefaRepository.getTarefas()
+            val taskUsersResult = tarefaUserRepository.getTarefaUsers()
             val usersResult = runCatching { userRemoteDataSource.getUsers() }
 
-            if (projectsResult.isFailure || projectUsersResult.isFailure || usersResult.isFailure) {
+            if (
+                projectsResult.isFailure ||
+                projectUsersResult.isFailure ||
+                tasksResult.isFailure ||
+                taskUsersResult.isFailure ||
+                usersResult.isFailure
+            ) {
                 state = state.copy(
                     isLoading = false,
                     errorMessage = "Não foi possível carregar os projetos."
@@ -155,9 +163,29 @@ class AdminProjectsViewModel(
             val directProjectMemberCounts = projectUsersResult.getOrDefault(emptyList())
                 .groupingBy { it.projeto_id }
                 .eachCount()
+            val taskProjectById = tasksResult
+                .getOrDefault(emptyList())
+                .mapNotNull { task -> task.id?.let { taskId -> taskId to task.projeto_id } }
+                .toMap()
+            val projectMemberIds = mutableMapOf<Int, MutableSet<Int>>()
+            projectUsersResult.getOrDefault(emptyList()).forEach { relation ->
+                projectMemberIds.getOrPut(relation.projeto_id) { mutableSetOf() }.add(relation.user_id)
+            }
+            taskUsersResult.getOrDefault(emptyList()).forEach { relation ->
+                val projectId = taskProjectById[relation.tarefa_id] ?: return@forEach
+                projectMemberIds.getOrPut(projectId) { mutableSetOf() }.add(relation.user_id)
+            }
             val projectMemberCounts = projectMemberCountsResult
                 .getOrDefault(emptyMap())
-                .ifEmpty { directProjectMemberCounts }
+                .toMutableMap()
+                .apply {
+                    directProjectMemberCounts.forEach { (projectId, count) ->
+                        put(projectId, maxOf(this[projectId] ?: 0, count))
+                    }
+                    projectMemberIds.forEach { (projectId, userIds) ->
+                        put(projectId, maxOf(this[projectId] ?: 0, userIds.size))
+                    }
+                }
             val oldExpandedIds = state.projects
                 .filter { it.isExpanded }
                 .map { it.id }
@@ -223,6 +251,7 @@ class AdminProjectsViewModel(
             val projectUsersResult = projetoUserRepository.getUsersByProjeto(project.id)
             val taskUsersResult = tarefaUserRepository.getTarefaUsers()
             val ratingsResult = avaliacaoRepository.getAvaliacoesByProjeto(project.id)
+            val allRatingsResult = avaliacaoRepository.getAvaliacoes()
             val recordsResult = registoTarefaRepository.getRegistos()
             val observationsResult = observacaoRepository.getObservacoes()
             val photosResult = observacaoFotoRepository.getFotos()
@@ -233,6 +262,7 @@ class AdminProjectsViewModel(
                 projectUsersResult.isFailure ||
                 taskUsersResult.isFailure ||
                 ratingsResult.isFailure ||
+                allRatingsResult.isFailure ||
                 recordsResult.isFailure ||
                 observationsResult.isFailure ||
                 photosResult.isFailure ||
@@ -253,25 +283,14 @@ class AdminProjectsViewModel(
                 .mapNotNull { user -> user.id?.let { id -> id to user } }
                 .toMap()
 
-            val ratingsByUser = ratingsResult
-                .getOrDefault(emptyList())
+            val ratingsByUser = (
+                ratingsResult.getOrDefault(emptyList()) +
+                    allRatingsResult
+                        .getOrDefault(emptyList())
+                        .filter { it.projeto_id == project.id }
+                )
+                .distinctBy { it.user_id }
                 .associateBy { it.user_id }
-
-            val participants = projectUsersResult
-                .getOrDefault(emptyList())
-                .mapNotNull { relation ->
-                    val user = usersById[relation.user_id] ?: return@mapNotNull null
-                    val rating = ratingsByUser[relation.user_id]
-
-                    AdminProjectInfoParticipant(
-                        id = relation.user_id,
-                        name = user.nome.ifBlank { user.username },
-                        email = user.email,
-                        rating = rating?.classificacao,
-                        comment = rating?.comentario
-                    )
-                }
-                .sortedBy { it.name.lowercase() }
 
             val tasks = tasksResult
                 .getOrDefault(emptyList())
@@ -282,6 +301,27 @@ class AdminProjectsViewModel(
                 .getOrDefault(emptyList())
                 .filter { it.tarefa_id in taskIds }
                 .groupBy { it.tarefa_id }
+
+            val participantUserIds = (
+                projectUsersResult.getOrDefault(emptyList()).map { it.user_id } +
+                    taskUsersByTask.values.flatten().map { it.user_id }
+                )
+                .toSet()
+
+            val participants = participantUserIds
+                .mapNotNull { userId ->
+                    val user = usersById[userId] ?: return@mapNotNull null
+                    val rating = ratingsByUser[userId]
+
+                    AdminProjectInfoParticipant(
+                        id = userId,
+                        name = user.nome.ifBlank { user.username },
+                        email = user.email,
+                        rating = rating?.classificacao,
+                        comment = rating?.comentario
+                    )
+                }
+                .sortedBy { it.name.lowercase() }
 
             val records = recordsResult
                 .getOrDefault(emptyList())
