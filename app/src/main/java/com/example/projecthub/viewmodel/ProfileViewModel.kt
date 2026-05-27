@@ -231,7 +231,7 @@ class ProfileViewModel(
         }
 
         if (currentUser.role.equals("ADMIN", ignoreCase = true)) {
-            state = state.copy(errorMessage = "A conta de administrador nao pode ser eliminada.")
+            state = state.copy(errorMessage = "A conta de administrador não pode ser eliminada.")
             return
         }
 
