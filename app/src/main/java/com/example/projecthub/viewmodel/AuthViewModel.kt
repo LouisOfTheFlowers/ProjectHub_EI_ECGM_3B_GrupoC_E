@@ -68,7 +68,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 isLoggedIn = false
                 message = authErrorMessage(
                     result.exceptionOrNull(),
-                    fallback = "Sessao expirada. Inicia sessao novamente."
+                    fallback = "Sessão expirada. Inicia sessão novamente."
                 )
                 isRestoringSession = false
                 onResult(false)
@@ -156,12 +156,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             isLoading = false
 
             if (result.isSuccess) {
-                message = "Email de recuperaÃ§Ã£o enviado. Verifica a tua caixa de entrada."
+                message = "Email de recuperação enviado. Verifica a tua caixa de entrada."
                 onResult(true, message)
             } else {
                 message = authErrorMessage(
                     result.exceptionOrNull(),
-                    fallback = "NÃ£o foi possÃ­vel enviar o email de recuperaÃ§Ã£o."
+                    fallback = "Não foi possível enviar o email de recuperação."
                 )
                 onResult(false, message)
             }
@@ -186,14 +186,14 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     ) {
         viewModelScope.launch {
             if (newPassword.length < 8 || !newPassword.any(Char::isLetter) || !newPassword.any(Char::isDigit)) {
-                val error = "A palavra-passe deve ter pelo menos 8 caracteres, letras e numeros."
+                val error = "A palavra-passe deve ter pelo menos 8 caracteres, letras e números."
                 message = error
                 onResult(false, error)
                 return@launch
             }
 
             if (newPassword != confirmPassword) {
-                val error = "As palavras-passe nao coincidem."
+                val error = "As palavras-passe não coincidem."
                 message = error
                 onResult(false, error)
                 return@launch
@@ -210,12 +210,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 jwt = null
                 isLoggedIn = false
                 isRecoverySessionReady = false
-                message = "Palavra-passe alterada com sucesso. Ja podes iniciar sessao."
+                message = "Palavra-passe alterada com sucesso. Já podes iniciar sessão."
                 onResult(true, message)
             } else {
                 message = authErrorMessage(
                     result.exceptionOrNull(),
-                    fallback = "Nao foi possivel alterar a palavra-passe."
+                    fallback = "Não foi possível alterar a palavra-passe."
                 )
                 onResult(false, message)
             }

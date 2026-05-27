@@ -128,7 +128,7 @@ class GestorTasksViewModel(
         if (gestorId == null) {
             state = GestorTasksState(
                 isLoading = false,
-                errorMessage = "Nao foi possivel identificar o gestor autenticado."
+                errorMessage = "Não foi possível identificar o gestor autenticado."
             )
             return
         }
@@ -144,7 +144,7 @@ class GestorTasksViewModel(
             if (projectsResult.isFailure || tasksResult.isFailure || taskUsersResult.isFailure || usersResult.isFailure) {
                 state = state.copy(
                     isLoading = false,
-                    errorMessage = "Nao foi possivel carregar as tarefas."
+                    errorMessage = "Não foi possível carregar as tarefas."
                 )
                 return@launch
             }
@@ -241,7 +241,7 @@ class GestorTasksViewModel(
                     detailState = GestorTaskInfoState(
                         task = task,
                         isLoading = false,
-                        errorMessage = "Nao foi possivel carregar os detalhes da tarefa."
+                        errorMessage = "Não foi possível carregar os detalhes da tarefa."
                     )
                 )
                 return@launch
@@ -304,13 +304,13 @@ class GestorTasksViewModel(
             val endDate = endDateText.toInputLocalDateOrNull()
 
             val validationError = when {
-                title.isBlank() -> "Indica o titulo da tarefa."
-                description.isBlank() -> "Indica a descricao da tarefa."
+                title.isBlank() -> "Indica o título da tarefa."
+                description.isBlank() -> "Indica a descrição da tarefa."
                 projectId == null -> "Seleciona o projeto da tarefa."
-                startDate == null -> "Indica a data de inicio no formato dd/mm/aaaa."
+                startDate == null -> "Indica a data de início no formato dd/mm/aaaa."
                 endDate == null -> "Indica a data de fim no formato dd/mm/aaaa."
-                startDate.isAfter(endDate) -> "A data de inicio nao pode ser depois da data de fim."
-                userIds.isEmpty() -> "Associa pelo menos um utilizador a tarefa."
+                startDate.isAfter(endDate) -> "A data de início não pode ser depois da data de fim."
+                userIds.isEmpty() -> "Associa pelo menos um utilizador à tarefa."
                 else -> null
             }
 
@@ -334,7 +334,7 @@ class GestorTasksViewModel(
                 state = state.copy(
                     isCreating = false,
                     createErrorMessage = createResult.exceptionOrNull()?.message
-                        ?: "Nao foi possivel criar a tarefa."
+                        ?: "Não foi possível criar a tarefa."
                 )
                 return@launch
             }
@@ -345,7 +345,7 @@ class GestorTasksViewModel(
                     state = state.copy(
                         isCreating = false,
                         createErrorMessage = associateResult.exceptionOrNull()?.message
-                            ?: "Nao foi possivel associar utilizadores a tarefa."
+                            ?: "Não foi possível associar utilizadores à tarefa."
                     )
                     return@launch
                 }
@@ -366,7 +366,7 @@ class GestorTasksViewModel(
             } else {
                 state = state.copy(
                     errorMessage = result.exceptionOrNull()?.message
-                        ?: "Nao foi possivel eliminar a tarefa."
+                        ?: "Não foi possível eliminar a tarefa."
                 )
             }
         }
@@ -387,12 +387,12 @@ class GestorTasksViewModel(
             val endDate = endDateText.toInputLocalDateOrNull()
 
             val validationError = when {
-                title.isBlank() -> "Indica o titulo da tarefa."
-                description.isBlank() -> "Indica a descricao da tarefa."
-                startDate == null -> "Indica a data de inicio no formato dd/mm/aaaa."
+                title.isBlank() -> "Indica o título da tarefa."
+                description.isBlank() -> "Indica a descrição da tarefa."
+                startDate == null -> "Indica a data de início no formato dd/mm/aaaa."
                 endDate == null -> "Indica a data de fim no formato dd/mm/aaaa."
-                startDate.isAfter(endDate) -> "A data de inicio nao pode ser depois da data de fim."
-                userIds.isEmpty() -> "Associa pelo menos um utilizador a tarefa."
+                startDate.isAfter(endDate) -> "A data de início não pode ser depois da data de fim."
+                userIds.isEmpty() -> "Associa pelo menos um utilizador à tarefa."
                 else -> null
             }
 
@@ -417,7 +417,7 @@ class GestorTasksViewModel(
                 state = state.copy(
                     isCreating = false,
                     createErrorMessage = updateResult.exceptionOrNull()?.message
-                        ?: "Nao foi possivel atualizar a tarefa."
+                        ?: "Não foi possível atualizar a tarefa."
                 )
                 return@launch
             }
@@ -432,7 +432,7 @@ class GestorTasksViewModel(
                     state = state.copy(
                         isCreating = false,
                         createErrorMessage = result.exceptionOrNull()?.message
-                            ?: "Nao foi possivel remover utilizadores da tarefa."
+                            ?: "Não foi possível remover utilizadores da tarefa."
                     )
                     return@launch
                 }
@@ -444,7 +444,7 @@ class GestorTasksViewModel(
                     state = state.copy(
                         isCreating = false,
                         createErrorMessage = result.exceptionOrNull()?.message
-                            ?: "Nao foi possivel associar utilizadores a tarefa."
+                            ?: "Não foi possível associar utilizadores à tarefa."
                     )
                     return@launch
                 }
@@ -517,7 +517,7 @@ class GestorTasksViewModel(
             id = id ?: 0,
             projectId = projeto_id,
             title = titulo,
-            description = descricao?.takeIf { it.isNotBlank() } ?: "Sem descricao",
+            description = descricao?.takeIf { it.isNotBlank() } ?: "Sem descrição",
             statusLabel = when {
                 isCompleted -> "Concluída"
                 isDelayed -> "Atrasada"

@@ -494,7 +494,7 @@ class GestorProjectsViewModel(
             if (tasksResult.isFailure) {
                 state = state.copy(
                     isAssociating = false,
-                    errorMessage = "Nao foi possivel validar as tarefas do projeto."
+                    errorMessage = "Não foi possível validar as tarefas do projeto."
                 )
                 return@launch
             }
@@ -510,7 +510,7 @@ class GestorProjectsViewModel(
 
                 state = state.copy(
                     isAssociating = false,
-                    errorMessage = "Nao podes concluir este projeto. Todas as tarefas tem de estar concluidas. Pendentes: $pendingTasks, em progresso: $inProgressTasks, em atraso: $lateTasks."
+                    errorMessage = "Não podes concluir este projeto. Todas as tarefas têm de estar concluídas. Pendentes: $pendingTasks, em progresso: $inProgressTasks, em atraso: $lateTasks."
                 )
                 return@launch
             }
