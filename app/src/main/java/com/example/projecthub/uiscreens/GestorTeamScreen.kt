@@ -114,13 +114,13 @@ private fun TeamStats(state: GestorTeamState) {
             modifier = Modifier.weight(1f)
         )
         TeamStatCard(
-            label = "Media",
+            label = "Média",
             value = visibleAverageRating?.formatRating() ?: "-",
             color = TeamOrange,
             modifier = Modifier.weight(1f)
         )
         TeamStatCard(
-            label = "Concluidas",
+            label = "Concluídas",
             value = visibleCompletedTasks.toString(),
             color = TeamGreen,
             modifier = Modifier.weight(1f)
@@ -364,15 +364,15 @@ private fun TeamMemberCard(
 
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 MemberMetric(
-                    label = "Media das estrelas",
-                    value = visibleRating?.let { "${it.formatRating()} / 5" } ?: "Sem avaliacoes",
+                    label = "Média das estrelas",
+                    value = visibleRating?.let { "${it.formatRating()} / 5" } ?: "Sem avaliações",
                     color = TeamOrange,
                     modifier = Modifier.weight(1f),
                     showStars = visibleRating != null,
                     rating = visibleRating
                 )
                 MemberMetric(
-                    label = "Tarefas concluidas",
+                    label = "Tarefas concluídas",
                     value = visibleCompletedTasks.toString(),
                     color = TeamGreen,
                     modifier = Modifier.weight(1f)

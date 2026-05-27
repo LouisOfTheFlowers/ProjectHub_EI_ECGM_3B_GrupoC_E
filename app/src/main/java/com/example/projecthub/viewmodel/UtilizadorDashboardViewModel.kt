@@ -71,7 +71,7 @@ class UtilizadorDashboardViewModel(
     fun loadDashboard(userId: Int?) {
         if (userId == null) {
             state = UtilizadorDashboardState(
-                errorMessage = "Nao foi possivel identificar o utilizador autenticado."
+                errorMessage = "Não foi possível identificar o utilizador autenticado."
             )
             return
         }
@@ -83,7 +83,7 @@ class UtilizadorDashboardViewModel(
             if (associationsResult.isFailure) {
                 state = state.copy(
                     isLoading = false,
-                    errorMessage = "Nao foi possivel carregar as tarefas do utilizador."
+                    errorMessage = "Não foi possível carregar as tarefas do utilizador."
                 )
                 return@launch
             }
@@ -102,7 +102,7 @@ class UtilizadorDashboardViewModel(
             if (tasksResult.isFailure) {
                 state = state.copy(
                     isLoading = false,
-                    errorMessage = "Nao foi possivel carregar os detalhes das tarefas."
+                    errorMessage = "Não foi possível carregar os detalhes das tarefas."
                 )
                 return@launch
             }
@@ -183,7 +183,7 @@ class UtilizadorDashboardViewModel(
         photoUri: String?
     ) {
         if (userId == null || taskId == null) {
-            state = state.copy(errorMessage = "Nao foi possivel identificar a tarefa ou o utilizador.")
+            state = state.copy(errorMessage = "Não foi possível identificar a tarefa ou o utilizador.")
             return
         }
 
@@ -203,7 +203,7 @@ class UtilizadorDashboardViewModel(
                 state = state.copy(
                     isSaving = false,
                     errorMessage = registoResult.exceptionOrNull().toUserMessage(
-                        fallback = "Nao foi possivel criar o registo da observacao."
+                        fallback = "Não foi possível criar o registo da observação."
                     )
                 )
                 return@launch
@@ -213,7 +213,7 @@ class UtilizadorDashboardViewModel(
             if (registoId == null) {
                 state = state.copy(
                     isSaving = false,
-                    errorMessage = "Nao foi possivel obter o registo criado."
+                    errorMessage = "Não foi possível obter o registo criado."
                 )
                 return@launch
             }
@@ -227,7 +227,7 @@ class UtilizadorDashboardViewModel(
                 state = state.copy(
                     isSaving = false,
                     errorMessage = observacaoResult.exceptionOrNull().toUserMessage(
-                        fallback = "Nao foi possivel guardar a observacao."
+                        fallback = "Não foi possível guardar a observação."
                     )
                 )
                 return@launch
@@ -244,7 +244,7 @@ class UtilizadorDashboardViewModel(
                     state = state.copy(
                         isSaving = false,
                         errorMessage = photoResult.exceptionOrNull().toUserMessage(
-                            fallback = "A observacao foi guardada, mas nao foi possivel guardar a fotografia."
+                            fallback = "A observação foi guardada, mas não foi possível guardar a fotografia."
                         )
                     )
                     loadDashboard(userId)
@@ -265,23 +265,23 @@ class UtilizadorDashboardViewModel(
         spentHours: String
     ) {
         if (userId == null || taskId == null) {
-            state = state.copy(errorMessage = "Nao foi possivel identificar a tarefa ou o utilizador.")
+            state = state.copy(errorMessage = "Não foi possível identificar a tarefa ou o utilizador.")
             return
         }
 
         val hours = spentHours.replace(",", ".").toFloatOrNull()
         if (hours == null || hours < 0f) {
-            state = state.copy(errorMessage = "Indica um numero valido de horas.")
+            state = state.copy(errorMessage = "Indica um número válido de horas.")
             return
         }
 
         if (completionDate.toLocalDateOrNull() == null) {
-            state = state.copy(errorMessage = "Indica uma data de conclusao valida.")
+            state = state.copy(errorMessage = "Indica uma data de conclusão válida.")
             return
         }
 
         if (location.isBlank()) {
-            state = state.copy(errorMessage = "Indica o local de conclusao.")
+            state = state.copy(errorMessage = "Indica o local de conclusão.")
             return
         }
 
@@ -301,7 +301,7 @@ class UtilizadorDashboardViewModel(
                 state = state.copy(
                     isSaving = false,
                     errorMessage = registoResult.exceptionOrNull().toUserMessage(
-                        fallback = "Nao foi possivel guardar o registo de conclusao."
+                        fallback = "Não foi possível guardar o registo de conclusão."
                     )
                 )
                 return@launch
@@ -312,7 +312,7 @@ class UtilizadorDashboardViewModel(
                 state = state.copy(
                     isSaving = false,
                     errorMessage = completeResult.exceptionOrNull().toUserMessage(
-                        fallback = "O registo foi guardado, mas nao foi possivel concluir a tarefa."
+                        fallback = "O registo foi guardado, mas não foi possível concluir a tarefa."
                     )
                 )
                 return@launch
@@ -396,9 +396,9 @@ class UtilizadorDashboardViewModel(
         val message = this?.message.orEmpty()
         return when {
             message.contains("row-level security", ignoreCase = true) ->
-                "Nao tens permissao para guardar dados nesta tarefa."
+                "Não tens permissão para guardar dados nesta tarefa."
             message.contains("permission denied", ignoreCase = true) ->
-                "Nao tens permissao para realizar esta acao."
+                "Não tens permissão para realizar esta ação."
             message.contains("violates", ignoreCase = true) ->
                 fallback
             else -> message.takeIf { it.isNotBlank() && !it.contains("Headers:", ignoreCase = true) }

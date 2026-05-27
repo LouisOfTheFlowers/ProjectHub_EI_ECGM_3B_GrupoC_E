@@ -70,8 +70,8 @@ fun UtilizadorProjectsSection(
                 }
                 Spacer(modifier = Modifier.height(18.dp))
                 ProjectMessageCard(
-                    title = "Projeto nao encontrado",
-                    detail = "Nao foi possivel encontrar este projeto nos teus projetos atribuidos."
+                    title = "Projeto não encontrado",
+                    detail = "Não foi possível encontrar este projeto nos teus projetos atribuídos."
                 )
             }
         }
@@ -80,7 +80,7 @@ fun UtilizadorProjectsSection(
 
     Column {
         Text(
-            text = "Projetos Atribuidos",
+            text = "Projetos Atribuídos",
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp
@@ -115,7 +115,7 @@ fun UtilizadorProjectsSection(
 
             state.projects.isEmpty() -> {
                 ProjectMessageCard(
-                    title = "Sem projetos atribuidos",
+                    title = "Sem projetos atribuídos",
                     detail = "Quando fores associado a um projeto, ele aparece aqui."
                 )
             }
@@ -180,7 +180,7 @@ private fun UserProjectCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                ProjectMeta(label = "Inicio", value = project.data_inicio.toUiDate(), modifier = Modifier.weight(1f))
+                ProjectMeta(label = "Início", value = project.data_inicio.toUiDate(), modifier = Modifier.weight(1f))
                 ProjectMeta(label = "Fim", value = project.data_fim.toUiDate(), modifier = Modifier.weight(1f))
                 ProjectMeta(label = "Tarefas", value = item.tasksCount.toString(), modifier = Modifier.weight(1f))
             }
@@ -197,7 +197,7 @@ private fun UserProjectCard(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     ProjectMetric(
-                        label = "Concluidas",
+                        label = "Concluídas",
                         value = item.completedTasks.toString(),
                         color = ProjectHubColors.Success,
                         modifier = Modifier.weight(1f)
@@ -222,7 +222,7 @@ private fun UserProjectCard(
                     modifier = Modifier.padding(start = 12.dp)
                 ) {
                     Text(
-                        text = "Ver historico",
+                        text = "Ver histórico",
                         color = AuthAccent,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.ExtraBold
@@ -262,7 +262,7 @@ private fun ProjectTaskHistoryPage(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Historico de tarefas concluidas neste projeto",
+                    text = "Histórico de tarefas concluídas neste projeto",
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold
@@ -279,7 +279,7 @@ private fun ProjectTaskHistoryPage(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             ProjectMetric(
-                label = "Concluidas",
+                label = "Concluídas",
                 value = item.completedTasks.toString(),
                 color = ProjectHubColors.Success,
                 modifier = Modifier.weight(1f)
@@ -302,8 +302,8 @@ private fun ProjectTaskHistoryPage(
 
         if (item.completedTaskHistory.isEmpty()) {
             ProjectMessageCard(
-                title = "Sem tarefas concluidas",
-                detail = "Ainda nao concluíste tarefas neste projeto."
+                title = "Sem tarefas concluídas",
+                detail = "Ainda não concluíste tarefas neste projeto."
             )
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -341,7 +341,7 @@ private fun CompletedTaskHistoryRow(task: TarefaDto) {
             Spacer(modifier = Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 ProjectMeta(label = "Estado", value = task.status, modifier = Modifier.weight(1f))
-                ProjectMeta(label = "Inicio", value = task.data_inicio.toUiDate(), modifier = Modifier.weight(1f))
+                ProjectMeta(label = "Início", value = task.data_inicio.toUiDate(), modifier = Modifier.weight(1f))
                 ProjectMeta(label = "Fim", value = task.data_fim.toUiDate(), modifier = Modifier.weight(1f))
             }
         }

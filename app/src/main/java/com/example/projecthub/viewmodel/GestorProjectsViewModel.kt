@@ -117,7 +117,7 @@ class GestorProjectsViewModel(
         if (gestorId == null) {
             state = GestorProjectsState(
                 isLoading = false,
-                errorMessage = "Nao foi possivel identificar o gestor autenticado."
+                errorMessage = "Não foi possível identificar o gestor autenticado."
             )
             return
         }
@@ -138,7 +138,7 @@ class GestorProjectsViewModel(
             ) {
                 state = state.copy(
                     isLoading = false,
-                    errorMessage = "Nao foi possivel carregar os projetos do gestor."
+                    errorMessage = "Não foi possível carregar os projetos do gestor."
                 )
                 return@launch
             }
@@ -247,7 +247,7 @@ class GestorProjectsViewModel(
                     detailState = GestorProjectInfoState(
                         project = project,
                         isLoading = false,
-                        errorMessage = "Nao foi possivel carregar os detalhes do projeto."
+                        errorMessage = "Não foi possível carregar os detalhes do projeto."
                     )
                 )
                 return@launch
@@ -311,7 +311,7 @@ class GestorProjectsViewModel(
                 GestorProjectInfoTask(
                     id = taskId,
                     title = task.titulo,
-                    description = task.descricao?.takeIf { it.isNotBlank() } ?: "Sem descricao",
+                    description = task.descricao?.takeIf { it.isNotBlank() } ?: "Sem descrição",
                     statusLabel = task.toTaskStatusLabel(),
                     startDate = task.data_inicio.toUiDateText(),
                     dueDate = task.data_fim.toUiDateText(),
@@ -364,7 +364,7 @@ class GestorProjectsViewModel(
                 state = state.copy(
                     isAssociating = false,
                     errorMessage = result.exceptionOrNull()?.message
-                        ?: "Nao foi possivel associar o utilizador."
+                        ?: "Não foi possível associar o utilizador."
                 )
             }
         }
@@ -401,7 +401,7 @@ class GestorProjectsViewModel(
                     state = state.copy(
                         isAssociating = false,
                         errorMessage = result.exceptionOrNull()?.message
-                            ?: "Nao foi possivel guardar as avaliacoes."
+                            ?: "Não foi possível guardar as avaliações."
                     )
                     return@launch
                 }
@@ -412,14 +412,14 @@ class GestorProjectsViewModel(
             if (completeResult.isSuccess) {
                 state = state.copy(
                     isAssociating = false,
-                    actionMessage = "Projeto concluido com avaliacoes guardadas."
+                    actionMessage = "Projeto concluído com avaliações guardadas."
                 )
                 loadProjects(gestorId)
             } else {
                 state = state.copy(
                     isAssociating = false,
                     errorMessage = completeResult.exceptionOrNull()?.message
-                        ?: "Nao foi possivel concluir o projeto."
+                        ?: "Não foi possível concluir o projeto."
                 )
             }
         }
@@ -438,7 +438,7 @@ class GestorProjectsViewModel(
                 project.members.any { it.name.contains(query, ignoreCase = true) }
 
             val matchesStatus = when (state.selectedStatus) {
-                "Concluidos" -> project.statusLabel == "Concluido"
+                "Concluídos" -> project.statusLabel == "Concluído"
                 "Em Progresso" -> project.statusLabel == "Em Progresso"
                 "Pendentes" -> project.statusLabel == "Pendente"
                 else -> true
@@ -482,7 +482,7 @@ class GestorProjectsViewModel(
         return GestorProjectListItem(
             id = projectId,
             name = nome,
-            description = descricao?.takeIf { it.isNotBlank() } ?: "Sem descricao",
+            description = descricao?.takeIf { it.isNotBlank() } ?: "Sem descrição",
             statusLabel = status.toStatusLabel(data_inicio),
             startDate = data_inicio?.take(10) ?: "-",
             dueDate = data_fim?.take(10) ?: "-",
@@ -515,7 +515,7 @@ class GestorProjectsViewModel(
             )
 
         return when {
-            isCompleted -> "Concluida"
+            isCompleted -> "Concluída"
             isDelayed -> "Atrasada"
             isInProgress -> "Em progresso"
             else -> "Pendente"
@@ -525,7 +525,7 @@ class GestorProjectsViewModel(
     private fun String.toStatusLabel(startDateText: String?): String {
         val startDate = startDateText?.take(10)?.toLocalDateOrNull()
         return when {
-            isCompletedStatus() -> "Concluido"
+            isCompletedStatus() -> "Concluído"
             isInProgressStatus() -> "Em Progresso"
             startDate == LocalDate.now() -> "Em Progresso"
             isPendingStatus() -> "Pendente"

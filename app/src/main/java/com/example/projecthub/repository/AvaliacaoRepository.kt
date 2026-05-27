@@ -73,7 +73,7 @@ class AvaliacaoRepository(
                 )
 
             if (existingAvaliacao != null) {
-                return Result.failure(Exception("Este utilizador já foi avaliado neste projecto."))
+                return Result.failure(Exception("Este utilizador já foi avaliado neste projeto."))
             }
 
             val avaliacao = AvaliacaoDto(
@@ -101,7 +101,7 @@ class AvaliacaoRepository(
     ): Result<Unit> {
         return try {
             if (classificacao < 0 || classificacao > 5) {
-                return Result.failure(Exception("A classificacao deve estar entre 0 e 5."))
+                return Result.failure(Exception("A classificação deve estar entre 0 e 5."))
             }
 
             val existingAvaliacao =
@@ -122,7 +122,7 @@ class AvaliacaoRepository(
                 )
             } else {
                 avaliacaoRemoteDataSource.updateAvaliacao(
-                    avaliacaoId = existingAvaliacao.id ?: return Result.failure(Exception("A avaliacao nao tem id.")),
+                    avaliacaoId = existingAvaliacao.id ?: return Result.failure(Exception("A avaliação não tem id.")),
                     avaliacao = existingAvaliacao.copy(
                         classificacao = classificacao,
                         comentario = comentario

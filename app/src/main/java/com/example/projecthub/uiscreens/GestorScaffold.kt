@@ -225,10 +225,10 @@ private fun GestorSidebar(
         val destinations = listOf(
             SidebarDestination(AppRoutes.GestorDashboard, "Dashboard", GestorSidebarIcon.Dashboard),
             SidebarDestination(AppRoutes.GestorProjects, "Meus Projetos", GestorSidebarIcon.Projects),
-            SidebarDestination(AppRoutes.GestorTasks, "Gestao de Tarefas", GestorSidebarIcon.Tasks),
+            SidebarDestination(AppRoutes.GestorTasks, "Gestão de Tarefas", GestorSidebarIcon.Tasks),
             SidebarDestination(AppRoutes.GestorTeam, "Minha Equipa", GestorSidebarIcon.Team),
-            SidebarDestination(AppRoutes.GestorReports, "Relatorios de Projeto", GestorSidebarIcon.Reports),
-            SidebarDestination(AppRoutes.GestorSettings, "Definicoes", GestorSidebarIcon.Settings)
+            SidebarDestination(AppRoutes.GestorReports, "Relatórios de Projeto", GestorSidebarIcon.Reports),
+            SidebarDestination(AppRoutes.GestorSettings, "Definições", GestorSidebarIcon.Settings)
         )
 
         destinations.forEach { destination ->

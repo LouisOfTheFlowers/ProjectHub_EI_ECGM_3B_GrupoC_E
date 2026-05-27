@@ -127,13 +127,13 @@ fun GestorTasksScreen(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Gestao de Tarefas",
+                    text = "Gestão de Tarefas",
                     color = GestorTasksInk,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 24.sp
                 )
                 Text(
-                    text = "Cria tarefas e acompanha os responsaveis por projeto",
+                    text = "Cria tarefas e acompanha os responsáveis por projeto",
                     color = GestorTasksMuted,
                     fontSize = 14.sp
                 )
@@ -352,7 +352,7 @@ private fun TaskProjectList(
             colors = CardDefaults.cardColors(containerColor = Color.White),
             elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
         ) {
-            Text("Nao existem tarefas para os filtros selecionados.", color = GestorTasksMuted, modifier = Modifier.padding(18.dp))
+            Text("Não existem tarefas para os filtros selecionados.", color = GestorTasksMuted, modifier = Modifier.padding(18.dp))
         }
 
         else -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -394,7 +394,7 @@ private fun ProjectTaskGroupCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(group.projectName, color = GestorTasksInk, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                     Text(
-                        "${group.totalTasks} tarefas | ${group.completedTasks} concluidas | ${group.inProgressTasks} em progresso | ${group.pendingTasks} pendentes",
+                        "${group.totalTasks} tarefas | ${group.completedTasks} concluídas | ${group.inProgressTasks} em progresso | ${group.pendingTasks} pendentes",
                         color = GestorTasksMuted,
                         fontSize = 12.sp
                     )
@@ -458,7 +458,7 @@ private fun TaskRow(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-        Text("Inicio: ${task.startDate}   Prazo: ${task.dueDate}", color = ProjectHubColors.Slate, fontSize = 12.sp)
+        Text("Início: ${task.startDate}   Prazo: ${task.dueDate}", color = ProjectHubColors.Slate, fontSize = 12.sp)
         Spacer(modifier = Modifier.height(8.dp))
         Text("Associada a:", color = GestorTasksInk, fontWeight = FontWeight.Bold, fontSize = 13.sp)
         if (task.assignees.isEmpty()) {
@@ -500,8 +500,8 @@ private fun GestorTaskInfoPage(
             )
 
             state.task == null -> TaskInfoMessageCard(
-                title = "Tarefa nao encontrada",
-                detail = "Nao foi possivel encontrar os detalhes desta tarefa."
+                title = "Tarefa não encontrada",
+                detail = "Não foi possível encontrar os detalhes desta tarefa."
             )
 
             else -> state.task?.let { task ->
@@ -519,7 +519,7 @@ private fun GestorTaskInfoPage(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Detalhes da tarefa e observacoes",
+                            text = "Detalhes da tarefa e observações",
                             color = GestorTasksMuted,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold
@@ -541,12 +541,12 @@ private fun GestorTaskInfoPage(
                         Text(task.description, color = GestorTasksMuted, fontSize = 14.sp)
                         Spacer(modifier = Modifier.height(14.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            TaskInfoMeta("Inicio", task.startDate.toInputDateText(), Modifier.weight(1f))
+                            TaskInfoMeta("Início", task.startDate.toInputDateText(), Modifier.weight(1f))
                             TaskInfoMeta("Prazo", task.dueDate.toInputDateText(), Modifier.weight(1f))
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         TaskInfoMeta(
-                            label = "Responsaveis",
+                            label = "Responsáveis",
                             value = task.assignees.takeIf { it.isNotEmpty() }
                                 ?.joinToString { it.name } ?: "Sem utilizadores",
                             modifier = Modifier.fillMaxWidth()
@@ -563,7 +563,7 @@ private fun GestorTaskInfoPage(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 Text(
-                    text = "Observacoes",
+                    text = "Observações",
                     color = GestorTasksInk,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 18.sp
@@ -572,8 +572,8 @@ private fun GestorTaskInfoPage(
 
                 if (state.observations.isEmpty()) {
                     TaskInfoMessageCard(
-                        title = "Sem observacoes",
-                        detail = "Ainda nao existem observacoes nesta tarefa."
+                        title = "Sem observações",
+                        detail = "Ainda não existem observações nesta tarefa."
                     )
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -690,7 +690,7 @@ private fun TaskActionIcon(
 @Composable
 private fun StatusPill(status: String) {
     val color = when (status) {
-        "Concluida" -> GestorTasksGreen
+        "Concluída" -> GestorTasksGreen
         "Em progresso" -> GestorTasksBlue
         "Atrasada" -> GestorTasksRed
         else -> GestorTasksOrange
@@ -739,12 +739,12 @@ private fun EditGestorTaskDialog(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Descricao") }
+                    label = { Text("Descrição") }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 EditTaskDatePickerField(
                     value = startDate,
-                    label = "Inicio",
+                    label = "Início",
                     onClick = { activeDateField = EditTaskDateField.Start }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -757,7 +757,7 @@ private fun EditGestorTaskDialog(
                 Text("Utilizadores", color = GestorTasksInk, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(6.dp))
                 if (users.isEmpty()) {
-                    Text("Este projeto ainda nao tem utilizadores associados.", color = GestorTasksMuted, fontSize = 13.sp)
+                    Text("Este projeto ainda não tem utilizadores associados.", color = GestorTasksMuted, fontSize = 13.sp)
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         users.forEach { user ->
@@ -918,21 +918,21 @@ private fun AddGestorTaskDialog(
             Column {
                 OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Titulo") }, singleLine = true)
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Descricao") })
+                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Descrição") })
                 Spacer(modifier = Modifier.height(8.dp))
                 ProjectDropdown(state.projects, selectedProjectId) {
                     selectedProjectId = it
                     selectedUserIds = emptySet()
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(value = startDate, onValueChange = { startDate = it }, label = { Text("Inicio dd/mm/aaaa") }, singleLine = true)
+                OutlinedTextField(value = startDate, onValueChange = { startDate = it }, label = { Text("Início dd/mm/aaaa") }, singleLine = true)
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(value = endDate, onValueChange = { endDate = it }, label = { Text("Prazo dd/mm/aaaa") }, singleLine = true)
                 Spacer(modifier = Modifier.height(12.dp))
                 Text("Utilizadores", color = GestorTasksInk, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(6.dp))
                 if (availableUsers.isEmpty()) {
-                    Text("Este projeto ainda nao tem utilizadores associados.", color = GestorTasksMuted, fontSize = 13.sp)
+                    Text("Este projeto ainda não tem utilizadores associados.", color = GestorTasksMuted, fontSize = 13.sp)
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         availableUsers.forEach { user ->

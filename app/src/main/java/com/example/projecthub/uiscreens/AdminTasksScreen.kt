@@ -321,7 +321,7 @@ private fun TaskProjectList(
 
         state.projectGroups.isEmpty() -> {
             Text(
-                text = "Ainda nÃ£o existem projetos para listar tarefas.",
+                text = "Ainda não existem projetos para listar tarefas.",
                 color = TasksMuted,
                 fontSize = 15.sp
             )
@@ -384,7 +384,7 @@ private fun ProjectTaskSection(
                         fontSize = 17.sp
                     )
                     Text(
-                        text = "${group.visibleTasks.size} visÃ­veis Â· ${group.pendingTasks} pendentes Â· ${group.completedTasks} completadas",
+                        text = "${group.visibleTasks.size} visíveis · ${group.pendingTasks} pendentes · ${group.completedTasks} completadas",
                         color = TasksMuted,
                         fontSize = 12.sp
                     )
@@ -472,7 +472,7 @@ private fun TaskCard(task: AdminTaskListItem) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            TaskInfoRow("Inicio", task.startDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
+            TaskInfoRow("Início", task.startDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
             TaskInfoRow("Prazo", task.dueDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
         }
     }

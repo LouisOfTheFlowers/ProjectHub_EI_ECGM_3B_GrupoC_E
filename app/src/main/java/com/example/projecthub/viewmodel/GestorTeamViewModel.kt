@@ -70,7 +70,7 @@ class GestorTeamViewModel(
         if (gestorId == null) {
             state = GestorTeamState(
                 isLoading = false,
-                errorMessage = "Nao foi possivel identificar o gestor autenticado."
+                errorMessage = "Não foi possível identificar o gestor autenticado."
             )
             return
         }
@@ -93,7 +93,7 @@ class GestorTeamViewModel(
             ) {
                 state = state.copy(
                     isLoading = false,
-                    errorMessage = "Nao foi possivel carregar a equipa do gestor."
+                    errorMessage = "Não foi possível carregar a equipa do gestor."
                 )
                 return@launch
             }

@@ -82,16 +82,16 @@ fun GestorReportsScreen(
                 try {
                     context.contentResolver.openOutputStream(uri)?.use { output ->
                         output.write(export.content.toByteArray(Charsets.UTF_8))
-                    } ?: error("Nao foi possivel abrir o ficheiro selecionado.")
+                    } ?: error("Não foi possível abrir o ficheiro selecionado.")
 
                     Toast.makeText(
                         context,
-                        "Relatorio de ${export.label.lowercase()} exportado.",
+                        "Relatório de ${export.label.lowercase()} exportado.",
                         Toast.LENGTH_SHORT
                     ).show()
                 } catch (e: Exception) {
                     viewModel.setExportError(
-                        e.message ?: "Nao foi possivel exportar o relatorio."
+                        e.message ?: "Não foi possível exportar o relatório."
                     )
                 }
             }
@@ -128,13 +128,13 @@ fun GestorReportsScreen(
 private fun GestorReportsHeader() {
     Column {
         Text(
-            text = "Relatorios de Projeto",
+            text = "Relatórios de Projeto",
             color = GestorReportsInk,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 24.sp
         )
         Text(
-            text = "Exporta estatisticas dos teus projetos, equipa e tarefas.",
+            text = "Exporta estatísticas dos teus projetos, equipa e tarefas.",
             color = GestorReportsMuted,
             fontSize = 14.sp
         )
@@ -203,7 +203,7 @@ private fun GestorReportsContent(
     }
 
     Text(
-        text = "Exportacoes disponiveis",
+        text = "Exportações disponíveis",
         color = GestorReportsInk,
         fontWeight = FontWeight.ExtraBold,
         fontSize = 20.sp

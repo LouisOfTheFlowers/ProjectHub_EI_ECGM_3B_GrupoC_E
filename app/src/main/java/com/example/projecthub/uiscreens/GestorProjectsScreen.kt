@@ -69,7 +69,7 @@ private val GestorProjectStatuses = listOf(
     "Todos os Status",
     "Em Progresso",
     "Pendentes",
-    "Concluidos"
+    "Concluídos"
 )
 
 @Composable
@@ -109,7 +109,7 @@ fun GestorProjectsScreen(
             fontSize = 24.sp
         )
         Text(
-            text = "Acompanha projetos e equipa atribuida",
+            text = "Acompanha projetos e equipa atribuída",
             color = GestorProjectsMuted,
             fontSize = 14.sp
         )
@@ -314,7 +314,7 @@ private fun ProjectList(
                 elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
             ) {
                 Text(
-                    text = "Nao existem projetos para os filtros selecionados.",
+                    text = "Não existem projetos para os filtros selecionados.",
                     color = GestorProjectsMuted,
                     fontSize = 15.sp,
                     modifier = Modifier.padding(18.dp)
@@ -455,8 +455,8 @@ private fun ProjectInfoPage(
             )
 
             state.project == null -> InfoMessageCard(
-                title = "Projeto nao encontrado",
-                detail = "Nao foi possivel encontrar os detalhes deste projeto."
+                title = "Projeto não encontrado",
+                detail = "Não foi possível encontrar os detalhes deste projeto."
             )
 
             else -> {
@@ -476,7 +476,7 @@ private fun ProjectInfoPage(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Detalhes, participantes, tarefas e observacoes",
+                            text = "Detalhes, participantes, tarefas e observações",
                             color = GestorProjectsMuted,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold
@@ -582,7 +582,7 @@ private fun ProjectInfoTasks(tasks: List<GestorProjectInfoTask>) {
     if (tasks.isEmpty()) {
         InfoMessageCard(
             title = "Sem tarefas",
-            detail = "Este projeto ainda nao tem tarefas registadas."
+            detail = "Este projeto ainda não tem tarefas registadas."
         )
     } else {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -619,13 +619,13 @@ private fun ProjectInfoTaskCard(task: GestorProjectInfoTask) {
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                DetailItem(label = "Inicio", value = task.startDate, modifier = Modifier.weight(1f))
+                DetailItem(label = "Início", value = task.startDate, modifier = Modifier.weight(1f))
                 DetailItem(label = "Prazo", value = task.dueDate, modifier = Modifier.weight(1f))
             }
 
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = "Responsaveis: ${task.assignees.takeIf { it.isNotEmpty() }?.joinToString() ?: "Sem utilizadores"}",
+                text = "Responsáveis: ${task.assignees.takeIf { it.isNotEmpty() }?.joinToString() ?: "Sem utilizadores"}",
                 color = ProjectHubColors.Slate,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold
@@ -633,7 +633,7 @@ private fun ProjectInfoTaskCard(task: GestorProjectInfoTask) {
 
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "Observacoes",
+                text = "Observações",
                 color = GestorProjectsInk,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp
@@ -641,7 +641,7 @@ private fun ProjectInfoTaskCard(task: GestorProjectInfoTask) {
             Spacer(modifier = Modifier.height(8.dp))
 
             if (task.observations.isEmpty()) {
-                Text("Sem observacoes nesta tarefa.", color = GestorProjectsMuted, fontSize = 13.sp)
+                Text("Sem observações nesta tarefa.", color = GestorProjectsMuted, fontSize = 13.sp)
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     task.observations.forEach { observation ->
@@ -687,7 +687,7 @@ private fun ProjectObservationRow(observation: GestorProjectInfoObservation) {
 @Composable
 private fun InfoTaskStatusPill(status: String) {
     val color = when (status) {
-        "Concluida" -> GestorProjectsGreen
+        "Concluída" -> GestorProjectsGreen
         "Atrasada" -> GestorProjectsRed
         "Em progresso" -> GestorProjectsBlue
         else -> GestorProjectsGray
@@ -726,7 +726,7 @@ private fun InfoMessageCard(
 private fun ProjectDetails(project: GestorProjectListItem) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         DetailItem(
-            label = "Inicio",
+            label = "Início",
             value = project.startDate,
             modifier = Modifier.weight(1f)
         )
@@ -743,7 +743,7 @@ private fun ProjectDetails(project: GestorProjectListItem) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        TaskLegend(color = GestorProjectsGreen, text = "Concluidas: ${project.completedTasks}")
+        TaskLegend(color = GestorProjectsGreen, text = "Concluídas: ${project.completedTasks}")
         TaskLegend(color = GestorProjectsBlue, text = "Em progresso: ${project.inProgressTasks}")
         TaskLegend(color = GestorProjectsGray, text = "Pendentes: ${project.pendingTasks}")
     }
@@ -923,7 +923,7 @@ private fun CompleteProjectDialog(
 
                 if (project.members.isEmpty()) {
                     Text(
-                        text = "Este projeto nao tem membros para avaliar.",
+                        text = "Este projeto não tem membros para avaliar.",
                         color = GestorProjectsMuted
                     )
                 } else {
@@ -1009,7 +1009,7 @@ private fun StarRatingText(rating: Int) {
 @Composable
 private fun StatusPill(status: String) {
     val color = when (status) {
-        "Concluido" -> GestorProjectsGreen
+        "Concluído" -> GestorProjectsGreen
         "Em Progresso" -> GestorProjectsBlue
         "Pendente" -> GestorProjectsGray
         else -> GestorProjectsMuted
@@ -1054,7 +1054,7 @@ private fun AssociateUserDialog(
                 Spacer(modifier = Modifier.height(12.dp))
                 if (users.isEmpty()) {
                     Text(
-                        text = "Nao existem utilizadores disponiveis para associar.",
+                        text = "Não existem utilizadores disponíveis para associar.",
                         color = GestorProjectsMuted
                     )
                 } else {

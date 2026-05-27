@@ -512,7 +512,7 @@ private fun ProjectListCard(
 
             ProjectInfoRow("Gestor", project.coordinator)
             ProjectInfoRow("Pessoas", project.memberCount.toString())
-            ProjectInfoRow("Inicio", project.startDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
+            ProjectInfoRow("Início", project.startDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
             ProjectInfoRow("Prazo", project.dueDate.toDisplayDate(currentAppSettings().dateFormat.pattern))
         }
     }

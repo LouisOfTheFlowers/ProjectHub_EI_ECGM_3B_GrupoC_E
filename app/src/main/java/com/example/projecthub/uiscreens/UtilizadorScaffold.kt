@@ -209,8 +209,8 @@ private fun UtilizadorSidebar(
         val destinations = listOf(
             SidebarDestination(AppRoutes.UserDashboard, "Dashboard", UtilizadorSidebarIcon.Dashboard),
             SidebarDestination(AppRoutes.UserTasks, "Minhas Tarefas", UtilizadorSidebarIcon.Tasks),
-            SidebarDestination(AppRoutes.UserProjects, "Projetos Atribuidos", UtilizadorSidebarIcon.Projects),
-            SidebarDestination(AppRoutes.UserSettings, "Definicoes", UtilizadorSidebarIcon.Settings)
+            SidebarDestination(AppRoutes.UserProjects, "Projetos Atribuídos", UtilizadorSidebarIcon.Projects),
+            SidebarDestination(AppRoutes.UserSettings, "Definições", UtilizadorSidebarIcon.Settings)
         )
 
         destinations.forEach { destination ->

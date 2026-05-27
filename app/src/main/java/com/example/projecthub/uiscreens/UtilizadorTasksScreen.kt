@@ -93,8 +93,8 @@ fun UtilizadorTasksSection(
                 }
                 Spacer(modifier = Modifier.height(18.dp))
                 TaskMessageCard(
-                    title = "Tarefa nao encontrada",
-                    detail = "Nao foi possivel encontrar esta tarefa nas tuas tarefas atribuidas."
+                    title = "Tarefa não encontrada",
+                    detail = "Não foi possível encontrar esta tarefa nas tuas tarefas atribuídas."
                 )
             }
         }
@@ -150,7 +150,7 @@ fun UtilizadorTasksSection(
 
             state.tasks.isEmpty() -> {
                 TaskMessageCard(
-                    title = "Sem tarefas atribuidas",
+                    title = "Sem tarefas atribuídas",
                     detail = "Quando uma tarefa for associada ao teu utilizador, ela aparece aqui."
                 )
             }
@@ -234,7 +234,7 @@ private fun UserTaskCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 TaskMeta(label = "Projeto", value = item.projectName.ifBlank { "-" }, modifier = Modifier.weight(1f))
-                TaskMeta(label = "Inicio", value = task.data_inicio.toUiDate(), modifier = Modifier.weight(1f))
+                TaskMeta(label = "Início", value = task.data_inicio.toUiDate(), modifier = Modifier.weight(1f))
                 TaskMeta(label = "Fim", value = task.data_fim.toUiDate(), modifier = Modifier.weight(1f))
             }
 
@@ -258,7 +258,7 @@ private fun UserTaskCard(
                         enabled = !isSaving,
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text("Observacoes")
+                        Text("Observações")
                     }
 
                     Button(
@@ -270,7 +270,7 @@ private fun UserTaskCard(
                         ),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text(if (completed) "Concluida" else "Concluir")
+                        Text(if (completed) "Concluída" else "Concluir")
                     }
                 }
             }
@@ -312,7 +312,7 @@ private fun TaskObservationsPage(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Observacoes da tarefa",
+                    text = "Observações da tarefa",
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold
@@ -333,15 +333,15 @@ private fun TaskObservationsPage(
             ),
             shape = RoundedCornerShape(8.dp)
         ) {
-            Text(if (isSaving) "A guardar..." else "Adicionar observacao")
+            Text(if (isSaving) "A guardar..." else "Adicionar observação")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         if (item.observations.isEmpty()) {
             TaskMessageCard(
-                title = "Sem observacoes",
-                detail = "Ainda nao existem observacoes nesta tarefa."
+                title = "Sem observações",
+                detail = "Ainda não existem observações nesta tarefa."
             )
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -371,14 +371,14 @@ private fun ObservationCard(observation: UtilizadorTaskObservation) {
             Spacer(modifier = Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 TaskMeta(label = "Data", value = observation.record.data.toUiDate(), modifier = Modifier.weight(1f))
-                TaskMeta(label = "Conclusao", value = "${observation.record.taxa_conclusao}%", modifier = Modifier.weight(1f))
+                TaskMeta(label = "Conclusão", value = "${observation.record.taxa_conclusao}%", modifier = Modifier.weight(1f))
                 TaskMeta(label = "Fotos", value = observation.photos.size.toString(), modifier = Modifier.weight(1f))
             }
             observation.photos.firstOrNull()?.let { photo ->
                 Spacer(modifier = Modifier.height(8.dp))
                 AsyncImage(
                     model = photo.foto_url,
-                    contentDescription = "Foto da observacao",
+                    contentDescription = "Foto da observação",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -419,7 +419,7 @@ private fun AddObservationDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Adicionar observacao",
+                text = "Adicionar observação",
                 fontWeight = FontWeight.ExtraBold
             )
         },
@@ -434,7 +434,7 @@ private fun AddObservationDialog(
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it },
-                    label = { Text("Texto da observacao") },
+                    label = { Text("Texto da observação") },
                     minLines = 3,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -512,7 +512,7 @@ private fun CompleteTaskDialog(
                 OutlinedTextField(
                     value = date,
                     onValueChange = { date = it },
-                    label = { Text("Data de conclusao") },
+                    label = { Text("Data de conclusão") },
                     placeholder = { Text("AAAA-MM-DD") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -521,7 +521,7 @@ private fun CompleteTaskDialog(
                 OutlinedTextField(
                     value = location,
                     onValueChange = { location = it },
-                    label = { Text("Local de conclusao") },
+                    label = { Text("Local de conclusão") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
