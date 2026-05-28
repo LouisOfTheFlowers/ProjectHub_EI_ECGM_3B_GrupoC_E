@@ -92,7 +92,15 @@ class UserRepository(
 
     suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
         return try {
-            authRemoteDataSource.sendPasswordResetEmail(email)
+            val normalizedEmail = email.trim()
+            val userExists = userRemoteDataSource.getUserByEmail(normalizedEmail) != null ||
+                userDao.getUserByEmail(normalizedEmail) != null
+
+            if (!userExists) {
+                return Result.failure(Exception(EMAIL_NOT_REGISTERED))
+            }
+
+            authRemoteDataSource.sendPasswordResetEmail(normalizedEmail)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -102,6 +110,21 @@ class UserRepository(
     fun handlePasswordRecoveryDeepLink(intent: Intent, onReady: () -> Unit) {
         authRemoteDataSource.handlePasswordRecoveryDeepLink(intent) {
             onReady()
+        }
+    }
+
+    suspend fun importPasswordRecoveryDeepLink(intent: Intent): Result<Unit> {
+        return try {
+            val session = authRemoteDataSource.importPasswordRecoveryDeepLink(intent)
+                ?: return Result.failure(Exception("Link de recuperacao invalido ou expirado."))
+
+            if (session.accessToken.isBlank()) {
+                Result.failure(Exception("Link de recuperacao invalido ou expirado."))
+            } else {
+                Result.success(Unit)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
@@ -187,5 +210,9 @@ class UserRepository(
     private suspend fun ensurePublicProfileIfAuthenticated(nome: String, username: String) {
         if (authRemoteDataSource.currentJwt().isNullOrBlank()) return
         userRemoteDataSource.ensureOwnProfile(nome, username)
+    }
+
+    private companion object {
+        const val EMAIL_NOT_REGISTERED = "EMAIL_NOT_REGISTERED"
     }
 }

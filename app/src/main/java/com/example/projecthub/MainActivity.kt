@@ -33,6 +33,7 @@ import com.example.projecthub.settings.AppSettingsProvider
 import com.example.projecthub.settings.AppThemeMode
 import com.example.projecthub.ui.theme.ProjectHubTheme
 import com.example.projecthub.uiscreens.AdminDashboardScreen
+import com.example.projecthub.uiscreens.EmailConfirmedScreen
 import com.example.projecthub.uiscreens.GestorDashboardScreen
 import com.example.projecthub.uiscreens.IntroSliderScreen
 import com.example.projecthub.uiscreens.LoginScreen
@@ -45,10 +46,12 @@ import com.example.projecthub.viewmodel.SettingsViewModel
 class MainActivity : ComponentActivity() {
 
     private var passwordRecoveryIntent by mutableStateOf<Intent?>(null)
+    private var emailConfirmationIntent by mutableStateOf<Intent?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         passwordRecoveryIntent = intent.takeIf { it.isPasswordRecoveryIntent() }
+        emailConfirmationIntent = intent.takeIf { it.isEmailConfirmationIntent() }
 
         window.setBackgroundDrawable(ColorDrawable(AndroidColor.rgb(232, 249, 252)))
         window.statusBarColor = AndroidColor.BLACK
@@ -87,7 +90,7 @@ class MainActivity : ComponentActivity() {
                         val navController = rememberNavController()
 
                         LaunchedEffect(Unit) {
-                            if (passwordRecoveryIntent != null) {
+                            if (passwordRecoveryIntent != null || emailConfirmationIntent != null) {
                                 return@LaunchedEffect
                             }
 
@@ -113,6 +116,8 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             startDestination = if (passwordRecoveryIntent != null) {
                                 AppRoutes.ResetPassword
+                            } else if (emailConfirmationIntent != null) {
+                                AppRoutes.EmailConfirmed
                             } else {
                                 AppRoutes.Login
                             },
@@ -138,6 +143,18 @@ class MainActivity : ComponentActivity() {
                                     onGoToLogin = {
                                         navController.navigate(AppRoutes.Login) {
                                             popUpTo(AppRoutes.Register) { inclusive = true }
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                )
+                            }
+
+                            composable(AppRoutes.EmailConfirmed) {
+                                EmailConfirmedScreen(
+                                    onGoToLogin = {
+                                        emailConfirmationIntent = null
+                                        navController.navigate(AppRoutes.Login) {
+                                            popUpTo(AppRoutes.EmailConfirmed) { inclusive = true }
                                             launchSingleTop = true
                                         }
                                     }
@@ -261,6 +278,10 @@ class MainActivity : ComponentActivity() {
         if (intent.isPasswordRecoveryIntent()) {
             passwordRecoveryIntent = intent
         }
+
+        if (intent.isEmailConfirmationIntent()) {
+            emailConfirmationIntent = intent
+        }
     }
 
     private fun requestNotificationPermissionIfNeeded() {
@@ -277,6 +298,11 @@ class MainActivity : ComponentActivity() {
     private fun Intent.isPasswordRecoveryIntent(): Boolean {
         val data = data ?: return false
         return data.scheme == "projecthub" && data.host == "reset-password"
+    }
+
+    private fun Intent.isEmailConfirmationIntent(): Boolean {
+        val data = data ?: return false
+        return data.scheme == "projecthub" && data.host == "confirm-email"
     }
 }
 

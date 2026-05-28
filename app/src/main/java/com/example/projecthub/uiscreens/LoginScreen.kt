@@ -28,6 +28,7 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
+    var messageIsSuccess by remember { mutableStateOf(false) }
     var showPasswordResetDialog by remember { mutableStateOf(false) }
     val isLoading = authViewModel.isLoading
     val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
@@ -38,16 +39,19 @@ fun LoginScreen(
     val loginClick = rememberSoundClick {
         if (email.isNotBlank() && !isEmailValid) {
             message = language.t("login.invalidEmail")
+            messageIsSuccess = false
             return@rememberSoundClick
         }
 
         if (!isFormValid) {
             message = language.t("login.invalidForm")
+            messageIsSuccess = false
             return@rememberSoundClick
         }
 
         authViewModel.login(email, password) { success, resultMessage ->
             message = resultMessage
+            messageIsSuccess = success
 
             if (success) {
                 onLoginSuccess()
@@ -141,7 +145,7 @@ fun LoginScreen(
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (message.contains("sucesso", ignoreCase = true)) {
+                color = if (messageIsSuccess) {
                     AuthAccentSoft
                 } else {
                     MaterialTheme.colorScheme.error
@@ -155,9 +159,9 @@ fun LoginScreen(
             initialEmail = email,
             isLoading = isLoading,
             onDismiss = { showPasswordResetDialog = false },
-            onSend = { resetEmail ->
+            onSend = { resetEmail, onResult ->
                 authViewModel.sendPasswordResetEmail(resetEmail) { success, resultMessage ->
-                    message = resultMessage
+                    onResult(success, resultMessage)
                     if (success) {
                         showPasswordResetDialog = false
                     }
@@ -172,11 +176,12 @@ private fun PasswordResetDialog(
     initialEmail: String,
     isLoading: Boolean,
     onDismiss: () -> Unit,
-    onSend: (String) -> Unit
+    onSend: (String, (Boolean, String) -> Unit) -> Unit
 ) {
     val language = currentAppSettings().language
     var resetEmail by remember(initialEmail) { mutableStateOf(initialEmail.trim()) }
-    var localError by remember { mutableStateOf("") }
+    var localMessage by remember { mutableStateOf("") }
+    var localMessageIsSuccess by remember { mutableStateOf(false) }
     val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(resetEmail.trim()).matches()
 
     AlertDialog(
@@ -199,11 +204,12 @@ private fun PasswordResetDialog(
                     value = resetEmail,
                     onValueChange = {
                         resetEmail = it
-                        localError = ""
+                        localMessage = ""
+                        localMessageIsSuccess = false
                     },
                     label = { Text(language.t("login.email")) },
                     singleLine = true,
-                    isError = localError.isNotBlank(),
+                    isError = localMessage.isNotBlank() && !localMessageIsSuccess,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
                         imeAction = ImeAction.Done
@@ -212,11 +218,15 @@ private fun PasswordResetDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                if (localError.isNotBlank()) {
+                if (localMessage.isNotBlank()) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = localError,
-                        color = MaterialTheme.colorScheme.error,
+                        text = localMessage,
+                        color = if (localMessageIsSuccess) {
+                            AuthAccentSoft
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        },
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -227,9 +237,13 @@ private fun PasswordResetDialog(
                 enabled = !isLoading,
                 onClick = rememberSoundClick {
                     if (!isEmailValid) {
-                        localError = language.t("login.invalidEmail")
+                        localMessage = language.t("login.invalidEmail")
+                        localMessageIsSuccess = false
                     } else {
-                        onSend(resetEmail.trim())
+                        onSend(resetEmail.trim()) { success, resultMessage ->
+                            localMessage = resultMessage
+                            localMessageIsSuccess = success
+                        }
                     }
                 }
             ) {

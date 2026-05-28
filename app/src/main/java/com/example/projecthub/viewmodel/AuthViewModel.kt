@@ -10,7 +10,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.projecthub.local.database.DatabaseProvider
 import com.example.projecthub.remote.supabase.models.UserDto
 import com.example.projecthub.repository.UserRepository
+import com.example.projecthub.settings.AppLanguage
 import com.example.projecthub.settings.OnboardingRepository
+import com.example.projecthub.settings.SettingsRepository
+import com.example.projecthub.settings.t
 import io.github.jan.supabase.auth.exception.AuthErrorCode
 import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.auth.exception.AuthWeakPasswordException
@@ -26,6 +29,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         syncQueueDao = database.syncQueueDao()
     )
     private val onboardingRepository = OnboardingRepository(application)
+    private val settingsRepository = SettingsRepository(application)
+    private var currentLanguage: AppLanguage = AppLanguage.Portuguese
 
     var message by mutableStateOf("")
         private set
@@ -48,6 +53,14 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     var currentUser by mutableStateOf<UserDto?>(null)
         private set
 
+    init {
+        viewModelScope.launch {
+            settingsRepository.settings.collect { settings ->
+                currentLanguage = settings.language
+            }
+        }
+    }
+
     fun restoreSession(onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             isRestoringSession = true
@@ -68,7 +81,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 isLoggedIn = false
                 message = authErrorMessage(
                     result.exceptionOrNull(),
-                    fallback = "Sessão expirada. Inicia sessão novamente."
+                    fallback = text("auth.sessionExpired")
                 )
                 isRestoringSession = false
                 onResult(false)
@@ -95,12 +108,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             isLoading = false
 
             if (result.isSuccess) {
-                message = "Conta criada com sucesso. Já podes iniciar sessão."
+                message = text("auth.registerSuccess")
                 onResult(true, message)
             } else {
                 message = authErrorMessage(
                     result.exceptionOrNull(),
-                    fallback = "Erro ao criar conta."
+                    fallback = text("auth.registerError")
                 )
                 onResult(false, message)
             }
@@ -122,12 +135,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 currentUser = result.getOrNull()?.user
                 isLoggedIn = true
                 jwt = result.getOrNull()?.jwt
-                message = "Login efetuado com sucesso."
+                message = text("auth.loginSuccess")
                 onResult(true, message)
             } else {
                 message = authErrorMessage(
                     result.exceptionOrNull(),
-                    fallback = "Erro ao iniciar sessão."
+                    fallback = text("auth.loginError")
                 )
                 onResult(false, message)
             }
@@ -156,12 +169,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             isLoading = false
 
             if (result.isSuccess) {
-                message = "Email de recuperação enviado. Verifica a tua caixa de entrada."
+                message = text("auth.resetEmailSent")
                 onResult(true, message)
             } else {
                 message = authErrorMessage(
                     result.exceptionOrNull(),
-                    fallback = "Não foi possível enviar o email de recuperação."
+                    fallback = text("auth.resetEmailError")
                 )
                 onResult(false, message)
             }
@@ -172,10 +185,22 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         isRecoverySessionReady = false
         message = ""
 
-        repository.handlePasswordRecoveryDeepLink(intent) {
-            jwt = repository.currentJwt()
-            isRecoverySessionReady = true
-            onReady()
+        viewModelScope.launch {
+            val result = repository.importPasswordRecoveryDeepLink(intent)
+
+            if (result.isSuccess) {
+                jwt = repository.currentJwt()
+                isRecoverySessionReady = true
+                message = ""
+                onReady()
+            } else {
+                jwt = null
+                isRecoverySessionReady = false
+                message = authErrorMessage(
+                    result.exceptionOrNull(),
+                    fallback = text("auth.recoveryInvalid")
+                )
+            }
         }
     }
 
@@ -186,14 +211,14 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     ) {
         viewModelScope.launch {
             if (newPassword.length < 8 || !newPassword.any(Char::isLetter) || !newPassword.any(Char::isDigit)) {
-                val error = "A palavra-passe deve ter pelo menos 8 caracteres, letras e números."
+                val error = text("auth.weakPassword")
                 message = error
                 onResult(false, error)
                 return@launch
             }
 
             if (newPassword != confirmPassword) {
-                val error = "As palavras-passe não coincidem."
+                val error = text("auth.passwordMismatch")
                 message = error
                 onResult(false, error)
                 return@launch
@@ -210,12 +235,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 jwt = null
                 isLoggedIn = false
                 isRecoverySessionReady = false
-                message = "Palavra-passe alterada com sucesso. Já podes iniciar sessão."
+                message = text("auth.passwordUpdated")
                 onResult(true, message)
             } else {
                 message = authErrorMessage(
                     result.exceptionOrNull(),
-                    fallback = "Não foi possível alterar a palavra-passe."
+                    fallback = text("auth.passwordUpdateError")
                 )
                 onResult(false, message)
             }
@@ -253,51 +278,59 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun authErrorMessage(error: Throwable?, fallback: String): String {
         if (error is AuthWeakPasswordException) {
-            return "A palavra-passe é fraca. Usa pelo menos 8 caracteres com letras e números."
+            return text("auth.weakPassword")
         }
 
         if (error is AuthRestException) {
             if (error.errorDescription.contains("sending confirmation email", ignoreCase = true)) {
-                return "O Supabase não conseguiu enviar o email de confirmação. Configura o SMTP em Authentication > SMTP Settings."
+                return text("auth.smtpConfirmationError")
+            }
+
+            if (
+                error.error.contains("email_not_confirmed", ignoreCase = true) ||
+                error.errorDescription.contains("email not confirmed", ignoreCase = true) ||
+                error.message.orEmpty().contains("email_not_confirmed", ignoreCase = true)
+            ) {
+                return text("auth.emailNotConfirmed")
             }
 
             return when (error.errorCode) {
                 AuthErrorCode.EmailAddressInvalid ->
-                    "Este email foi considerado inválido pelo Supabase. Usa um email real, sem domínio de teste."
+                    text("auth.emailInvalidSupabase")
 
                 AuthErrorCode.EmailAddressNotAuthorized ->
-                    "O Supabase não está autorizado a enviar emails para esse endereço. Configura SMTP próprio ou usa um email da organização Supabase."
+                    text("auth.emailNotAuthorized")
 
                 AuthErrorCode.EmailProviderDisabled,
                 AuthErrorCode.ProviderDisabled ->
-                    "O login por email está desativado no Supabase. Ativa o provider Email em Authentication."
+                    text("auth.emailProviderDisabled")
 
                 AuthErrorCode.SignupDisabled ->
-                    "O registo está desativado no Supabase."
+                    text("auth.signupDisabled")
 
                 AuthErrorCode.WeakPassword ->
-                    "A palavra-passe é fraca. Usa pelo menos 8 caracteres com letras e números."
+                    text("auth.weakPassword")
 
                 AuthErrorCode.EmailExists,
                 AuthErrorCode.UserAlreadyExists ->
-                    "Já existe uma conta com este email."
+                    text("auth.emailExists")
 
                 AuthErrorCode.InvalidCredentials ->
-                    "Email ou palavra-passe incorretos."
+                    text("auth.invalidCredentials")
 
                 AuthErrorCode.OverEmailSendRateLimit,
                 AuthErrorCode.OverRequestRateLimit ->
-                    "Foram feitas demasiadas tentativas. Espera um pouco e tenta novamente."
+                    text("auth.rateLimit")
 
                 AuthErrorCode.UnexpectedFailure ->
-                    "Erro interno no Supabase Auth: ${error.errorDescription}."
+                    text("auth.supabaseInternal").format(error.errorDescription)
 
-                else -> "Erro no Supabase Auth: ${error.error}."
+                else -> text("auth.supabaseAuthError").format(error.error)
             }
         }
 
         if (error is RestException) {
-            return "Erro no Supabase: ${error.error}."
+            return text("auth.supabaseRestError").format(error.error)
         }
 
         val rawMessage = error?.message.orEmpty()
@@ -306,30 +339,37 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             rawMessage.contains("email_address_invalid", ignoreCase = true) ||
             rawMessage.contains("invalid format", ignoreCase = true) ||
                 rawMessage.contains("validate email", ignoreCase = true) ->
-                "Este email foi considerado inválido pelo Supabase. Usa um email real, sem domínio de teste."
+                text("auth.emailInvalidSupabase")
 
             rawMessage.contains("email_address_not_authorized", ignoreCase = true) ->
-                "O Supabase não está autorizado a enviar emails para esse endereço. Configura SMTP próprio ou usa um email da organização Supabase."
+                text("auth.emailNotAuthorized")
+
+            rawMessage.contains("EMAIL_NOT_REGISTERED", ignoreCase = true) ->
+                text("auth.emailNotRegistered")
+
+            rawMessage.contains("email_not_confirmed", ignoreCase = true) ||
+                rawMessage.contains("email not confirmed", ignoreCase = true) ->
+                text("auth.emailNotConfirmed")
 
             rawMessage.contains("weak_password", ignoreCase = true) ->
-                "A palavra-passe é fraca. Usa pelo menos 8 caracteres com letras e números."
+                text("auth.weakPassword")
 
             rawMessage.contains("email_provider_disabled", ignoreCase = true) ||
                 rawMessage.contains("provider_disabled", ignoreCase = true) ->
-                "O login por email está desativado no Supabase. Ativa o provider Email em Authentication."
+                text("auth.emailProviderDisabled")
 
             rawMessage.contains("already registered", ignoreCase = true) ||
                 rawMessage.contains("already exists", ignoreCase = true) ||
                 rawMessage.contains("Já existe", ignoreCase = true) ->
-                "Já existe uma conta com este email."
+                text("auth.emailExists")
 
             rawMessage.contains("invalid login", ignoreCase = true) ||
                 rawMessage.contains("invalid credentials", ignoreCase = true) ->
-                "Email ou palavra-passe incorretos."
+                text("auth.invalidCredentials")
 
             rawMessage.contains("network", ignoreCase = true) ||
                 rawMessage.contains("timeout", ignoreCase = true) ->
-                "Não foi possível ligar ao Supabase. Verifica a ligação à internet."
+                text("auth.networkError")
 
             rawMessage.isBlank() -> fallback
 
@@ -340,4 +380,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 ?: fallback
         }
     }
+
+    private fun text(key: String): String = currentLanguage.t(key)
 }

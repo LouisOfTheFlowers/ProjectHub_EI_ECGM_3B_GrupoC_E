@@ -30,7 +30,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.settings.t
 import com.example.projecthub.viewmodel.AuthViewModel
 
 @Composable
@@ -41,8 +43,11 @@ fun ResetPasswordScreen(
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
+    var messageIsSuccess by remember { mutableStateOf(false) }
     val isLoading = authViewModel.isLoading
     val canSubmit = authViewModel.isRecoverySessionReady && !isLoading
+    val displayMessage = message.ifBlank { authViewModel.message }
+    val language = currentAppSettings().language
 
     Column(
         modifier = Modifier
@@ -53,12 +58,12 @@ fun ResetPasswordScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        AuthHeader(subtitle = "Definir nova palavra-passe")
+        AuthHeader(subtitle = language.t("resetPassword.subtitle"))
 
         Spacer(modifier = Modifier.height(28.dp))
 
         Text(
-            text = "Escolhe uma nova palavra-passe para voltares a entrar na tua conta.",
+            text = language.t("resetPassword.description"),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.fillMaxWidth()
@@ -71,8 +76,9 @@ fun ResetPasswordScreen(
             onValueChange = {
                 newPassword = it
                 message = ""
+                messageIsSuccess = false
             },
-            label = { Text("Nova palavra-passe") },
+            label = { Text(language.t("resetPassword.newPassword")) },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(
@@ -90,8 +96,9 @@ fun ResetPasswordScreen(
             onValueChange = {
                 confirmPassword = it
                 message = ""
+                messageIsSuccess = false
             },
-            label = { Text("Confirmar palavra-passe") },
+            label = { Text(language.t("resetPassword.confirmPassword")) },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(
@@ -108,6 +115,7 @@ fun ResetPasswordScreen(
             onClick = rememberSoundClick {
                 authViewModel.updatePasswordAfterRecovery(newPassword, confirmPassword) { success, resultMessage ->
                     message = resultMessage
+                    messageIsSuccess = success
                     if (success) {
                         onPasswordChanged()
                     }
@@ -124,25 +132,25 @@ fun ResetPasswordScreen(
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             } else {
-                Text("Guardar palavra-passe", fontWeight = FontWeight.Bold)
+                Text(language.t("resetPassword.submit"), fontWeight = FontWeight.Bold)
             }
         }
 
-        if (!authViewModel.isRecoverySessionReady) {
+        if (!authViewModel.isRecoverySessionReady && displayMessage.isBlank()) {
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = "A validar o link de recuperacao...",
+                text = language.t("resetPassword.validating"),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
-        if (message.isNotBlank()) {
+        if (displayMessage.isNotBlank()) {
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = message,
+                text = displayMessage,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (message.contains("sucesso", ignoreCase = true)) {
+                color = if (messageIsSuccess) {
                     AuthAccentSoft
                 } else {
                     MaterialTheme.colorScheme.error
@@ -156,7 +164,7 @@ fun ResetPasswordScreen(
             onClick = rememberSoundClick(onPasswordChanged),
             enabled = !isLoading
         ) {
-            Text("Voltar ao login", color = AuthAccent)
+            Text(language.t("resetPassword.backToLogin"), color = AuthAccent)
         }
     }
 }

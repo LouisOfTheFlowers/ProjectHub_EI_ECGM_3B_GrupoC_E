@@ -29,6 +29,7 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
+    var messageIsSuccess by remember { mutableStateOf(false) }
     val isLoading = authViewModel.isLoading
     val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
     val isPasswordValid = password.length >= 8 &&
@@ -43,16 +44,19 @@ fun RegisterScreen(
     val registerClick = rememberSoundClick {
         if (email.isNotBlank() && !isEmailValid) {
             message = language.t("register.invalidEmail")
+            messageIsSuccess = false
             return@rememberSoundClick
         }
 
         if (!isFormValid) {
             message = language.t("register.invalidForm")
+            messageIsSuccess = false
             return@rememberSoundClick
         }
 
         authViewModel.register(nome, username, email, password) { success, resultMessage ->
             message = resultMessage
+            messageIsSuccess = success
 
             if (success) {
                 onGoToLogin()
@@ -163,7 +167,7 @@ fun RegisterScreen(
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (message.contains("sucesso", ignoreCase = true)) {
+                color = if (messageIsSuccess) {
                     AuthAccentSoft
                 } else {
                     MaterialTheme.colorScheme.error
