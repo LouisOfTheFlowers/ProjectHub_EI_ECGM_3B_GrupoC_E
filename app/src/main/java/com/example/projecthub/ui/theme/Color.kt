@@ -3,7 +3,7 @@ package com.example.projecthub.ui.theme
 import androidx.compose.ui.graphics.Color
 
 object ProjectHubColors {
-    val Accent = Color(0xFF1E6571)
+    val Accent = Color(0xFF00A647)
     val AccentLight = Color(0xFF6ACBC8)
     val AccentSoft = Color(0xFF48B765)
 

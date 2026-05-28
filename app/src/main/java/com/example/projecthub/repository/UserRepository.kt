@@ -61,21 +61,9 @@ class UserRepository(
             val user = userRemoteDataSource.getUserByEmail(email)
 
             if (user == null) {
-                Result.failure(Exception("Utilizador não encontrado."))
+                Result.failure(Exception("Utilizador não encontrado no sistema."))
             } else {
-                userDao.insertUser(
-                    UserEntity(
-                        id = user.id ?: 0,
-                        nome = user.nome,
-                        username = user.username,
-                        email = user.email,
-                        password = "",
-                        foto = user.foto,
-                        role = user.role,
-                        createdAt = user.createdAt,
-                        status = user.status
-                    )
-                )
+                userDao.insertUser(user.toEntity())
 
                 Result.success(
                     AuthenticatedUser(
@@ -85,35 +73,6 @@ class UserRepository(
                 )
             }
 
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
-        return try {
-            authRemoteDataSource.sendPasswordResetEmail(email)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    fun handlePasswordRecoveryDeepLink(intent: Intent, onReady: () -> Unit) {
-        authRemoteDataSource.handlePasswordRecoveryDeepLink(intent) {
-            onReady()
-        }
-    }
-
-    fun currentJwt(): String? {
-        return authRemoteDataSource.currentJwt()
-    }
-
-    suspend fun updatePasswordAfterRecovery(newPassword: String): Result<Unit> {
-        return try {
-            authRemoteDataSource.updatePassword(newPassword)
-            logout()
-            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -150,6 +109,35 @@ class UserRepository(
         userDao.deleteAllUsers()
     }
 
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
+        return try {
+            authRemoteDataSource.sendPasswordResetEmail(email)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun handlePasswordRecoveryDeepLink(intent: Intent, onReady: () -> Unit) {
+        authRemoteDataSource.handlePasswordRecoveryDeepLink(intent) {
+            onReady()
+        }
+    }
+
+    fun currentJwt(): String? {
+        return authRemoteDataSource.currentJwt()
+    }
+
+    suspend fun updatePasswordAfterRecovery(newPassword: String): Result<Unit> {
+        return try {
+            authRemoteDataSource.updatePassword(newPassword)
+            logout()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     private fun AuthRestException.isExistingAuthUserError(): Boolean {
         return errorCode == AuthErrorCode.EmailExists ||
             errorCode == AuthErrorCode.UserAlreadyExists ||
@@ -159,20 +147,6 @@ class UserRepository(
     private fun UserDto.toEntity(): UserEntity {
         return UserEntity(
             id = id ?: 0,
-            nome = nome,
-            username = username,
-            email = email,
-            password = "",
-            foto = foto,
-            role = role,
-            createdAt = createdAt,
-            status = status
-        )
-    }
-
-    private fun UserEntity.toDto(): UserDto {
-        return UserDto(
-            id = id,
             nome = nome,
             username = username,
             email = email,

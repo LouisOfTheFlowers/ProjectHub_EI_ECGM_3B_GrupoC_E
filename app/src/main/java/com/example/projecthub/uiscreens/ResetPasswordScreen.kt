@@ -10,12 +10,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -25,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -47,7 +51,7 @@ fun ResetPasswordScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color(0xFFF5F5F5))
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 28.dp, vertical = 36.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -60,7 +64,7 @@ fun ResetPasswordScreen(
         Text(
             text = "Escolhe uma nova palavra-passe para voltares a entrar na tua conta.",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = Color(0xFF333333),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -79,7 +83,13 @@ fun ResetPasswordScreen(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Next
             ),
-            colors = authTextFieldColors(),
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF00A647),
+                focusedLabelColor = Color(0xFF00A647),
+                unfocusedContainerColor = Color.White,
+                focusedContainerColor = Color.White
+            ),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -98,7 +108,13 @@ fun ResetPasswordScreen(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Done
             ),
-            colors = authTextFieldColors(),
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF00A647),
+                focusedLabelColor = Color(0xFF00A647),
+                unfocusedContainerColor = Color.White,
+                focusedContainerColor = Color.White
+            ),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -114,26 +130,27 @@ fun ResetPasswordScreen(
                 }
             },
             enabled = canSubmit,
-            colors = authButtonColors(),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00A647)),
+            shape = RoundedCornerShape(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(20.dp),
                     strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.onPrimary
+                    color = Color.White
                 )
             } else {
-                Text("Guardar palavra-passe", fontWeight = FontWeight.Bold)
+                Text("Guardar palavra-passe", fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
 
         if (!authViewModel.isRecoverySessionReady) {
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = "A validar o link de recuperacao...",
+                text = "A validar o link de recuperação...",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = Color.Gray
             )
         }
 
@@ -143,7 +160,7 @@ fun ResetPasswordScreen(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (message.contains("sucesso", ignoreCase = true)) {
-                    AuthAccentSoft
+                    Color(0xFF00A647)
                 } else {
                     MaterialTheme.colorScheme.error
                 }
@@ -156,7 +173,7 @@ fun ResetPasswordScreen(
             onClick = rememberSoundClick(onPasswordChanged),
             enabled = !isLoading
         ) {
-            Text("Voltar ao login", color = AuthAccent)
+            Text("Voltar ao login", color = Color(0xFF00A647))
         }
     }
 }

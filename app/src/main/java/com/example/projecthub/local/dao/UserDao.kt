@@ -21,6 +21,9 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE email = :email LIMIT 1")
     suspend fun getUserByEmail(email: String): UserEntity?
 
+    @Query("SELECT * FROM users WHERE email = :identifier OR username = :identifier LIMIT 1")
+    suspend fun getUserByIdentifier(identifier: String): UserEntity?
+
     @Update
     suspend fun updateUser(user: UserEntity)
 

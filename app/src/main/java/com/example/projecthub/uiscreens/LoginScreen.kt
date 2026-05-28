@@ -1,22 +1,24 @@
 package com.example.projecthub.uiscreens
 
-import android.util.Patterns
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.projecthub.settings.currentAppSettings
-import com.example.projecthub.settings.rememberSoundClick
-import com.example.projecthub.settings.t
+import androidx.compose.ui.unit.sp
+import com.example.projecthub.R
 import com.example.projecthub.viewmodel.AuthViewModel
 
 @Composable
@@ -25,142 +27,119 @@ fun LoginScreen(
     onGoToRegister: () -> Unit,
     onLoginSuccess: () -> Unit
 ) {
-    var email by remember { mutableStateOf("") }
+    var identifier by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
-    var showPasswordResetDialog by remember { mutableStateOf(false) }
+    var showResetDialog by remember { mutableStateOf(false) }
     val isLoading = authViewModel.isLoading
-    val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
-    val isFormValid = isEmailValid && password.length >= 6
-    val language = currentAppSettings().language
-    val goToRegister = rememberSoundClick(onGoToRegister)
-    val forgotPasswordClick = rememberSoundClick { showPasswordResetDialog = true }
-    val loginClick = rememberSoundClick {
-        if (email.isNotBlank() && !isEmailValid) {
-            message = language.t("login.invalidEmail")
-            return@rememberSoundClick
-        }
-
-        if (!isFormValid) {
-            message = language.t("login.invalidForm")
-            return@rememberSoundClick
-        }
-
-        authViewModel.login(email, password) { success, resultMessage ->
-            message = resultMessage
-
-            if (success) {
-                onLoginSuccess()
-            }
-        }
-    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color(0xFFF5F5F5))
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 28.dp, vertical = 36.dp),
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        AuthHeader(subtitle = language.t("login.subtitle"))
+        Image(
+            painter = painterResource(id = R.drawable.projecthub_logo),
+            contentDescription = "ProjectHub Logo",
+            modifier = Modifier.size(150.dp)
+        )
+
+        Text(
+            text = "Bem-vindo ao ProjectHub",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF333333)
+        )
 
         Spacer(modifier = Modifier.height(32.dp))
 
         OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text(language.t("login.email")) },
-            singleLine = true,
-            isError = message.isNotEmpty() && !isEmailValid,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next
-            ),
-            colors = authTextFieldColors(),
-            modifier = Modifier.fillMaxWidth()
+            value = identifier,
+            onValueChange = { identifier = it },
+            label = { Text("E-mail") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF00A647),
+                focusedLabelColor = Color(0xFF00A647),
+                unfocusedContainerColor = Color.White,
+                focusedContainerColor = Color.White
+            )
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text(language.t("login.password")) },
-            singleLine = true,
-            isError = message.isNotEmpty() && password.length in 1..5,
+            label = { Text("Senha") },
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done
-            ),
-            colors = authTextFieldColors(),
-            modifier = Modifier.fillMaxWidth()
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF00A647),
+                focusedLabelColor = Color(0xFF00A647),
+                unfocusedContainerColor = Color.White,
+                focusedContainerColor = Color.White
+            )
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = loginClick,
-            enabled = !isLoading,
-            colors = authButtonColors(),
-            modifier = Modifier.fillMaxWidth()
+            onClick = {
+                authViewModel.login(identifier, password) { success, msg ->
+                    message = msg
+                    if (success) onLoginSuccess()
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00A647)),
+            shape = RoundedCornerShape(8.dp),
+            enabled = !isLoading
         ) {
             if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
             } else {
-                Text(language.t("login.submit"))
+                Text("Iniciar Sessão", color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
 
-        TextButton(
-            onClick = goToRegister,
-            enabled = !isLoading,
-            colors = ButtonDefaults.textButtonColors(contentColor = AuthAccent),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(language.t("login.createAccount"))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TextButton(onClick = onGoToRegister) {
+            Text("Ainda não tem conta? Registe-se", color = Color(0xFF00A647))
         }
 
-        TextButton(
-            onClick = forgotPasswordClick,
-            enabled = !isLoading,
-            colors = ButtonDefaults.textButtonColors(contentColor = AuthAccent),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(language.t("login.forgotPassword"))
+        TextButton(onClick = { showResetDialog = true }) {
+            Text("Esqueceu a password?", color = Color.Gray)
         }
 
         if (message.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (message.contains("sucesso", ignoreCase = true)) {
-                    AuthAccentSoft
-                } else {
-                    MaterialTheme.colorScheme.error
-                }
+                color = if (message.contains("sucesso")) Color(0xFF00A647) else Color.Red,
+                modifier = Modifier.padding(horizontal = 8.dp),
+                fontWeight = FontWeight.Medium
             )
         }
     }
 
-    if (showPasswordResetDialog) {
+    if (showResetDialog) {
         PasswordResetDialog(
-            initialEmail = email,
-            isLoading = isLoading,
-            onDismiss = { showPasswordResetDialog = false },
-            onSend = { resetEmail ->
-                authViewModel.sendPasswordResetEmail(resetEmail) { success, resultMessage ->
-                    message = resultMessage
-                    if (success) {
-                        showPasswordResetDialog = false
-                    }
+            onDismiss = { showResetDialog = false },
+            onSend = { email ->
+                authViewModel.sendPasswordResetEmail(email) { success, msg ->
+                    message = msg
+                    if (success) showResetDialog = false
                 }
             }
         )
@@ -168,80 +147,43 @@ fun LoginScreen(
 }
 
 @Composable
-private fun PasswordResetDialog(
-    initialEmail: String,
-    isLoading: Boolean,
+fun PasswordResetDialog(
     onDismiss: () -> Unit,
     onSend: (String) -> Unit
 ) {
-    val language = currentAppSettings().language
-    var resetEmail by remember(initialEmail) { mutableStateOf(initialEmail.trim()) }
-    var localError by remember { mutableStateOf("") }
-    val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(resetEmail.trim()).matches()
+    var email by remember { mutableStateOf("") }
 
     AlertDialog(
-        onDismissRequest = {
-            if (!isLoading) onDismiss()
-        },
-        title = {
-            Text(language.t("login.resetTitle"))
-        },
+        onDismissRequest = onDismiss,
+        title = { Text("Recuperar Password") },
         text = {
             Column {
-                Text(
-                    text = language.t("login.resetDescription"),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-
+                Text("Insere o teu e-mail para receberes um link de recuperação.")
                 Spacer(modifier = Modifier.height(12.dp))
-
                 OutlinedTextField(
-                    value = resetEmail,
-                    onValueChange = {
-                        resetEmail = it
-                        localError = ""
-                    },
-                    label = { Text(language.t("login.email")) },
-                    singleLine = true,
-                    isError = localError.isNotBlank(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email,
-                        imeAction = ImeAction.Done
-                    ),
-                    colors = authTextFieldColors(),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                if (localError.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = localError,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("E-mail") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF00A647),
+                        focusedLabelColor = Color(0xFF00A647)
                     )
-                }
+                )
             }
         },
         confirmButton = {
-            TextButton(
-                enabled = !isLoading,
-                onClick = rememberSoundClick {
-                    if (!isEmailValid) {
-                        localError = language.t("login.invalidEmail")
-                    } else {
-                        onSend(resetEmail.trim())
-                    }
-                }
+            Button(
+                onClick = { onSend(email) },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00A647))
             ) {
-                Text(language.t("login.resetSend"))
+                Text("Enviar")
             }
         },
         dismissButton = {
-            TextButton(
-                enabled = !isLoading,
-                onClick = rememberSoundClick(onDismiss)
-            ) {
-                Text(language.t("common.cancel"))
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar", color = Color.Gray)
             }
         }
     )

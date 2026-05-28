@@ -1,22 +1,24 @@
 package com.example.projecthub.uiscreens
 
-import android.util.Patterns
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.projecthub.settings.currentAppSettings
-import com.example.projecthub.settings.rememberSoundClick
-import com.example.projecthub.settings.t
+import androidx.compose.ui.unit.sp
+import com.example.projecthub.R
 import com.example.projecthub.viewmodel.AuthViewModel
 
 @Composable
@@ -24,64 +26,51 @@ fun RegisterScreen(
     authViewModel: AuthViewModel,
     onGoToLogin: () -> Unit
 ) {
-    var nome by remember { mutableStateOf("") }
+    var fullName by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
     val isLoading = authViewModel.isLoading
-    val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
-    val isPasswordValid = password.length >= 8 &&
-        password.any { it.isLetter() } &&
-        password.any { it.isDigit() }
-    val isFormValid = nome.isNotBlank() &&
-        username.isNotBlank() &&
-        isEmailValid &&
-        isPasswordValid
-    val language = currentAppSettings().language
-    val goToLogin = rememberSoundClick(onGoToLogin)
-    val registerClick = rememberSoundClick {
-        if (email.isNotBlank() && !isEmailValid) {
-            message = language.t("register.invalidEmail")
-            return@rememberSoundClick
-        }
-
-        if (!isFormValid) {
-            message = language.t("register.invalidForm")
-            return@rememberSoundClick
-        }
-
-        authViewModel.register(nome, username, email, password) { success, resultMessage ->
-            message = resultMessage
-
-            if (success) {
-                onGoToLogin()
-            }
-        }
-    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color(0xFFF5F5F5))
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 28.dp, vertical = 36.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        AuthHeader(subtitle = language.t("register.subtitle"))
+        Spacer(modifier = Modifier.height(20.dp))
+        
+        Image(
+            painter = painterResource(id = R.drawable.projecthub_logo),
+            contentDescription = "ProjectHub Logo",
+            modifier = Modifier.size(120.dp)
+        )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Text(
+            text = "Criar Nova Conta",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF333333)
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         OutlinedTextField(
-            value = nome,
-            onValueChange = { nome = it },
-            label = { Text(language.t("register.name")) },
-            singleLine = true,
-            isError = message.isNotEmpty() && nome.isBlank(),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            colors = authTextFieldColors(),
-            modifier = Modifier.fillMaxWidth()
+            value = fullName,
+            onValueChange = { fullName = it },
+            label = { Text("Nome Completo") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF00A647),
+                focusedLabelColor = Color(0xFF00A647),
+                unfocusedContainerColor = Color.White,
+                focusedContainerColor = Color.White
+            )
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -89,12 +78,15 @@ fun RegisterScreen(
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
-            label = { Text(language.t("register.username")) },
-            singleLine = true,
-            isError = message.isNotEmpty() && username.isBlank(),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            colors = authTextFieldColors(),
-            modifier = Modifier.fillMaxWidth()
+            label = { Text("Username") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF00A647),
+                focusedLabelColor = Color(0xFF00A647),
+                unfocusedContainerColor = Color.White,
+                focusedContainerColor = Color.White
+            )
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -102,15 +94,16 @@ fun RegisterScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text(language.t("register.email")) },
-            singleLine = true,
-            isError = message.isNotEmpty() && !isEmailValid,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next
-            ),
-            colors = authTextFieldColors(),
-            modifier = Modifier.fillMaxWidth()
+            label = { Text("Email") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF00A647),
+                focusedLabelColor = Color(0xFF00A647),
+                unfocusedContainerColor = Color.White,
+                focusedContainerColor = Color.White
+            )
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -118,57 +111,84 @@ fun RegisterScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text(language.t("register.password")) },
-            singleLine = true,
-            isError = message.isNotEmpty() && password.isNotEmpty() && !isPasswordValid,
+            label = { Text("Senha (mín. 8 caracteres)") },
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done
-            ),
-            colors = authTextFieldColors(),
-            modifier = Modifier.fillMaxWidth()
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF00A647),
+                focusedLabelColor = Color(0xFF00A647),
+                unfocusedContainerColor = Color.White,
+                focusedContainerColor = Color.White
+            )
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = confirmPassword,
+            onValueChange = { confirmPassword = it },
+            label = { Text("Confirmar Senha") },
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF00A647),
+                focusedLabelColor = Color(0xFF00A647),
+                unfocusedContainerColor = Color.White,
+                focusedContainerColor = Color.White
+            )
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = registerClick,
-            enabled = !isLoading,
-            colors = authButtonColors(),
-            modifier = Modifier.fillMaxWidth()
+            onClick = {
+                if (fullName.isBlank() || username.isBlank() || email.isBlank() || password.isBlank()) {
+                    message = "Todos os campos são obrigatórios."
+                } else if (!email.contains("@")) {
+                    message = "E-mail inválido."
+                } else if (password.length < 8) {
+                    message = "A senha deve ter pelo menos 8 caracteres."
+                } else if (password != confirmPassword) {
+                    message = "As senhas não coincidem."
+                } else {
+                    authViewModel.register(fullName, username, email, password) { success, msg ->
+                        message = if (success) {
+                            "Registo realizado! Por favor, verifica a tua caixa de e-mail para confirmares a conta antes de iniciares sessão."
+                        } else {
+                            msg
+                        }
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00A647)),
+            shape = RoundedCornerShape(8.dp),
+            enabled = !isLoading
         ) {
             if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
             } else {
-                Text(language.t("register.submit"))
+                Text("Registar", color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
 
-        TextButton(
-            onClick = goToLogin,
-            enabled = !isLoading,
-            colors = ButtonDefaults.textButtonColors(contentColor = AuthAccent),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(language.t("register.haveAccount"))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TextButton(onClick = onGoToLogin) {
+            Text("Já tem conta? Inicie Sessão", color = Color(0xFF00A647))
         }
 
         if (message.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (message.contains("sucesso", ignoreCase = true)) {
-                    AuthAccentSoft
-                } else {
-                    MaterialTheme.colorScheme.error
-                }
-            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(text = message, color = if (message.contains("sucesso")) Color(0xFF00A647) else Color.Red)
         }
+
+        Spacer(modifier = Modifier.height(20.dp))
     }
 }
