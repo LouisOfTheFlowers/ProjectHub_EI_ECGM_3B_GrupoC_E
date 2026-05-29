@@ -1,7 +1,0 @@
-{
-  "name": "QuickDressKids",
-  "integrations": {
-    "capacitor": {}
-  },
-  "type": "angular"
-}
