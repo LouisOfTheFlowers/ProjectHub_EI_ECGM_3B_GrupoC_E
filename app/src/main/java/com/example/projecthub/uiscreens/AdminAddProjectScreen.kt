@@ -3,8 +3,6 @@ package com.example.projecthub.uiscreens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,7 +36,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -91,10 +88,6 @@ fun AdminAddProjectScreen(
                     ),
                     placeholder = language.t("addProject.namePlaceholder")
                 )
-                AccentCharacterRow(
-                    onInsert = { character -> name = name.insertText(character) }
-                )
-
                 Spacer(modifier = Modifier.height(14.dp))
 
                 AppFormLabel(language.t("projects.description"))
@@ -110,10 +103,6 @@ fun AdminAddProjectScreen(
                     ),
                     placeholder = language.t("addProject.descriptionPlaceholder")
                 )
-                AccentCharacterRow(
-                    onInsert = { character -> description = description.insertText(character) }
-                )
-
                 Spacer(modifier = Modifier.height(14.dp))
 
                 AppFormLabel(language.t("addProject.startDate"))
@@ -186,50 +175,6 @@ fun AdminAddProjectScreen(
     }
 }
 
-@Composable
-private fun AccentCharacterRow(onInsert: (String) -> Unit) {
-    val characters = listOf("á", "à", "ã", "â", "é", "ê", "í", "ó", "õ", "ô", "ú", "ç")
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(top = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        characters.forEach { character ->
-            val click = rememberSoundClick { onInsert(character) }
-            Box(
-                modifier = Modifier
-                    .height(34.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(AddProjectAccent.copy(alpha = 0.12f))
-                    .clickable(onClick = click)
-                    .padding(horizontal = 12.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = character,
-                    color = AddProjectAccent,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
-            }
-        }
-    }
-}
-
-private fun TextFieldValue.insertText(value: String): TextFieldValue {
-    val start = minOf(selection.start, selection.end)
-    val end = maxOf(selection.start, selection.end)
-    val updatedText = text.replaceRange(start, end, value)
-    val cursor = start + value.length
-
-    return copy(
-        text = updatedText,
-        selection = TextRange(cursor)
-    )
-}
 
 private enum class DateField {
     Start,
@@ -260,7 +205,7 @@ private fun DatePickerField(
             fontSize = 15.sp
         )
         Text(
-            text = "📅",
+            text = "ðŸ“…",
             fontSize = 18.sp
         )
     }

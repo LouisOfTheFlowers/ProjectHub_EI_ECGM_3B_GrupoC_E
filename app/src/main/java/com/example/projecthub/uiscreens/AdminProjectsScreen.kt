@@ -706,9 +706,9 @@ private fun AdminProjectRatingsCard(participants: List<com.example.projecthub.vi
                         text = participant.rating
                             ?.let { rating ->
                                 val clamped = rating.coerceIn(0, 5)
-                                "${"?".repeat(clamped)}${"?".repeat(5 - clamped)} $clamped/5"
+                                "${"★".repeat(clamped)}${"☆".repeat(5 - clamped)} $clamped/5"
                             }
-                            ?: "????? 0/5",
+                            ?: "☆☆☆☆☆ 0/5",
                         color = participant.rating?.let { ProjectHubColors.Rating } ?: ProjectHubColors.Muted,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp

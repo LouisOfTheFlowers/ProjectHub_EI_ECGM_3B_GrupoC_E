@@ -25,6 +25,7 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -38,11 +39,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.projecthub.R
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
@@ -82,7 +85,7 @@ fun GestorAddTaskScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         AppFormCard(title = language.t("addTask.title")) {
-                AppFormLabel("Título")
+                AppFormLabel(language.t("addTask.taskTitle"))
                 AppTextField(
                     value = title,
                     onValueChange = { title = it },
@@ -96,7 +99,7 @@ fun GestorAddTaskScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                AppFormLabel("Descrição")
+                AppFormLabel(language.t("projects.description"))
                 AppTextField(
                     value = description,
                     onValueChange = { description = it },
@@ -112,7 +115,7 @@ fun GestorAddTaskScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                AppFormLabel("Projeto")
+                AppFormLabel(language.t("teams.project"))
                 GestorProjectDropdown(
                     selectedProject = selectedProject,
                     projects = state.projects,
@@ -124,7 +127,7 @@ fun GestorAddTaskScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                AppFormLabel("Utilizadores")
+                AppFormLabel(language.t("common.users"))
                 UserMultiSelect(
                     users = availableUsers,
                     selectedUserIds = selectedUserIds,
@@ -140,7 +143,7 @@ fun GestorAddTaskScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                AppFormLabel("Data de Início")
+                AppFormLabel(language.t("addProject.startDate"))
                 GestorTaskDatePickerField(
                     value = startDate,
                     onClick = rememberSoundClick { activeDateField = GestorTaskDateField.Start }
@@ -148,7 +151,7 @@ fun GestorAddTaskScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                AppFormLabel("Data de Fim (Prazo)")
+                AppFormLabel(language.t("addProject.endDate"))
                 GestorTaskDatePickerField(
                     value = endDate,
                     onClick = rememberSoundClick { activeDateField = GestorTaskDateField.End }
@@ -234,7 +237,7 @@ private fun GestorProjectDropdown(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = selectedProject?.name ?: "Selecione um projeto",
+                text = selectedProject?.name ?: currentAppSettings().language.t("addTask.projectPlaceholder"),
                 color = if (selectedProject == null) ProjectHubColors.Muted else ProjectHubColors.Ink,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp
@@ -275,11 +278,11 @@ private fun UserMultiSelect(
 ) {
     when {
         !enabled -> {
-            DisabledBox("Seleciona primeiro um projeto")
+            DisabledBox(currentAppSettings().language.t("tasks.selectProjectFirst"))
         }
 
         users.isEmpty() -> {
-            DisabledBox("Este projeto ainda não tem utilizadores associados")
+            DisabledBox(currentAppSettings().language.t("common.noProjectUsers"))
         }
 
         else -> {
@@ -308,7 +311,12 @@ private fun UserMultiSelect(
                             contentAlignment = Alignment.Center
                         ) {
                             if (user.id in selectedUserIds) {
-                                Text("✓", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_check_circle_24),
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(15.dp)
+                                )
                             }
                         }
                         Spacer(modifier = Modifier.width(10.dp))

@@ -116,10 +116,10 @@ class UserRepository(
     suspend fun importPasswordRecoveryDeepLink(intent: Intent): Result<Unit> {
         return try {
             val session = authRemoteDataSource.importPasswordRecoveryDeepLink(intent)
-                ?: return Result.failure(Exception("Link de recuperacao invalido ou expirado."))
+                ?: return Result.failure(Exception("Link de recuperação inválido ou expirado."))
 
             if (session.accessToken.isBlank()) {
-                Result.failure(Exception("Link de recuperacao invalido ou expirado."))
+                Result.failure(Exception("Link de recuperação inválido ou expirado."))
             } else {
                 Result.success(Unit)
             }
