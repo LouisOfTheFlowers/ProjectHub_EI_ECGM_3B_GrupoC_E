@@ -1,0 +1,1 @@
+# Registo de Utilização de Modelos de IA - QuickDressKids
