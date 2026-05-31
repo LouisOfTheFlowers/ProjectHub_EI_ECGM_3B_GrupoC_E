@@ -463,27 +463,7 @@ private fun ProjectMessageCard(
     title: String,
     detail: String
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-    ) {
-        Column(modifier = Modifier.padding(18.dp)) {
-            Text(
-                text = title,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 16.sp
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = detail,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
-                fontSize = 13.sp
-            )
-        }
-    }
+    AppMessageCard(title = title, detail = detail)
 }
 
 private fun projectProgress(item: UtilizadorProjectItem): String {

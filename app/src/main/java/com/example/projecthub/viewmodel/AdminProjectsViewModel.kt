@@ -28,20 +28,20 @@ data class AdminProjectManager(
 )
 
 data class AdminProjectListItem(
-    val id: Int,
-    val name: String,
-    val description: String,
+    override val id: Int,
+    override val name: String,
+    override val description: String,
     val coordinator: String,
     val managerId: Int?,
-    val statusLabel: String,
-    val startDate: String,
-    val dueDate: String,
+    override val statusLabel: String,
+    override val startDate: String,
+    override val dueDate: String,
     val memberCount: Int,
     val isCompleted: Boolean,
     val isDelayed: Boolean,
     val isInProgress: Boolean,
     val isExpanded: Boolean = false
-)
+) : ProjectUiListItem
 
 data class AdminProjectInfoParticipant(
     val id: Int,
@@ -148,8 +148,10 @@ class AdminProjectsViewModel(
                 .mapNotNull { user -> user.id?.let { it to user.nome } }
                 .toMap()
             val managers = users
-                .filter { it.role.normalizedStatus() in setOf("ADMIN", "GESTOR", "COORDENADOR") }
-                .ifEmpty { users }
+                .filter { it.role.normalizedStatus() in setOf("GESTOR") }
+                .ifEmpty {
+                    users.filterNot { it.role.normalizedStatus() == "ADMIN" }
+                }
                 .mapNotNull { user ->
                     user.id?.let {
                         AdminProjectManager(

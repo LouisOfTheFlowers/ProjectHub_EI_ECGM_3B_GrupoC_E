@@ -235,54 +235,12 @@ private fun StatusDropdown(
     selected: String,
     onOptionSelected: (String) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    val openClick = rememberSoundClick { expanded = true }
-
-    Box {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
-                .background(ProjectHubColors.LightSurface)
-                .clickable(onClick = openClick)
-                .padding(horizontal = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = selected,
-                color = ProjectHubColors.Ink,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp
-            )
-
-            AppExpandIcon(expanded = expanded)
-        }
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.background(ProjectHubColors.LightSurface)
-        ) {
-            GestorProjectStatuses.forEach { option ->
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = option,
-                            color = ProjectHubColors.Ink,
-                            fontWeight = if (option == selected) FontWeight.Bold else FontWeight.Medium
-                        )
-                    },
-                    onClick = {
-                        expanded = false
-                        onOptionSelected(option)
-                    }
-                )
-            }
-        }
-    }
+    AppDropdownField(
+        selected = selected,
+        options = GestorProjectStatuses,
+        label = { it ?: selected },
+        onOptionSelected = onOptionSelected
+    )
 }
 
 @Composable
@@ -395,24 +353,11 @@ private fun ProjectCard(
 
                 Column(horizontalAlignment = Alignment.End) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Button(
-                            onClick = rememberSoundClick {
-                                onMoreInfo(project)
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = GestorProjectsAccent,
-                                contentColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
-                            modifier = Modifier.height(34.dp)
-                        ) {
-                            Text(
-                                text = currentAppSettings().language.t("common.moreInfo"),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
-                            )
-                        }
+                        AppMoreInfoButton(
+                            text = currentAppSettings().language.t("common.moreInfo"),
+                            onClick = { onMoreInfo(project) },
+                            compact = true
+                        )
 
                         Spacer(modifier = Modifier.width(10.dp))
 
@@ -754,20 +699,12 @@ private fun ProjectInfoTaskCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Button(
-                onClick = rememberSoundClick(onOpenObservations),
+            AppObservationsButton(
+                text = currentAppSettings().language.t("user.tasks.observations"),
+                onClick = onOpenObservations,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = GestorProjectsAccent,
-                    contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(
-                    text = "${currentAppSettings().language.t("user.tasks.observations")} (${task.observations.size})",
-                    fontWeight = FontWeight.Bold
-                )
-            }
+                count = task.observations.size
+            )
         }
     }
 }
@@ -965,37 +902,18 @@ private fun ProjectObservationRow(
     observation: GestorProjectInfoObservation,
     onClick: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(ProjectHubColors.SurfaceSoft)
-            .clickable(onClick = rememberSoundClick(onClick))
-            .padding(horizontal = 12.dp, vertical = 10.dp)
-    ) {
-        Text(
+    AppObservationCard(
+        observation = AppObservationUiModel(
             text = observation.text,
-            color = ProjectHubColors.Ink,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 13.sp
-        )
-
-        Spacer(modifier = Modifier.height(6.dp))
-
-        Text(
-            text = "${observation.userName} | ${observation.date} | ${observation.completionPercent}% | ${observation.photoUrls.size} fotos",
-            color = ProjectHubColors.Muted,
-            fontSize = 12.sp
-        )
-
-        observation.spentHours?.let { hours ->
-            Text(
-                text = currentAppSettings().language.t("tasks.timeSpent").format(hours),
-                color = ProjectHubColors.Muted,
-                fontSize = 12.sp
-            )
-        }
-    }
+            userName = observation.userName,
+            date = observation.date,
+            completionPercent = observation.completionPercent,
+            spentHours = observation.spentHours,
+            photoUrls = observation.photoUrls
+        ),
+        onClick = onClick,
+        showPhotoPreview = false
+    )
 }
 
 @Composable
@@ -1010,29 +928,7 @@ private fun InfoMessageCard(
     title: String,
     detail: String
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = title,
-                color = ProjectHubColors.Ink,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 16.sp
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = detail,
-                color = ProjectHubColors.Muted,
-                fontSize = 13.sp
-            )
-        }
-    }
+    AppMessageCard(title = title, detail = detail)
 }
 
 @Composable
@@ -1090,22 +986,7 @@ private fun DetailItem(
     value: String,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
-        Text(
-            text = label,
-            color = ProjectHubColors.Muted,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 12.sp
-        )
-
-        Spacer(modifier = Modifier.height(3.dp))
-
-        Text(
-            text = value,
-            color = ProjectHubColors.Slate,
-            fontSize = 14.sp
-        )
-    }
+    AppDetailItem(label = label, value = value, modifier = modifier)
 }
 
 @Composable

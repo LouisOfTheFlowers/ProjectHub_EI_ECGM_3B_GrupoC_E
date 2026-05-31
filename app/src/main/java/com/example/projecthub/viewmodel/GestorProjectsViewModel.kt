@@ -35,12 +35,12 @@ data class GestorUserOption(
 )
 
 data class GestorProjectListItem(
-    val id: Int,
-    val name: String,
-    val description: String,
-    val statusLabel: String,
-    val startDate: String,
-    val dueDate: String,
+    override val id: Int,
+    override val name: String,
+    override val description: String,
+    override val statusLabel: String,
+    override val startDate: String,
+    override val dueDate: String,
     val totalTasks: Int,
     val completedTasks: Int,
     val inProgressTasks: Int,
@@ -49,7 +49,7 @@ data class GestorProjectListItem(
     val progressPercent: Int,
     val isCompleted: Boolean,
     val isExpanded: Boolean = false
-)
+) : ProjectUiListItem
 
 data class GestorProjectInfoParticipant(
     val id: Int,
@@ -505,8 +505,8 @@ class GestorProjectsViewModel(
 
             if (unfinishedTasks.isNotEmpty()) {
                 val lateTasks = unfinishedTasks.count { it.isLate() }
-                val pendingTasks = unfinishedTasks.count { it.isPendingByDate() && !it.isLate() }
-                val inProgressTasks = unfinishedTasks.size - lateTasks - pendingTasks
+                val pendingTasks = unfinishedTasks.count { it.isPendingByStartDate() }
+                val inProgressTasks = unfinishedTasks.size - pendingTasks
 
                 state = state.copy(
                     isAssociating = false,
@@ -609,12 +609,12 @@ class GestorProjectsViewModel(
             it.status.isCompletedStatus()
         }
 
-        val pendingTasks = tasks.count {
-            it.isPendingByDate()
+        val pendingTasks = tasks.count { task ->
+            !task.status.isCompletedStatus() && task.isPendingByStartDate()
         }
 
-        val inProgressTasks = tasks.count {
-            it.status.isInProgressStatus() && !it.isPendingByDate()
+        val inProgressTasks = tasks.count { task ->
+            !task.status.isCompletedStatus() && !task.isPendingByStartDate()
         }
 
         val progressPercent = if (tasks.isEmpty()) {
@@ -655,13 +655,12 @@ class GestorProjectsViewModel(
         )
     }
 
-    private fun TarefaDto.isPendingByDate(): Boolean {
+    private fun TarefaDto.isPendingByStartDate(): Boolean {
         val startDate = data_inicio
             ?.take(10)
             ?.toLocalDateOrNull()
 
-        return status.isPendingStatus() ||
-                startDate?.isAfter(LocalDate.now()) == true
+        return startDate?.isAfter(LocalDate.now()) == true
     }
 
     private fun TarefaDto.isLate(): Boolean {
@@ -691,6 +690,7 @@ class GestorProjectsViewModel(
 
         val isInProgress = !isCompleted &&
                 !isDelayed &&
+                startDate?.isAfter(LocalDate.now()) != true &&
                 (
                     status.isInProgressStatus() ||
                             status.isPendingStatus() ||

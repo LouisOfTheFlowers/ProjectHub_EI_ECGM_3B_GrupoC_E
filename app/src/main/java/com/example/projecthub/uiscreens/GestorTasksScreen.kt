@@ -161,19 +161,14 @@ fun GestorTasksScreen(
                     )
                 }
 
-                Button(
-                    onClick = rememberSoundClick {
+                AppFilledActionButton(
+                    text = language.t("tasks.add"),
+                    onClick = {
                         viewModel.clearCreateError()
                         isCreatingTask = true
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = GestorTasksAccent,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(language.t("tasks.add"), fontWeight = FontWeight.Bold)
-                }
+                    containerColor = GestorTasksAccent
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -210,27 +205,19 @@ fun GestorTasksScreen(
             title = { Text(language.t("tasks.deleteTitle")) },
             text = { Text(language.t("tasks.deleteQuestion").format(task.title)) },
             confirmButton = {
-                TextButton(
-                    onClick = rememberSoundClick {
+                AppDialogConfirmButton(
+                    text = language.t("common.delete"),
+                    onClick = {
                         viewModel.deleteTask(gestorId, task.id)
                         taskToDelete = null
                     }
-                ) {
-                    Text(
-                        language.t("common.delete"),
-                        color = GestorTasksRed,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                )
             },
             dismissButton = {
-                TextButton(
-                    onClick = rememberSoundClick {
-                        taskToDelete = null
-                    }
-                ) {
-                    Text(language.t("common.cancel"))
-                }
+                AppDialogCancelButton(
+                    text = language.t("common.cancel"),
+                    onClick = { taskToDelete = null }
+                )
             }
         )
     }
@@ -278,32 +265,7 @@ private fun SmallStat(
     accent: Color,
     modifier: Modifier
 ) {
-    Card(
-        modifier = modifier.height(72.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = title,
-                color = ProjectHubColors.Muted,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = value,
-                color = accent,
-                fontSize = 23.sp,
-                fontWeight = FontWeight.ExtraBold
-            )
-        }
-    }
+    AppCompactStatCard(title = title, value = value, accent = accent, modifier = modifier, heightDp = 72)
 }
 
 @Composable
@@ -339,48 +301,12 @@ private fun StatusDropdown(
     selected: GestorTaskStatusFilter,
     onOptionSelected: (GestorTaskStatusFilter) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
-                .background(ProjectHubColors.LightSurface)
-                .clickable(onClick = rememberSoundClick { expanded = true })
-                .padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = selected.label,
-                color = ProjectHubColors.Ink,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp
-            )
-            AppExpandIcon(expanded = expanded)
-        }
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.background(ProjectHubColors.LightSurface)
-        ) {
-            GestorTaskStatusFilter.entries.forEach { option ->
-                DropdownMenuItem(
-                    text = {
-                        Text(option.label, color = ProjectHubColors.Ink)
-                    },
-                    onClick = {
-                        expanded = false
-                        onOptionSelected(option)
-                    }
-                )
-            }
-        }
-    }
+    AppDropdownField(
+        selected = selected,
+        options = GestorTaskStatusFilter.entries,
+        label = { it?.label ?: selected.label },
+        onOptionSelected = onOptionSelected
+    )
 }
 
 @Composable
@@ -536,53 +462,49 @@ private fun TaskRow(
             .background(ProjectHubColors.SurfaceSoft)
             .padding(12.dp)
     ) {
+        Text(
+            text = task.title,
+            color = ProjectHubColors.Ink,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 15.sp
+        )
+        Text(
+            text = task.description,
+            color = ProjectHubColors.Muted,
+            fontSize = 12.sp
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = task.title,
-                    color = ProjectHubColors.Ink,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 15.sp
-                )
-                Text(
-                    text = task.description,
-                    color = ProjectHubColors.Muted,
-                    fontSize = 12.sp
-                )
+            StatusPill(task.statusLabel)
+
+            AppMoreInfoButton(
+                text = currentAppSettings().language.t("common.moreInfo"),
+                onClick = { onMoreInfo(task) },
+                compact = true
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            TaskActionIcon(
+                painter = painterResource(R.drawable.ic_edit_24),
+                contentDescription = currentAppSettings().language.t("common.edit"),
+                color = GestorTasksAccent
+            ) {
+                onEditTask(task)
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            TaskActionIcon(
+                painter = painterResource(R.drawable.ic_delete_24),
+                contentDescription = currentAppSettings().language.t("common.delete"),
+                color = GestorTasksRed
             ) {
-                StatusPill(task.statusLabel)
-
-                TaskTextAction(
-                    label = "Mais info",
-                    color = GestorTasksBlue
-                ) {
-                    onMoreInfo(task)
-                }
-
-                TaskActionIcon(
-                    painter = painterResource(R.drawable.ic_edit_24),
-                    contentDescription = currentAppSettings().language.t("common.edit"),
-                    color = GestorTasksAccent
-                ) {
-                    onEditTask(task)
-                }
-
-                TaskActionIcon(
-                    painter = painterResource(R.drawable.ic_delete_24),
-                    contentDescription = currentAppSettings().language.t("common.delete"),
-                    color = GestorTasksRed
-                ) {
-                    onDeleteTask(task)
-                }
+                onDeleteTask(task)
             }
         }
 
@@ -620,12 +542,11 @@ private fun TaskRow(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        TaskTextAction(
-            label = currentAppSettings().language.t("user.tasks.observations"),
-            color = GestorTasksAccent
-        ) {
-            onObservations(task)
-        }
+        AppObservationsButton(
+            text = currentAppSettings().language.t("user.tasks.observations"),
+            onClick = { onObservations(task) },
+            compact = true
+        )
     }
 }
 
@@ -830,33 +751,16 @@ private fun TaskInfoMeta(
 
 @Composable
 private fun TaskObservationRow(observation: GestorTaskInfoObservation) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(ProjectHubColors.SurfaceSoft)
-            .padding(horizontal = 12.dp, vertical = 10.dp)
-    ) {
-        Text(
+    AppObservationCard(
+        observation = AppObservationUiModel(
             text = observation.text,
-            color = ProjectHubColors.Ink,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 13.sp
-        )
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            text = "${observation.userName} | ${observation.date} | ${observation.completionPercent}%",
-            color = ProjectHubColors.Muted,
-            fontSize = 12.sp
-        )
-        observation.spentHours?.let { hours ->
-            Text(
-                text = "${currentAppSettings().language.t("user.tasks.spentHours")}: $hours h",
-                color = ProjectHubColors.Muted,
-                fontSize = 12.sp
-            )
-        }
-    }
+            userName = observation.userName,
+            date = observation.date,
+            completionPercent = observation.completionPercent,
+            spentHours = observation.spentHours
+        ),
+        showPhotoPreview = false
+    )
 }
 
 @Composable
@@ -864,42 +768,7 @@ private fun TaskInfoMessageCard(
     title: String,
     detail: String
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(title, color = ProjectHubColors.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(detail, color = ProjectHubColors.Muted, fontSize = 13.sp)
-        }
-    }
-}
-
-@Composable
-private fun TaskTextAction(
-    label: String,
-    color: Color,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .height(32.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(color.copy(alpha = 0.12f))
-            .clickable(onClick = rememberSoundClick(onClick))
-            .padding(horizontal = 9.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = label,
-            color = color,
-            fontWeight = FontWeight.Bold,
-            fontSize = 11.sp
-        )
-    }
+    AppMessageCard(title = title, detail = detail)
 }
 
 @Composable

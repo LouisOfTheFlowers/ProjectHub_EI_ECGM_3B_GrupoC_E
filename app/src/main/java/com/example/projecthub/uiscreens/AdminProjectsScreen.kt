@@ -130,19 +130,19 @@ fun AdminProjectsScreen(
             title = { Text(language.t("projects.deleteTitle")) },
             text = { Text("${language.t("projects.deleteQuestion")} \"${project.name}\"?") },
             confirmButton = {
-                TextButton(
-                    onClick = rememberSoundClick {
+                AppDialogConfirmButton(
+                    text = language.t("common.delete"),
+                    onClick = {
                         viewModel.deleteProject(project.id)
                         projectToDelete = null
                     }
-                ) {
-                    Text(language.t("common.delete"), color = ProjectsRed, fontWeight = FontWeight.Bold)
-                }
+                )
             },
             dismissButton = {
-                TextButton(onClick = rememberSoundClick { projectToDelete = null }) {
-                    Text(language.t("common.cancel"))
-                }
+                AppDialogCancelButton(
+                    text = language.t("common.cancel"),
+                    onClick = { projectToDelete = null }
+                )
             }
         )
     }
@@ -206,20 +206,11 @@ private fun ProjectsPage(
                 )
             }
 
-            Button(
-                onClick = addProjectClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = ProjectsAccent,
-                    contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(
-                    text = language.t("projects.add"),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-            }
+            AppFilledActionButton(
+                text = language.t("projects.add"),
+                onClick = onAddProject,
+                containerColor = ProjectsAccent
+            )
         }
 
         Spacer(modifier = Modifier.height(18.dp))
@@ -411,52 +402,13 @@ private fun FilterDropdown(
     modifier: Modifier = Modifier,
     onOptionSelected: (String) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    val openClick = rememberSoundClick { expanded = true }
-
-    Box(modifier = modifier) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
-                .clickable(onClick = openClick)
-                .padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = label,
-                color = ProjectHubColors.Ink,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp
-            )
-            AppExpandIcon(expanded = expanded)
-        }
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.background(ProjectHubColors.LightSurface)
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = option,
-                            color = ProjectHubColors.Ink,
-                            fontWeight = if (option == label) FontWeight.Bold else FontWeight.Medium
-                        )
-                    },
-                    onClick = {
-                        expanded = false
-                        onOptionSelected(option)
-                    }
-                )
-            }
-        }
-    }
+    AppDropdownField(
+        selected = label,
+        options = options,
+        label = { it ?: label },
+        onOptionSelected = onOptionSelected,
+        modifier = modifier
+    )
 }
 
 @Composable
@@ -529,17 +481,12 @@ private fun ProjectListCard(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = rememberSoundClick(onMoreInfo),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = ProjectsAccent,
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(language.t("common.moreInfo"), fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    }
+                    AppMoreInfoButton(
+                        text = language.t("common.moreInfo"),
+                        onClick = onMoreInfo,
+                        modifier = Modifier.weight(1f),
+                        compact = true
+                    )
                     AppActionIconButton(
                         painter = painterResource(R.drawable.ic_edit_24),
                         contentDescription = language.t("common.edit"),
@@ -560,30 +507,7 @@ private fun ProjectListCard(
 
 @Composable
 private fun ProjectInfoRow(label: String, value: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            color = ProjectHubColors.Muted,
-            fontSize = 13.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
-        Text(
-            text = value,
-            color = ProjectHubColors.Ink,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 13.sp,
-            maxLines = 1,
-            modifier = Modifier.padding(start = 12.dp)
-        )
-    }
+    AppInfoRow(label = label, value = value)
 }
 
 @Composable
@@ -595,12 +519,10 @@ private fun AdminProjectDetailPage(
     val project = state.project
 
     Column {
-        TextButton(
-            onClick = rememberSoundClick(onBack),
-            colors = ButtonDefaults.textButtonColors(contentColor = ProjectsAccent)
-        ) {
-            Text(language.t("manager.projects.back"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        }
+        AppBackButton(
+            text = language.t("manager.projects.back"),
+            onClick = onBack
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -796,37 +718,18 @@ private fun AdminProjectTaskBlock(task: AdminProjectInfoTask) {
 
 @Composable
 private fun AdminProjectObservationBlock(observation: AdminProjectInfoObservation) {
-    val language = currentAppSettings().language
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(ProjectHubColors.LightSurface)
-            .padding(10.dp)
-    ) {
-        Text(observation.text, color = ProjectHubColors.Ink, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            text = "${observation.userName} | ${observation.date} | ${observation.completionPercent}%",
-            color = ProjectHubColors.Muted,
-            fontSize = 12.sp
-        )
-        observation.spentHours?.let { hours ->
-            Text(language.t("tasks.timeSpent").format(hours), color = ProjectHubColors.Muted, fontSize = 12.sp)
-        }
-        if (observation.photoUrls.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
-            AsyncImage(
-                model = observation.photoUrls.first(),
-                contentDescription = language.t("profile.photoDescription"),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(140.dp)
-                    .clip(RoundedCornerShape(8.dp))
-            )
-        }
-    }
+    AppObservationCard(
+        observation = AppObservationUiModel(
+            text = observation.text,
+            userName = observation.userName,
+            date = observation.date,
+            completionPercent = observation.completionPercent,
+            spentHours = observation.spentHours,
+            location = observation.local,
+            photoUrls = observation.photoUrls
+        ),
+        modifier = Modifier.padding(top = 8.dp)
+    )
 }
 
 @Composable
@@ -853,9 +756,7 @@ private fun AdminProjectMessageCard(
     title: String,
     detail: String
 ) {
-    AdminProjectSectionCard(title = title) {
-        Text(detail, color = ProjectHubColors.Muted, fontSize = 13.sp)
-    }
+    AppMessageCard(title = title, detail = detail, titleSize = 17)
 }
 
 @Composable

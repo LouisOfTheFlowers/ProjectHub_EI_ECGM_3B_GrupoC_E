@@ -42,20 +42,20 @@ data class GestorTaskAssignee(
 )
 
 data class GestorTaskListItem(
-    val id: Int,
+    override val id: Int,
     val projectId: Int,
-    val title: String,
-    val description: String,
-    val statusLabel: String,
+    override val title: String,
+    override val description: String,
+    override val statusLabel: String,
     val rawStatus: String,
-    val startDate: String,
-    val dueDate: String,
+    override val startDate: String,
+    override val dueDate: String,
     val assignees: List<GestorTaskAssignee>,
-    val isCompleted: Boolean,
+    override val isCompleted: Boolean,
     val isInProgress: Boolean,
     val isPending: Boolean,
-    val isDelayed: Boolean
-)
+    override val isDelayed: Boolean
+) : TaskUiListItem
 
 data class GestorTaskInfoObservation(
     val id: Int?,

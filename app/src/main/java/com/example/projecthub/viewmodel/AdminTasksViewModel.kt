@@ -24,15 +24,15 @@ data class AdminTaskProjectOption(
 )
 
 data class AdminTaskListItem(
-    val id: Int,
-    val title: String,
-    val description: String,
-    val statusLabel: String,
-    val startDate: String,
-    val dueDate: String,
-    val isCompleted: Boolean,
-    val isDelayed: Boolean
-)
+    override val id: Int,
+    override val title: String,
+    override val description: String,
+    override val statusLabel: String,
+    override val startDate: String,
+    override val dueDate: String,
+    override val isCompleted: Boolean,
+    override val isDelayed: Boolean
+) : TaskUiListItem
 
 data class AdminProjectTaskGroup(
     val projectId: Int,

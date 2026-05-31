@@ -11,7 +11,7 @@ import com.example.projecthub.repository.ProjetoRepository
 import com.example.projecthub.repository.ProjetoUserRepository
 import kotlinx.coroutines.launch
 
-val AdminTeamEditableRoles = listOf("ADMIN", "GESTOR", "UTILIZADOR")
+val AdminTeamEditableRoles = listOf("GESTOR", "UTILIZADOR")
 
 data class AdminTeamProjectOption(
     val id: Int,
@@ -92,6 +92,7 @@ class AdminTeamsViewModel(
                 }
 
             val teamUsers = users
+                .filterNot { user -> user.role.equals("ADMIN", ignoreCase = true) }
                 .mapNotNull { user ->
                     val userId = user.id ?: return@mapNotNull null
 

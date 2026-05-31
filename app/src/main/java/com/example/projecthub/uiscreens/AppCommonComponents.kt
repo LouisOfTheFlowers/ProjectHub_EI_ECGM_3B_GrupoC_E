@@ -2,9 +2,12 @@ package com.example.projecthub.uiscreens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -12,10 +15,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -24,6 +30,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
@@ -35,8 +45,30 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import com.example.projecthub.R
+import com.example.projecthub.settings.currentAppSettings
+import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
+
+data class AppObservationUiModel(
+    val text: String,
+    val userName: String? = null,
+    val date: String? = null,
+    val completionPercent: Int? = null,
+    val spentHours: Float? = null,
+    val location: String? = null,
+    val photoUrls: List<String> = emptyList()
+)
+
+data class AppDashboardMetric(
+    val label: String,
+    val value: String,
+    val accent: Color,
+    val detail: String,
+    val iconRes: Int
+)
 
 @Composable
 fun AppSurfaceCard(
@@ -50,6 +82,202 @@ fun AppSurfaceCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         content()
+    }
+}
+
+@Composable
+fun AppDashboardMetricCard(
+    metric: AppDashboardMetric,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.height(108.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(CircleShape)
+                        .background(metric.accent.copy(alpha = 0.14f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(metric.iconRes),
+                        contentDescription = null,
+                        tint = metric.accent,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.size(14.dp))
+
+                Column {
+                    Text(
+                        text = metric.label,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = metric.detail,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                        fontSize = 13.sp,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            Text(
+                text = metric.value,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 36.sp
+            )
+        }
+    }
+}
+
+@Composable
+fun AppCompactStatCard(
+    title: String,
+    value: String,
+    accent: Color,
+    modifier: Modifier = Modifier,
+    heightDp: Int = 82
+) {
+    Card(
+        modifier = modifier.height(heightDp.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(text = title, color = ProjectHubColors.Muted, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+            Text(text = value, color = accent, fontWeight = FontWeight.ExtraBold, fontSize = 27.sp)
+        }
+    }
+}
+
+@Composable
+fun AppInfoRow(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, color = ProjectHubColors.Muted, fontSize = 12.sp)
+        Text(value, color = ProjectHubColors.Ink, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+    }
+}
+
+@Composable
+fun AppDetailItem(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(label, color = ProjectHubColors.Muted, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+        Spacer(modifier = Modifier.height(3.dp))
+        Text(value, color = ProjectHubColors.Slate, fontSize = 14.sp)
+    }
+}
+
+@Composable
+fun AppMessageCard(
+    title: String,
+    detail: String,
+    modifier: Modifier = Modifier,
+    titleSize: Int = 16
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(title, color = ProjectHubColors.Ink, fontWeight = FontWeight.ExtraBold, fontSize = titleSize.sp)
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(detail, color = ProjectHubColors.Muted, fontSize = 13.sp)
+        }
+    }
+}
+
+@Composable
+fun <T> AppDropdownField(
+    selected: T?,
+    options: List<T>,
+    label: (T?) -> String,
+    onOptionSelected: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(modifier = modifier) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(ProjectHubColors.LightSurface)
+                .clickable(enabled = enabled && options.isNotEmpty(), onClick = rememberSoundClick { expanded = true })
+                .padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label(selected),
+                color = ProjectHubColors.Ink,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            AppExpandIcon(expanded = expanded)
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(ProjectHubColors.LightSurface)
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(label(option), color = ProjectHubColors.Ink) },
+                    onClick = {
+                        expanded = false
+                        onOptionSelected(option)
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -180,6 +408,33 @@ fun AppPrimaryButton(
 }
 
 @Composable
+fun AppFilledActionButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    containerColor: Color = AuthAccent
+) {
+    Button(
+        onClick = rememberSoundClick(onClick),
+        enabled = enabled,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor,
+            contentColor = Color.White
+        ),
+        shape = RoundedCornerShape(8.dp),
+        modifier = modifier
+    ) {
+        Text(
+            text = text,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
 fun AppSecondaryButton(
     text: String,
     onClick: () -> Unit,
@@ -228,6 +483,144 @@ fun AppOutlinedActionButton(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
+    }
+}
+
+@Composable
+fun AppObservationsButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    count: Int? = null,
+    compact: Boolean = false
+) {
+    val label = count?.let { "$text ($it)" } ?: text
+    OutlinedButton(
+        onClick = rememberSoundClick(onClick),
+        enabled = enabled,
+        shape = RoundedCornerShape(8.dp),
+        modifier = modifier.height(if (compact) 36.dp else 44.dp)
+    ) {
+        Text(
+            text = label,
+            color = AuthAccent,
+            fontWeight = FontWeight.Bold,
+            fontSize = if (compact) 12.sp else 14.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+fun AppMoreInfoButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    compact: Boolean = false
+) {
+    OutlinedButton(
+        onClick = rememberSoundClick(onClick),
+        enabled = enabled,
+        shape = RoundedCornerShape(8.dp),
+        modifier = modifier.height(if (compact) 34.dp else 44.dp)
+    ) {
+        Text(
+            text = text,
+            color = AuthAccent,
+            fontWeight = FontWeight.Bold,
+            fontSize = if (compact) 12.sp else 14.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+fun AppObservationCard(
+    observation: AppObservationUiModel,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    showPhotoPreview: Boolean = true
+) {
+    val language = currentAppSettings().language
+    val clickableModifier = onClick?.let { Modifier.clickable(onClick = rememberSoundClick(it)) } ?: Modifier
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(clickableModifier),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Text(
+                text = observation.text,
+                color = ProjectHubColors.Ink,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                observation.userName?.let {
+                    AppObservationMeta(language.t("common.user"), it, Modifier.weight(1f))
+                }
+                observation.date?.let {
+                    AppObservationMeta(language.t("common.date"), it, Modifier.weight(1f))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                observation.completionPercent?.let {
+                    AppObservationMeta(language.t("user.tasks.completion"), "$it%", Modifier.weight(1f))
+                }
+                AppObservationMeta(language.t("common.photos"), observation.photoUrls.size.toString(), Modifier.weight(1f))
+                observation.spentHours?.let {
+                    AppObservationMeta(language.t("common.hours"), "$it h", Modifier.weight(1f))
+                }
+            }
+
+            observation.location?.takeIf { it.isNotBlank() }?.let { location ->
+                Spacer(modifier = Modifier.height(8.dp))
+                AppObservationMeta(language.t("common.location"), location, Modifier.fillMaxWidth())
+            }
+
+            if (showPhotoPreview) {
+                observation.photoUrls.firstOrNull()?.let { photoUrl ->
+                    Spacer(modifier = Modifier.height(10.dp))
+                    AsyncImage(
+                        model = photoUrl,
+                        contentDescription = language.t("profile.photoDescription"),
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(150.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(ProjectHubColors.SurfaceSoft)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AppObservationMeta(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(label, color = ProjectHubColors.Muted, fontWeight = FontWeight.SemiBold, fontSize = 11.sp)
+        Spacer(modifier = Modifier.height(3.dp))
+        Text(value, color = ProjectHubColors.Slate, fontWeight = FontWeight.Bold, fontSize = 13.sp)
     }
 }
 

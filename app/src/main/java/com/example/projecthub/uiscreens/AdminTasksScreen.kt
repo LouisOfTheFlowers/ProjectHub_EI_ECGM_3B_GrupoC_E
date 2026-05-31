@@ -184,23 +184,7 @@ private fun CompactStatCard(
     accent: Color,
     modifier: Modifier = Modifier
 ) {
-    val language = currentAppSettings().language
-    Card(
-        modifier = modifier.height(82.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(text = title, color = ProjectHubColors.Muted, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
-            Text(text = value, color = accent, fontWeight = FontWeight.ExtraBold, fontSize = 27.sp)
-        }
-    }
+    AppCompactStatCard(title = title, value = value, accent = accent, modifier = modifier)
 }
 
 @Composable
@@ -240,52 +224,12 @@ private fun StatusDropdown(
     selected: AdminTaskStatusFilter,
     onOptionSelected: (AdminTaskStatusFilter) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    val openClick = rememberSoundClick { expanded = true }
-
-    Box {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, ProjectHubColors.Border, RoundedCornerShape(8.dp))
-                .clickable(onClick = openClick)
-                .padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = selected.label,
-                color = ProjectHubColors.Ink,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp
-            )
-            AppExpandIcon(expanded = expanded)
-        }
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.background(ProjectHubColors.LightSurface)
-        ) {
-            AdminTaskStatusFilter.entries.forEach { option ->
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = option.label,
-                            color = ProjectHubColors.Ink,
-                            fontWeight = if (option == selected) FontWeight.Bold else FontWeight.Medium
-                        )
-                    },
-                    onClick = {
-                        expanded = false
-                        onOptionSelected(option)
-                    }
-                )
-            }
-        }
-    }
+    AppDropdownField(
+        selected = selected,
+        options = AdminTaskStatusFilter.entries,
+        label = { it?.label ?: selected.label },
+        onOptionSelected = onOptionSelected
+    )
 }
 
 @Composable
@@ -498,30 +442,7 @@ private fun CompletionIcon(
 
 @Composable
 private fun TaskInfoRow(label: String, value: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            color = ProjectHubColors.Muted,
-            fontSize = 13.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
-        Text(
-            text = value,
-            color = ProjectHubColors.Ink,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 13.sp,
-            maxLines = 1,
-            modifier = Modifier.padding(start = 12.dp)
-        )
-    }
+    AppInfoRow(label = label, value = value)
 }
 
 private fun String.toDisplayDate(pattern: String = "dd/MM/yyyy"): String {

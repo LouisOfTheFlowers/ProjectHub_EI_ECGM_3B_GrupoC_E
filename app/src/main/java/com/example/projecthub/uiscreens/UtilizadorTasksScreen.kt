@@ -255,23 +255,19 @@ private fun UserTaskCard(
                 )
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    AppOutlinedActionButton(
+                    AppObservationsButton(
                         text = language.t("user.tasks.observations"),
                         onClick = onOpenObservations,
-                        enabled = !isSaving
+                        enabled = !isSaving,
+                        compact = true
                     )
 
-                    Button(
-                        onClick = rememberSoundClick(onComplete),
+                    AppFilledActionButton(
+                        text = if (completed) language.t("user.tasks.completed") else language.t("user.tasks.complete"),
+                        onClick = onComplete,
                         enabled = !isSaving && !completed,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = ProjectHubColors.Success,
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(if (completed) language.t("user.tasks.completed") else language.t("user.tasks.complete"))
-                    }
+                        containerColor = ProjectHubColors.Success
+                    )
                 }
             }
         }
@@ -323,17 +319,12 @@ private fun TaskObservationsPage(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        Button(
-            onClick = rememberSoundClick(onAddObservation),
+        AppObservationsButton(
+            text = if (isSaving) language.t("common.saving") else language.t("user.tasks.addObservation"),
+            onClick = onAddObservation,
             enabled = !isSaving,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = AuthAccent,
-                contentColor = Color.White
-            ),
-            shape = RoundedCornerShape(8.dp)
-        ) {
-            Text(if (isSaving) language.t("common.saving") else language.t("user.tasks.addObservation"))
-        }
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -354,40 +345,14 @@ private fun TaskObservationsPage(
 
 @Composable
 private fun ObservationCard(observation: UtilizadorTaskObservation) {
-    val language = currentAppSettings().language
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Text(
-                text = observation.observation.texto,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                TaskMeta(label = language.t("common.date"), value = observation.record.data.toUiDate(), modifier = Modifier.weight(1f))
-                TaskMeta(label = language.t("user.tasks.completion"), value = "${observation.record.taxa_conclusao}%", modifier = Modifier.weight(1f))
-                TaskMeta(label = language.t("common.photos"), value = observation.photos.size.toString(), modifier = Modifier.weight(1f))
-            }
-            observation.photos.firstOrNull()?.let { photo ->
-                Spacer(modifier = Modifier.height(8.dp))
-                AsyncImage(
-                    model = photo.foto_url,
-                    contentDescription = language.t("profile.photoDescription"),
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(150.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                )
-            }
-        }
-    }
+    AppObservationCard(
+        observation = AppObservationUiModel(
+            text = observation.observation.texto,
+            date = observation.record.data.toUiDate(),
+            completionPercent = observation.record.taxa_conclusao,
+            photoUrls = observation.photos.map { it.foto_url }
+        )
+    )
 }
 
 @Composable
@@ -581,27 +546,7 @@ private fun TaskMessageCard(
     title: String,
     detail: String
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-    ) {
-        Column(modifier = Modifier.padding(18.dp)) {
-            Text(
-                text = title,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 16.sp
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = detail,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
-                fontSize = 13.sp
-            )
-        }
-    }
+    AppMessageCard(title = title, detail = detail)
 }
 
 private fun String?.toUiDate(): String {

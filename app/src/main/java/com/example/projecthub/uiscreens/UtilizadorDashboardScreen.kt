@@ -166,50 +166,60 @@ private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
         }
 
         state.errorMessage != null -> {
-            UserMetricCard(
-                label = language.t("dashboard.state"),
-                value = language.t("dashboard.error"),
-                accent = UtilizadorRed,
-                detail = state.errorMessage,
-                icon = UserDashboardIcon.Warning
+            AppDashboardMetricCard(
+                metric = AppDashboardMetric(
+                    label = language.t("dashboard.state"),
+                    value = language.t("dashboard.error"),
+                    accent = UtilizadorRed,
+                    detail = state.errorMessage,
+                    iconRes = userDashboardIconRes(UserDashboardIcon.Warning)
+                )
             )
         }
 
         else -> {
             val cards: @Composable (Modifier) -> Unit = { modifier ->
-                UserMetricCard(
-                    label = language.t("common.inProgress"),
-                    value = state.inProgressTasks.toString(),
-                    accent = UtilizadorBlue,
-                    detail = language.t("user.dashboard.progressDetail"),
-                    icon = UserDashboardIcon.Progress,
+                AppDashboardMetricCard(
+                    metric = AppDashboardMetric(
+                        label = language.t("common.inProgress"),
+                        value = state.inProgressTasks.toString(),
+                        accent = UtilizadorBlue,
+                        detail = language.t("user.dashboard.progressDetail"),
+                        iconRes = userDashboardIconRes(UserDashboardIcon.Progress)
+                    ),
                     modifier = modifier
                 )
                 if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
-                UserMetricCard(
-                    label = language.t("common.completed"),
-                    value = state.completedTasks.toString(),
-                    accent = UtilizadorGreen,
-                    detail = language.t("user.dashboard.completedDetail"),
-                    icon = UserDashboardIcon.Completed,
+                AppDashboardMetricCard(
+                    metric = AppDashboardMetric(
+                        label = language.t("common.completed"),
+                        value = state.completedTasks.toString(),
+                        accent = UtilizadorGreen,
+                        detail = language.t("user.dashboard.completedDetail"),
+                        iconRes = userDashboardIconRes(UserDashboardIcon.Completed)
+                    ),
                     modifier = modifier
                 )
                 if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
-                UserMetricCard(
-                    label = language.t("common.pending"),
-                    value = state.pendingTasks.toString(),
-                    accent = UtilizadorOrange,
-                    detail = language.t("user.dashboard.pendingDetail"),
-                    icon = UserDashboardIcon.Pending,
+                AppDashboardMetricCard(
+                    metric = AppDashboardMetric(
+                        label = language.t("common.pending"),
+                        value = state.pendingTasks.toString(),
+                        accent = UtilizadorOrange,
+                        detail = language.t("user.dashboard.pendingDetail"),
+                        iconRes = userDashboardIconRes(UserDashboardIcon.Pending)
+                    ),
                     modifier = modifier
                 )
                 if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
-                UserMetricCard(
-                    label = language.t("common.delayed"),
-                    value = state.lateTasks.toString(),
-                    accent = UtilizadorRed,
-                    detail = language.t("user.dashboard.lateDetail"),
-                    icon = UserDashboardIcon.Late,
+                AppDashboardMetricCard(
+                    metric = AppDashboardMetric(
+                        label = language.t("common.delayed"),
+                        value = state.lateTasks.toString(),
+                        accent = UtilizadorRed,
+                        detail = language.t("user.dashboard.lateDetail"),
+                        iconRes = userDashboardIconRes(UserDashboardIcon.Late)
+                    ),
                     modifier = modifier
                 )
             }
@@ -222,6 +232,16 @@ private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
                 cards(Modifier.fillMaxWidth())
             }
         }
+    }
+}
+
+private fun userDashboardIconRes(icon: UserDashboardIcon): Int {
+    return when (icon) {
+        UserDashboardIcon.Late -> R.drawable.ic_warning_24
+        UserDashboardIcon.Pending -> R.drawable.ic_tasks_24
+        UserDashboardIcon.Completed -> R.drawable.ic_check_circle_24
+        UserDashboardIcon.Progress -> R.drawable.ic_trending_up_24
+        UserDashboardIcon.Warning -> R.drawable.ic_warning_24
     }
 }
 
@@ -241,90 +261,4 @@ private enum class UserDashboardIcon {
     Pending,
     Late,
     Warning
-}
-
-@Composable
-private fun UserMetricCard(
-    label: String,
-    value: String,
-    accent: Color,
-    detail: String,
-    icon: UserDashboardIcon,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .height(108.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(46.dp)
-                        .clip(CircleShape)
-                        .background(accent.copy(alpha = 0.14f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    UserMetricIcon(icon = icon, color = accent)
-                }
-
-                Spacer(modifier = Modifier.width(14.dp))
-
-                Column {
-                    Text(
-                        text = label,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = detail,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
-                        fontSize = 13.sp
-                    )
-                }
-            }
-
-            Text(
-                text = value,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 36.sp
-            )
-        }
-    }
-}
-
-@Composable
-private fun UserMetricIcon(
-    icon: UserDashboardIcon,
-    color: Color
-) {
-    val iconRes = when (icon) {
-        UserDashboardIcon.Late -> R.drawable.ic_warning_24
-        UserDashboardIcon.Pending -> R.drawable.ic_tasks_24
-        UserDashboardIcon.Completed -> R.drawable.ic_check_circle_24
-        UserDashboardIcon.Progress -> R.drawable.ic_trending_up_24
-        UserDashboardIcon.Warning -> R.drawable.ic_warning_24
-    }
-
-    Icon(
-        painter = painterResource(iconRes),
-        contentDescription = null,
-        tint = color,
-        modifier = Modifier.size(24.dp)
-    )
 }

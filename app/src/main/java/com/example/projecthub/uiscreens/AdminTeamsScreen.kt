@@ -21,6 +21,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
@@ -89,19 +90,19 @@ fun AdminTeamsScreen(
             title = { Text(language.t("teams.removeTitle")) },
             text = { Text(language.t("teams.removeQuestion").format(user.name)) },
             confirmButton = {
-                TextButton(
-                    onClick = rememberSoundClick {
+                AppDialogConfirmButton(
+                    text = language.t("common.delete"),
+                    onClick = {
                         viewModel.deleteUser(user)
                         userToDelete = null
                     }
-                ) {
-                    Text(language.t("common.delete"), color = TeamsRed, fontWeight = FontWeight.Bold)
-                }
+                )
             },
             dismissButton = {
-                TextButton(onClick = rememberSoundClick { userToDelete = null }) {
-                    Text(language.t("common.cancel"))
-                }
+                AppDialogCancelButton(
+                    text = language.t("common.cancel"),
+                    onClick = { userToDelete = null }
+                )
             }
         )
     }
@@ -209,14 +210,10 @@ private fun TeamFilters(
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
-            OutlinedTextField(
+            AppSearchField(
                 value = state.searchQuery,
                 onValueChange = onSearchChange,
-                label = { Text(language.t("common.search")) },
-                placeholder = { Text(language.t("teams.searchPlaceholder")) },
-                singleLine = true,
-                colors = appTextFieldColors(),
-                modifier = Modifier.fillMaxWidth()
+                placeholder = language.t("teams.searchPlaceholder")
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -263,7 +260,7 @@ private fun RoleFilter(
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = appTextFieldColors(),
             modifier = Modifier
-                .menuAnchor()
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                 .fillMaxWidth()
         )
 
@@ -316,7 +313,7 @@ private fun ProjectFilter(
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = appTextFieldColors(),
             modifier = Modifier
-                .menuAnchor()
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                 .fillMaxWidth()
         )
 
@@ -519,7 +516,10 @@ private fun UserRoleEditor(
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 colors = appTextFieldColors(),
                 modifier = Modifier
-                    .menuAnchor()
+                    .menuAnchor(
+                        type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,
+                        enabled = !isUpdating
+                    )
                     .fillMaxWidth()
             )
 

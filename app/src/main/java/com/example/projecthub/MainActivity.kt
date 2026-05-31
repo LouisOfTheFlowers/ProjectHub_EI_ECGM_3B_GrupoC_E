@@ -7,6 +7,8 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
@@ -54,8 +56,10 @@ class MainActivity : ComponentActivity() {
         emailConfirmationIntent = intent.takeIf { it.isEmailConfirmationIntent() }
 
         window.setBackgroundDrawable(ColorDrawable(AndroidColor.rgb(232, 249, 252)))
-        window.statusBarColor = AndroidColor.BLACK
-        window.navigationBarColor = AndroidColor.BLACK
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(AndroidColor.BLACK),
+            navigationBarStyle = SystemBarStyle.dark(AndroidColor.BLACK)
+        )
         window.attributes = window.attributes.apply {
             alpha = 1f
         }

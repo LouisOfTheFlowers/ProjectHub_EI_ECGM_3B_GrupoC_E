@@ -144,41 +144,49 @@ private fun DashboardContent(state: GestorDashboardState) {
         }
 
         state.errorMessage != null -> {
-            MetricCard(
-                label = language.t("dashboard.state"),
-                value = language.t("dashboard.error"),
-                accent = GestorRed,
-                detail = state.errorMessage,
-                icon = GestorDashboardIcon.Warning
+            AppDashboardMetricCard(
+                metric = AppDashboardMetric(
+                    label = language.t("dashboard.state"),
+                    value = language.t("dashboard.error"),
+                    accent = GestorRed,
+                    detail = state.errorMessage,
+                    iconRes = gestorDashboardIconRes(GestorDashboardIcon.Warning)
+                )
             )
         }
 
         else -> {
             val cards: @Composable (Modifier) -> Unit = { modifier ->
-                MetricCard(
-                    label = language.t("manager.dashboard.projects"),
-                    value = state.totalProjects.toString(),
-                    accent = GestorOrange,
-                    detail = language.t("manager.dashboard.projectsDetail"),
-                    icon = GestorDashboardIcon.Projects,
+                AppDashboardMetricCard(
+                    metric = AppDashboardMetric(
+                        label = language.t("manager.dashboard.projects"),
+                        value = state.totalProjects.toString(),
+                        accent = GestorOrange,
+                        detail = language.t("manager.dashboard.projectsDetail"),
+                        iconRes = gestorDashboardIconRes(GestorDashboardIcon.Projects)
+                    ),
                     modifier = modifier
                 )
                 if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
-                MetricCard(
-                    label = language.t("common.completed"),
-                    value = state.completedTasks.toString(),
-                    accent = GestorAccent,
-                    detail = language.t("manager.dashboard.completedDetail"),
-                    icon = GestorDashboardIcon.Completed,
+                AppDashboardMetricCard(
+                    metric = AppDashboardMetric(
+                        label = language.t("common.completed"),
+                        value = state.completedTasks.toString(),
+                        accent = GestorAccent,
+                        detail = language.t("manager.dashboard.completedDetail"),
+                        iconRes = gestorDashboardIconRes(GestorDashboardIcon.Completed)
+                    ),
                     modifier = modifier
                 )
                 if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
-                MetricCard(
-                    label = language.t("common.inProgress"),
-                    value = state.inProgressTasks.toString(),
-                    accent = GestorRed,
-                    detail = language.t("manager.dashboard.progressDetail"),
-                    icon = GestorDashboardIcon.Pending,
+                AppDashboardMetricCard(
+                    metric = AppDashboardMetric(
+                        label = language.t("common.inProgress"),
+                        value = state.inProgressTasks.toString(),
+                        accent = GestorRed,
+                        detail = language.t("manager.dashboard.progressDetail"),
+                        iconRes = gestorDashboardIconRes(GestorDashboardIcon.Pending)
+                    ),
                     modifier = modifier
                 )
             }
@@ -194,94 +202,18 @@ private fun DashboardContent(state: GestorDashboardState) {
     }
 }
 
-private enum class GestorDashboardIcon {
-    Completed,
-    Projects,
-    Pending,
-    Warning
-}
-
-@Composable
-private fun MetricCard(
-    label: String,
-    value: String,
-    accent: Color,
-    detail: String,
-    icon: GestorDashboardIcon,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .height(108.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(46.dp)
-                        .clip(CircleShape)
-                        .background(accent.copy(alpha = 0.14f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    MetricIcon(icon = icon, color = accent)
-                }
-
-                Spacer(modifier = Modifier.width(14.dp))
-
-                Column {
-                    Text(
-                        text = label,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = detail,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
-                        fontSize = 13.sp
-                    )
-                }
-            }
-
-            Text(
-                text = value,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 36.sp
-            )
-        }
-    }
-}
-
-@Composable
-private fun MetricIcon(
-    icon: GestorDashboardIcon,
-    color: Color
-) {
-    val iconRes = when (icon) {
+private fun gestorDashboardIconRes(icon: GestorDashboardIcon): Int {
+    return when (icon) {
         GestorDashboardIcon.Projects -> R.drawable.ic_folder_24
         GestorDashboardIcon.Warning -> R.drawable.ic_warning_24
         GestorDashboardIcon.Pending -> R.drawable.ic_tasks_24
         GestorDashboardIcon.Completed -> R.drawable.ic_check_circle_24
     }
+}
 
-    Icon(
-        painter = painterResource(iconRes),
-        contentDescription = null,
-        tint = color,
-        modifier = Modifier.size(24.dp)
-    )
+private enum class GestorDashboardIcon {
+    Completed,
+    Projects,
+    Pending,
+    Warning
 }
