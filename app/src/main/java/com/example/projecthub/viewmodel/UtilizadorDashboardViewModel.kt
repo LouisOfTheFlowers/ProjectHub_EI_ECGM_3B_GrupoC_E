@@ -1,8 +1,7 @@
 package com.example.projecthub.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projecthub.remote.supabase.models.ObservacaoDto
@@ -65,8 +64,11 @@ class UtilizadorDashboardViewModel(
     private val observacaoFotoRepository: ObservacaoFotoRepository = ObservacaoFotoRepository()
 ) : ViewModel() {
 
-    var state by mutableStateOf(UtilizadorDashboardState())
-        private set
+    private val _state = MutableStateFlow(UtilizadorDashboardState())
+    val stateFlow: StateFlow<UtilizadorDashboardState> = _state
+    private var state: UtilizadorDashboardState
+        get() = _state.value
+        set(value) { _state.value = value }
 
     fun loadDashboard(userId: Int?) {
         if (userId == null) {

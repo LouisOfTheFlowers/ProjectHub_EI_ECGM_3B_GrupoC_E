@@ -1,8 +1,7 @@
 package com.example.projecthub.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projecthub.remote.supabase.UserRemoteDataSource
@@ -114,8 +113,11 @@ class GestorProjectsViewModel(
     private val userRemoteDataSource: UserRemoteDataSource = UserRemoteDataSource()
 ) : ViewModel() {
 
-    var state by mutableStateOf(GestorProjectsState())
-        private set
+    private val _state = MutableStateFlow(GestorProjectsState())
+    val stateFlow: StateFlow<GestorProjectsState> = _state
+    private var state: GestorProjectsState
+        get() = _state.value
+        set(value) { _state.value = value }
 
     fun loadProjects(gestorId: Int?) {
         if (gestorId == null) {

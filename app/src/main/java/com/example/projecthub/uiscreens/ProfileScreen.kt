@@ -1,24 +1,17 @@
 package com.example.projecthub.uiscreens
 
 import android.content.Intent
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -38,18 +31,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.projecthub.R
 import com.example.projecthub.remote.supabase.models.UserDto
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
@@ -68,7 +57,7 @@ fun ProfileScreen(
     onAccountDeleted: () -> Unit,
     viewModel: ProfileViewModel = viewModel()
 ) {
-    val state = viewModel.state
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val language = currentAppSettings().language
     val context = LocalContext.current
     var isEditingEmail by remember { mutableStateOf(false) }
@@ -534,138 +523,5 @@ fun ProfileScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun ProfilePhoto(
-    photoUri: String?,
-    name: String,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .clip(CircleShape)
-            .background(ProfileAccent.copy(alpha = 0.12f))
-            .border(3.dp, ProfileAccent, CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
-        val bitmap = rememberProfileImageBitmap(photoUri)
-
-        when {
-            bitmap != null -> Image(
-                bitmap = bitmap,
-                contentDescription = currentAppSettings().language.t("profile.photoDescription"),
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-
-            else -> Text(
-                text = name.firstOrNull()?.uppercaseChar()?.toString() ?: "G",
-                color = ProfileAccent,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 42.sp
-            )
-        }
-    }
-}
-
-@Composable
-internal fun TopBarProfilePhoto(
-    photoUri: String?,
-    name: String?,
-    modifier: Modifier = Modifier
-) {
-    val bitmap = rememberProfileImageBitmap(photoUri)
-
-    Box(
-        modifier = modifier
-            .clip(CircleShape)
-            .background(Color.White)
-            .border(1.dp, ProjectHubColors.HeaderContent.copy(alpha = 0.18f), CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
-        when {
-            bitmap != null -> Image(
-                bitmap = bitmap,
-                contentDescription = currentAppSettings().language.t("profile.title"),
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-
-            !name.isNullOrBlank() -> Text(
-                text = name.first().uppercaseChar().toString(),
-                color = ProfileAccent,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 17.sp
-            )
-
-            else -> Image(
-                painter = painterResource(id = R.drawable.projecthub_logo),
-                contentDescription = currentAppSettings().language.t("profile.title"),
-                modifier = Modifier.padding(4.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun rememberProfileImageBitmap(photoUri: String?): androidx.compose.ui.graphics.ImageBitmap? {
-    val context = LocalContext.current
-
-    return androidx.compose.runtime.remember(photoUri) {
-        if (photoUri.isNullOrBlank()) {
-            null
-        } else {
-            runCatching {
-                context.contentResolver.openInputStream(Uri.parse(photoUri))?.use { input ->
-                    android.graphics.BitmapFactory.decodeStream(input)?.asImageBitmap()
-                }
-            }.getOrNull()
-        }
-    }
-}
-
-@Composable
-private fun AccountActionCard(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-        Text(
-            text = title,
-            color = ProjectHubColors.Ink,
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 16.sp
-        )
-            Spacer(modifier = Modifier.height(10.dp))
-            content()
-        }
-    }
-}
-
-@Composable
-private fun ProfileMessageCard(
-    message: String,
-    color: Color
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f))
-    ) {
-        Text(
-            text = message,
-            color = color,
-            fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
-            modifier = Modifier.padding(12.dp)
-        )
     }
 }

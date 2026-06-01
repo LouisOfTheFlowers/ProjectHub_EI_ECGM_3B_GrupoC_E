@@ -85,61 +85,59 @@ fun GestorAddTaskScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         AppFormCard(title = language.t("addTask.title")) {
-                AppFormLabel(language.t("addTask.taskTitle"))
-                AppTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        keyboardType = KeyboardType.Text
-                    ),
-                    placeholder = language.t("addTask.titlePlaceholder")
-                )
+            AppFormLabel(language.t("addTask.taskTitle"))
+            AppTextField(
+                value = title,
+                onValueChange = { title = it },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    keyboardType = KeyboardType.Text
+                ),
+                placeholder = language.t("addTask.titlePlaceholder")
+            )
 
-                Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-                AppFormLabel(language.t("projects.description"))
-                AppTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp),
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        keyboardType = KeyboardType.Text
-                    ),
-                    placeholder = language.t("addTask.descriptionPlaceholder")
-                )
+            AppFormLabel(language.t("projects.description"))
+            AppTextField(
+                value = description,
+                onValueChange = { description = it },
+                modifier = Modifier.height(120.dp),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    keyboardType = KeyboardType.Text
+                ),
+                placeholder = language.t("addTask.descriptionPlaceholder")
+            )
 
-                Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-                AppFormLabel(language.t("teams.project"))
-                GestorProjectDropdown(
-                    selectedProject = selectedProject,
-                    projects = state.projects,
-                    onProjectSelected = {
-                        selectedProject = it
-                        selectedUserIds = emptySet()
+            AppFormLabel(language.t("teams.project"))
+            GestorProjectDropdown(
+                selectedProject = selectedProject,
+                projects = state.projects,
+                onProjectSelected = {
+                    selectedProject = it
+                    selectedUserIds = emptySet()
+                }
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            AppFormLabel(language.t("addTask.users"))
+            UserMultiSelect(
+                users = availableUsers,
+                selectedUserIds = selectedUserIds,
+                enabled = selectedProject != null,
+                onToggleUser = { userId ->
+                    selectedUserIds = if (userId in selectedUserIds) {
+                        selectedUserIds - userId
+                    } else {
+                        selectedUserIds + userId
                     }
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                AppFormLabel(language.t("common.users"))
-                UserMultiSelect(
-                    users = availableUsers,
-                    selectedUserIds = selectedUserIds,
-                    enabled = selectedProject != null,
-                    onToggleUser = { userId ->
-                        selectedUserIds = if (userId in selectedUserIds) {
-                            selectedUserIds - userId
-                        } else {
-                            selectedUserIds + userId
-                        }
-                    }
-                )
+                }
+            )
 
                 Spacer(modifier = Modifier.height(14.dp))
 
@@ -276,13 +274,14 @@ private fun UserMultiSelect(
     enabled: Boolean,
     onToggleUser: (Int) -> Unit
 ) {
+    val language = currentAppSettings().language
     when {
         !enabled -> {
-            DisabledBox(currentAppSettings().language.t("tasks.selectProjectFirst"))
+            DisabledBox(language.t("addTask.selectProjectFirst"))
         }
 
         users.isEmpty() -> {
-            DisabledBox(currentAppSettings().language.t("common.noProjectUsers"))
+            DisabledBox(language.t("common.noProjectUsers"))
         }
 
         else -> {

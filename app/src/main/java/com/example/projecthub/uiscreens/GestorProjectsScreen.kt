@@ -12,9 +12,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
@@ -47,6 +50,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.projecthub.settings.currentAppSettings
@@ -79,7 +83,7 @@ fun GestorProjectsScreen(
     gestorId: Int?,
     viewModel: GestorProjectsViewModel = viewModel()
 ) {
-    val state = viewModel.state
+    val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     val language = currentAppSettings().language
 
     var projectToAssociate by remember { mutableStateOf<GestorProjectListItem?>(null) }
@@ -235,12 +239,23 @@ private fun StatusDropdown(
     selected: String,
     onOptionSelected: (String) -> Unit
 ) {
+    val language = currentAppSettings().language
     AppDropdownField(
         selected = selected,
         options = GestorProjectStatuses,
-        label = { it ?: selected },
+        label = { (it ?: selected).toGestorProjectStatusFilterLabel(language) },
         onOptionSelected = onOptionSelected
     )
+}
+
+private fun String.toGestorProjectStatusFilterLabel(language: com.example.projecthub.settings.AppLanguage): String {
+    return when (this) {
+        "Todos os Status" -> language.t("filters.allStatuses")
+        "Em progresso" -> language.t("filters.projects.inProgress")
+        "Pendentes" -> language.t("filters.projects.pending")
+        "Concluídos" -> language.t("filters.projects.completed")
+        else -> this
+    }
 }
 
 @Composable
@@ -265,7 +280,7 @@ private fun ProjectList(
 
         state.errorMessage != null -> {
             Text(
-                text = state.errorMessage,
+                text = state.errorMessage.orEmpty(),
                 color = GestorProjectsRed,
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp
@@ -289,8 +304,16 @@ private fun ProjectList(
         }
 
         else -> {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                state.visibleProjects.forEach { project ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 760.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                items(
+                    items = state.visibleProjects,
+                    key = { it.id }
+                ) { project ->
                     ProjectCard(
                         project = project,
                         onToggleProject = onToggleProject,
@@ -508,6 +531,8 @@ private fun ProjectInfoPage(
 private fun ProjectInfoParticipants(
     state: GestorProjectInfoState
 ) {
+    val language = currentAppSettings().language
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -516,7 +541,7 @@ private fun ProjectInfoParticipants(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = currentAppSettings().language.t("manager.projects.participants"),
+                text = language.t("manager.projects.participants"),
                 color = ProjectHubColors.Ink,
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 18.sp
@@ -526,13 +551,19 @@ private fun ProjectInfoParticipants(
 
             if (state.participants.isEmpty()) {
                 Text(
-                    text = currentAppSettings().language.t("manager.projects.noParticipants"),
+                    text = language.t("manager.projects.noParticipants"),
                     color = ProjectHubColors.Muted,
                     fontSize = 14.sp
                 )
             } else {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    state.participants.forEach { participant ->
+                LazyColumn(
+                    modifier = Modifier.heightIn(max = 360.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(
+                        items = state.participants,
+                        key = { it.id }
+                    ) { participant ->
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -586,6 +617,7 @@ private fun ProjectInfoParticipants(
 private fun ProjectInfoTasks(
     tasks: List<GestorProjectInfoTask>
 ) {
+    val language = currentAppSettings().language
     var selectedTask by remember {
         mutableStateOf<GestorProjectInfoTask?>(null)
     }
@@ -601,7 +633,7 @@ private fun ProjectInfoTasks(
     }
 
     Text(
-        text = currentAppSettings().language.t("reports.tasks"),
+        text = language.t("reports.tasks"),
         color = ProjectHubColors.Ink,
         fontWeight = FontWeight.ExtraBold,
         fontSize = 18.sp
@@ -611,12 +643,18 @@ private fun ProjectInfoTasks(
 
     if (tasks.isEmpty()) {
         InfoMessageCard(
-            title = currentAppSettings().language.t("manager.projects.noTasksTitle"),
-            detail = currentAppSettings().language.t("manager.projects.noTasksDetail")
+            title = language.t("manager.projects.noTasksTitle"),
+            detail = language.t("manager.projects.noTasksDetail")
         )
     } else {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            tasks.forEach { task ->
+        LazyColumn(
+            modifier = Modifier.heightIn(max = 680.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            items(
+                items = tasks,
+                key = { it.id }
+            ) { task ->
                 ProjectInfoTaskCard(
                     task = task,
                     onOpenObservations = {
@@ -633,6 +671,8 @@ private fun ProjectInfoTaskCard(
     task: GestorProjectInfoTask,
     onOpenObservations: () -> Unit
 ) {
+    val language = currentAppSettings().language
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -671,13 +711,13 @@ private fun ProjectInfoTaskCard(
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 DetailItem(
-                    label = currentAppSettings().language.t("common.start"),
+                    label = language.t("common.start"),
                     value = task.startDate,
                     modifier = Modifier.weight(1f)
                 )
 
                 DetailItem(
-                    label = currentAppSettings().language.t("common.deadline"),
+                    label = language.t("common.deadline"),
                     value = task.dueDate,
                     modifier = Modifier.weight(1f)
                 )
@@ -686,11 +726,11 @@ private fun ProjectInfoTaskCard(
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "${currentAppSettings().language.t("tasks.responsibles")}: ${
+                text = "${language.t("tasks.responsibles")}: ${
                     task.assignees
                         .takeIf { it.isNotEmpty() }
                         ?.joinToString()
-                        ?: currentAppSettings().language.t("tasks.noAssignees")
+                        ?: language.t("tasks.noAssignees")
                 }",
                 color = ProjectHubColors.Slate,
                 fontSize = 13.sp,
@@ -700,7 +740,7 @@ private fun ProjectInfoTaskCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             AppObservationsButton(
-                text = currentAppSettings().language.t("user.tasks.observations"),
+                text = language.t("user.tasks.observations"),
                 onClick = onOpenObservations,
                 modifier = Modifier.fillMaxWidth(),
                 count = task.observations.size
@@ -714,6 +754,7 @@ private fun ProjectTaskObservationsPage(
     task: GestorProjectInfoTask,
     onBack: () -> Unit
 ) {
+    val language = currentAppSettings().language
     var selectedObservation by remember {
         mutableStateOf<GestorProjectInfoObservation?>(null)
     }
@@ -731,7 +772,7 @@ private fun ProjectTaskObservationsPage(
 
     Column {
         AppBackButton(
-            text = currentAppSettings().language.t("manager.projects.backProject"),
+            text = language.t("manager.projects.backProject"),
             onClick = onBack
         )
 
@@ -747,7 +788,7 @@ private fun ProjectTaskObservationsPage(
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            text = currentAppSettings().language.t("tasks.observationsTitle"),
+            text = language.t("tasks.observationsTitle"),
             color = ProjectHubColors.Muted,
             fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold
@@ -757,12 +798,18 @@ private fun ProjectTaskObservationsPage(
 
         if (task.observations.isEmpty()) {
             InfoMessageCard(
-                title = currentAppSettings().language.t("user.tasks.noObservationsTitle"),
-                detail = currentAppSettings().language.t("user.tasks.noObservationsDetail")
+                title = language.t("user.tasks.noObservationsTitle"),
+                detail = language.t("user.tasks.noObservationsDetail")
             )
         } else {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                task.observations.forEach { observation ->
+            LazyColumn(
+                modifier = Modifier.heightIn(max = 620.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(
+                    items = task.observations,
+                    key = { it.id ?: it.text.hashCode() }
+                ) { observation ->
                     ProjectObservationRow(
                         observation = observation,
                         onClick = {
@@ -935,15 +982,16 @@ private fun InfoMessageCard(
 private fun ProjectDetails(
     project: GestorProjectListItem
 ) {
+    val language = currentAppSettings().language
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         DetailItem(
-            label = currentAppSettings().language.t("common.start"),
+            label = language.t("common.start"),
             value = project.startDate,
             modifier = Modifier.weight(1f)
         )
 
         DetailItem(
-            label = currentAppSettings().language.t("common.deadline"),
+            label = language.t("common.deadline"),
             value = project.dueDate,
             modifier = Modifier.weight(1f)
         )
@@ -957,24 +1005,24 @@ private fun ProjectDetails(
     ) {
         TaskLegend(
             color = GestorProjectsGreen,
-            text = "${currentAppSettings().language.t("common.completed")}: ${project.completedTasks}"
+            text = "${language.t("common.completed")}: ${project.completedTasks}"
         )
 
         TaskLegend(
             color = GestorProjectsBlue,
-            text = "${currentAppSettings().language.t("common.inProgress")}: ${project.inProgressTasks}"
+            text = "${language.t("common.inProgress")}: ${project.inProgressTasks}"
         )
 
         TaskLegend(
             color = ProjectHubColors.SidebarMutedText,
-            text = "${currentAppSettings().language.t("common.pending")}: ${project.pendingTasks}"
+            text = "${language.t("common.pending")}: ${project.pendingTasks}"
         )
     }
 
     Spacer(modifier = Modifier.height(6.dp))
 
     Text(
-        text = currentAppSettings().language.t("manager.projects.tasksTotal").format(project.totalTasks),
+        text = language.t("manager.projects.tasksTotal").format(project.totalTasks),
         color = ProjectHubColors.Muted,
         fontSize = 13.sp
     )
@@ -1435,5 +1483,3 @@ private fun TeamIcon(
         modifier = Modifier.size(22.dp)
     )
 }
-
-

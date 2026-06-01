@@ -1,8 +1,7 @@
 package com.example.projecthub.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projecthub.repository.ProjetoRepository
@@ -23,8 +22,11 @@ class GestorDashboardViewModel(
     private val tarefaRepository: TarefaRepository = TarefaRepository()
 ) : ViewModel() {
 
-    var state by mutableStateOf(GestorDashboardState())
-        private set
+    private val _state = MutableStateFlow(GestorDashboardState())
+    val stateFlow: StateFlow<GestorDashboardState> = _state
+    private var state: GestorDashboardState
+        get() = _state.value
+        set(value) { _state.value = value }
 
     fun loadDashboard(gestorId: Int?) {
         if (gestorId == null) {

@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +36,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.R
 import com.example.projecthub.navigation.AppRoutes
@@ -59,7 +61,7 @@ fun GestorDashboardScreen(
     onNavigate: (String) -> Unit = {},
     viewModel: GestorDashboardViewModel = viewModel()
 ) {
-    val state = viewModel.state
+    val state by viewModel.stateFlow.collectAsStateWithLifecycle()
 
     LaunchedEffect(gestorId) {
         viewModel.loadDashboard(gestorId)
@@ -149,7 +151,7 @@ private fun DashboardContent(state: GestorDashboardState) {
                     label = language.t("dashboard.state"),
                     value = language.t("dashboard.error"),
                     accent = GestorRed,
-                    detail = state.errorMessage,
+                    detail = state.errorMessage.orEmpty(),
                     iconRes = gestorDashboardIconRes(GestorDashboardIcon.Warning)
                 )
             )

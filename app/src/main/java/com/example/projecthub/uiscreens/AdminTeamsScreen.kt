@@ -8,9 +8,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
@@ -41,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
@@ -61,7 +65,7 @@ private val TeamsRed = ProjectHubColors.DangerDark
 fun AdminTeamsScreen(
     viewModel: AdminTeamsViewModel = viewModel()
 ) {
-    val state = viewModel.state
+    val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     var userToDelete by remember { mutableStateOf<AdminTeamUserItem?>(null) }
     val language = currentAppSettings().language
 
@@ -253,7 +257,7 @@ private fun RoleFilter(
         modifier = modifier
     ) {
         OutlinedTextField(
-            value = selectedRole ?: language.t("common.allFemale"),
+            value = selectedRole?.toRoleFilterLabel(language) ?: language.t("common.allFemale"),
             onValueChange = {},
             readOnly = true,
             label = { Text(language.t("teams.role")) },
@@ -277,7 +281,7 @@ private fun RoleFilter(
             )
             roles.forEach { role ->
                 DropdownMenuItem(
-                    text = { Text(role) },
+                    text = { Text(role.toRoleFilterLabel(language)) },
                     onClick = {
                         onRoleSelected(role)
                         expanded = false
@@ -285,6 +289,15 @@ private fun RoleFilter(
                 )
             }
         }
+    }
+}
+
+private fun String.toRoleFilterLabel(language: com.example.projecthub.settings.AppLanguage): String {
+    return when (uppercase()) {
+        "ADMIN" -> language.t("role.admin")
+        "GESTOR" -> language.t("role.manager")
+        "UTILIZADOR" -> language.t("role.user")
+        else -> this
     }
 }
 
@@ -379,15 +392,24 @@ private fun TeamUserList(
                         fontSize = 15.sp
                     )
                 } else {
-                    state.visibleUsers.forEach { user ->
-                        TeamUserCard(
-                            user = user,
-                            isUpdatingRole = state.updatingRoleUserId == user.id,
-                            isDeleting = state.deletingUserId == user.id,
-                            onRoleSelected = onRoleSelected,
-                            onDelete = { onDeleteUser(user) }
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 720.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(
+                            items = state.visibleUsers,
+                            key = { it.id }
+                        ) { user ->
+                            TeamUserCard(
+                                user = user,
+                                isUpdatingRole = state.updatingRoleUserId == user.id,
+                                isDeleting = state.deletingUserId == user.id,
+                                onRoleSelected = onRoleSelected,
+                                onDelete = { onDeleteUser(user) }
+                            )
+                        }
                     }
                 }
             }
@@ -459,7 +481,7 @@ private fun TeamUserCard(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 StatusChip(
                     text = if (user.projectNames.isEmpty()) {
-                        "Sem projeto"
+                        language.t("common.noProject")
                     } else {
                         user.projectNames.joinToString(limit = 2, truncated = "+")
                     },
@@ -506,9 +528,9 @@ private fun UserRoleEditor(
                 }
             },
             modifier = Modifier.weight(1f)
-        ) {
-            OutlinedTextField(
-                value = user.role,
+            ) {
+                OutlinedTextField(
+                value = user.role.toRoleFilterLabel(language),
                 onValueChange = {},
                 readOnly = true,
                 enabled = !isUpdating,
@@ -529,7 +551,7 @@ private fun UserRoleEditor(
             ) {
                 AdminTeamEditableRoles.forEach { role ->
                     DropdownMenuItem(
-                        text = { Text(role) },
+                        text = { Text(role.toRoleFilterLabel(language)) },
                         onClick = {
                             onRoleSelected(user, role)
                             expanded = false

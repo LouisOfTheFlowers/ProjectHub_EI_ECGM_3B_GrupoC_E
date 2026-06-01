@@ -1,14 +1,25 @@
 package com.example.projecthub.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.projecthub.local.database.DatabaseProvider
+import com.example.projecthub.local.entities.SyncQueueEntity
+import com.example.projecthub.local.entities.UserEntity
 import com.example.projecthub.remote.supabase.AuthRemoteDataSource
 import com.example.projecthub.remote.supabase.UserRemoteDataSource
 import com.example.projecthub.remote.supabase.models.UserDto
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 data class ProfileState(
     val user: UserDto? = null,
@@ -21,55 +32,101 @@ data class ProfileState(
 )
 
 class ProfileViewModel(
-    private val authRemoteDataSource: AuthRemoteDataSource = AuthRemoteDataSource(),
-    private val userRemoteDataSource: UserRemoteDataSource = UserRemoteDataSource()
-) : ViewModel() {
+    application: Application
+) : AndroidViewModel(application) {
 
-    var state by mutableStateOf(ProfileState())
-        private set
+    private val authRemoteDataSource = AuthRemoteDataSource()
+    private val userRemoteDataSource = UserRemoteDataSource()
+    private val database = DatabaseProvider.getDatabase(application)
+    private val syncQueueDao = database.syncQueueDao()
+    private val userDao = database.userDao()
+    private val connectivityManager = application.getSystemService(ConnectivityManager::class.java)
+    private val json = Json { ignoreUnknownKeys = true }
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            syncPendingProfilePhotoUpdates()
+        }
+    }
+
+    private val _state = MutableStateFlow(ProfileState())
+    val state: StateFlow<ProfileState> = _state
+
+    init {
+        runCatching { connectivityManager.registerDefaultNetworkCallback(networkCallback) }
+        syncPendingProfilePhotoUpdates()
+    }
+
+    override fun onCleared() {
+        runCatching { connectivityManager.unregisterNetworkCallback(networkCallback) }
+        super.onCleared()
+    }
 
     fun setUser(user: UserDto?) {
-        state = state.copy(user = user, message = null, errorMessage = null)
+        if (user == null) {
+            _state.update { it.copy(user = null, message = null, errorMessage = null) }
+            return
+        }
+
+        _state.update { it.copy(user = user, message = null, errorMessage = null) }
+
+        viewModelScope.launch {
+            val userId = user.id
+            val localUser = userId?.let { userDao.getUserById(it) }
+            val hasPendingPhoto = userId?.let { hasPendingProfilePhotoUpdate(it) } == true
+            val mergedUser = if (hasPendingPhoto && localUser != null) {
+                user.copy(foto = localUser.foto)
+            } else {
+                user
+            }
+
+            saveUserLocally(mergedUser)
+            _state.update { it.copy(user = mergedUser) }
+            syncPendingProfilePhotoUpdates()
+        }
     }
 
     fun clearMessage() {
-        state = state.copy(message = null)
+        _state.update { it.copy(message = null) }
     }
 
     fun sendEmailChangeCode() {
-        val currentUser = state.user
+        val currentUser = _state.value.user
         if (currentUser == null) {
-            state = state.copy(errorMessage = "Não foi possível identificar a tua conta.")
+            _state.update { it.copy(errorMessage = "Não foi possível identificar a tua conta.") }
             return
         }
 
         viewModelScope.launch {
-            state = state.copy(
-                isSendingEmailCode = true,
-                emailCodeSent = false,
-                message = null,
-                errorMessage = null
-            )
+            _state.update {
+                it.copy(
+                    isSendingEmailCode = true,
+                    emailCodeSent = false,
+                    message = null,
+                    errorMessage = null
+                )
+            }
 
             val result = runCatching {
                 authRemoteDataSource.sendReauthenticationCode()
             }
 
-            state = if (result.isSuccess) {
-                state.copy(
-                    isSendingEmailCode = false,
-                    emailCodeSent = true,
-                    message = "Enviámos um código para ${currentUser.email}."
-                )
-            } else {
-                state.copy(
-                    isSendingEmailCode = false,
-                    emailCodeSent = false,
-                    errorMessage = accountErrorMessage(
-                        result.exceptionOrNull(),
-                        "Não foi possível enviar o código para o email atual."
+            _state.update { state ->
+                if (result.isSuccess) {
+                    state.copy(
+                        isSendingEmailCode = false,
+                        emailCodeSent = true,
+                        message = "Enviámos um código para ${currentUser.email}."
                     )
-                )
+                } else {
+                    state.copy(
+                        isSendingEmailCode = false,
+                        emailCodeSent = false,
+                        errorMessage = accountErrorMessage(
+                            result.exceptionOrNull(),
+                            "Não foi possível enviar o código para o email atual."
+                        )
+                    )
+                }
             }
         }
     }
@@ -78,41 +135,78 @@ class ProfileViewModel(
         photoUri: String?,
         onUserUpdated: (UserDto) -> Unit
     ) {
-        val currentUser = state.user
+        val currentUser = _state.value.user
         val userId = currentUser?.id
 
         if (currentUser == null || userId == null) {
-            state = state.copy(errorMessage = "Não foi possível identificar a tua conta.")
+            _state.update { it.copy(errorMessage = "Não foi possível identificar a tua conta.") }
             return
         }
 
         viewModelScope.launch {
-            state = state.copy(isSaving = true, message = null, errorMessage = null)
+            _state.update { it.copy(isSaving = true, message = null, errorMessage = null) }
 
             val updatedUser = currentUser.copy(foto = photoUri)
+
+            if (!hasInternet()) {
+                saveProfilePhotoOffline(updatedUser, userId, photoUri, onUserUpdated)
+                return@launch
+            }
+
             val result = runCatching {
                 userRemoteDataSource.updateUserPhoto(userId, photoUri)
             }
 
             if (result.isSuccess) {
-                state = state.copy(
-                    user = updatedUser,
-                    isSaving = false,
-                    message = if (photoUri.isNullOrBlank()) {
-                        "Foto removida."
-                    } else {
-                        "Foto de perfil atualizada."
-                    }
-                )
+                saveUserLocally(updatedUser)
+                _state.update {
+                    it.copy(
+                        user = updatedUser,
+                        isSaving = false,
+                        message = if (photoUri.isNullOrBlank()) {
+                            "Foto removida."
+                        } else {
+                            "Foto de perfil atualizada."
+                        }
+                    )
+                }
                 onUserUpdated(updatedUser)
+                syncPendingProfilePhotoUpdates()
+            } else if (isNetworkError(result.exceptionOrNull())) {
+                saveProfilePhotoOffline(updatedUser, userId, photoUri, onUserUpdated)
             } else {
-                state = state.copy(
-                    isSaving = false,
-                    errorMessage = result.exceptionOrNull()?.message
-                        ?: "Não foi possível atualizar a foto de perfil."
-                )
+                _state.update {
+                    it.copy(
+                        isSaving = false,
+                        errorMessage = result.exceptionOrNull()?.message
+                            ?: "Não foi possível atualizar a foto de perfil."
+                    )
+                }
             }
         }
+    }
+
+    private suspend fun saveProfilePhotoOffline(
+        updatedUser: UserDto,
+        userId: Int,
+        photoUri: String?,
+        onUserUpdated: (UserDto) -> Unit
+    ) {
+        saveUserLocally(updatedUser)
+        queueProfilePhotoUpdate(userId, photoUri)
+        _state.update {
+            it.copy(
+                user = updatedUser,
+                isSaving = false,
+                message = if (photoUri.isNullOrBlank()) {
+                    "Foto removida offline. Será sincronizada quando houver internet."
+                } else {
+                    "Foto guardada offline. Será sincronizada quando houver internet."
+                },
+                errorMessage = null
+            )
+        }
+        onUserUpdated(updatedUser)
     }
 
     fun updateEmail(
@@ -120,31 +214,31 @@ class ProfileViewModel(
         verificationCode: String,
         onUserUpdated: (UserDto) -> Unit
     ) {
-        val currentUser = state.user
+        val currentUser = _state.value.user
         if (currentUser == null) {
-            state = state.copy(errorMessage = "Não foi possível identificar a tua conta.")
+            _state.update { it.copy(errorMessage = "Não foi possível identificar a tua conta.") }
             return
         }
 
         val trimmedEmail = newEmail.trim()
         if (!trimmedEmail.contains("@") || !trimmedEmail.contains(".")) {
-            state = state.copy(errorMessage = "Insere um email válido.")
+            _state.update { it.copy(errorMessage = "Insere um email válido.") }
             return
         }
 
         if (trimmedEmail.equals(currentUser.email, ignoreCase = true)) {
-            state = state.copy(errorMessage = "O novo email tem de ser diferente do atual.")
+            _state.update { it.copy(errorMessage = "O novo email tem de ser diferente do atual.") }
             return
         }
 
         val trimmedCode = verificationCode.trim()
         if (trimmedCode.isBlank()) {
-            state = state.copy(errorMessage = "Insere o código enviado para o email atual.")
+            _state.update { it.copy(errorMessage = "Insere o código enviado para o email atual.") }
             return
         }
 
         viewModelScope.launch {
-            state = state.copy(isSaving = true, message = null, errorMessage = null)
+            _state.update { it.copy(isSaving = true, message = null, errorMessage = null) }
 
             val result = runCatching {
                 authRemoteDataSource.updateEmail(trimmedEmail, trimmedCode)
@@ -153,21 +247,25 @@ class ProfileViewModel(
 
             if (result.isSuccess) {
                 val updatedUser = currentUser.copy(email = trimmedEmail)
-                state = state.copy(
-                    user = updatedUser,
-                    isSaving = false,
-                    emailCodeSent = false,
-                    message = "Email atualizado. Se o Supabase pedir confirmação, confirma no teu email."
-                )
+                _state.update {
+                    it.copy(
+                        user = updatedUser,
+                        isSaving = false,
+                        emailCodeSent = false,
+                        message = "Email atualizado. Se o Supabase pedir confirmação, confirma no teu email."
+                    )
+                }
                 onUserUpdated(updatedUser)
             } else {
-                state = state.copy(
-                    isSaving = false,
-                    errorMessage = accountErrorMessage(
-                        result.exceptionOrNull(),
-                        "Não foi possível alterar o email."
+                _state.update {
+                    it.copy(
+                        isSaving = false,
+                        errorMessage = accountErrorMessage(
+                            result.exceptionOrNull(),
+                            "Não foi possível alterar o email."
+                        )
                     )
-                )
+                }
             }
         }
     }
@@ -177,29 +275,29 @@ class ProfileViewModel(
         newPassword: String,
         confirmPassword: String
     ) {
-        val currentUser = state.user
+        val currentUser = _state.value.user
         if (currentUser == null) {
-            state = state.copy(errorMessage = "Não foi possível identificar a tua conta.")
+            _state.update { it.copy(errorMessage = "Não foi possível identificar a tua conta.") }
             return
         }
 
         if (oldPassword.isBlank()) {
-            state = state.copy(errorMessage = "Insere a palavra-passe antiga.")
+            _state.update { it.copy(errorMessage = "Insere a palavra-passe antiga.") }
             return
         }
 
         if (newPassword.length < 8) {
-            state = state.copy(errorMessage = "A nova palavra-passe deve ter pelo menos 8 caracteres.")
+            _state.update { it.copy(errorMessage = "A nova palavra-passe deve ter pelo menos 8 caracteres.") }
             return
         }
 
         if (newPassword != confirmPassword) {
-            state = state.copy(errorMessage = "A confirmação da palavra-passe não coincide.")
+            _state.update { it.copy(errorMessage = "A confirmação da palavra-passe não coincide.") }
             return
         }
 
         viewModelScope.launch {
-            state = state.copy(isSaving = true, message = null, errorMessage = null)
+            _state.update { it.copy(isSaving = true, message = null, errorMessage = null) }
 
             val result = runCatching {
                 authRemoteDataSource.login(currentUser.email, oldPassword)
@@ -207,36 +305,40 @@ class ProfileViewModel(
             }
 
             if (result.isSuccess) {
-                state = state.copy(
-                    isSaving = false,
-                    message = "Palavra-passe alterada com sucesso."
-                )
-            } else {
-                state = state.copy(
-                    isSaving = false,
-                    errorMessage = accountErrorMessage(
-                        result.exceptionOrNull(),
-                        "Não foi possível alterar a palavra-passe."
+                _state.update {
+                    it.copy(
+                        isSaving = false,
+                        message = "Palavra-passe alterada com sucesso."
                     )
-                )
+                }
+            } else {
+                _state.update {
+                    it.copy(
+                        isSaving = false,
+                        errorMessage = accountErrorMessage(
+                            result.exceptionOrNull(),
+                            "Não foi possível alterar a palavra-passe."
+                        )
+                    )
+                }
             }
         }
     }
 
     fun deleteAccount(onDeleted: () -> Unit) {
-        val currentUser = state.user
+        val currentUser = _state.value.user
         if (currentUser == null) {
-            state = state.copy(errorMessage = "Não foi possível identificar a tua conta.")
+            _state.update { it.copy(errorMessage = "Não foi possível identificar a tua conta.") }
             return
         }
 
         if (currentUser.role.equals("ADMIN", ignoreCase = true)) {
-            state = state.copy(errorMessage = "A conta de administrador não pode ser eliminada.")
+            _state.update { it.copy(errorMessage = "A conta de administrador não pode ser eliminada.") }
             return
         }
 
         viewModelScope.launch {
-            state = state.copy(isDeleting = true, message = null, errorMessage = null)
+            _state.update { it.copy(isDeleting = true, message = null, errorMessage = null) }
 
             val result = runCatching {
                 userRemoteDataSource.deleteOwnAccount()
@@ -246,13 +348,15 @@ class ProfileViewModel(
                 runCatching { authRemoteDataSource.logout() }
                 onDeleted()
             } else {
-                state = state.copy(
-                    isDeleting = false,
-                    errorMessage = accountErrorMessage(
-                        result.exceptionOrNull(),
-                        "Não foi possível eliminar a conta."
+                _state.update {
+                    it.copy(
+                        isDeleting = false,
+                        errorMessage = accountErrorMessage(
+                            result.exceptionOrNull(),
+                            "Não foi possível eliminar a conta."
+                        )
                     )
-                )
+                }
             }
         }
     }
@@ -261,6 +365,9 @@ class ProfileViewModel(
         val rawMessage = error?.message.orEmpty()
 
         return when {
+            isNetworkError(error) ->
+                "Esta ação precisa de ligação à internet por motivos de segurança."
+
             rawMessage.contains("invalid login", ignoreCase = true) ||
                 rawMessage.contains("invalid credentials", ignoreCase = true) ->
                 "A palavra-passe antiga não está correta."
@@ -288,5 +395,98 @@ class ProfileViewModel(
                 ?.take(180)
                 ?: fallback
         }
+    }
+
+    private fun syncPendingProfilePhotoUpdates() {
+        viewModelScope.launch {
+            if (!hasInternet()) return@launch
+
+            val pendingActions = syncQueueDao.getPendingSyncActions()
+                .filter { it.action == PROFILE_PHOTO_UPDATE }
+
+            pendingActions.forEach { action ->
+                val payload = action.decodeProfilePhotoPayload() ?: return@forEach
+                val result = runCatching {
+                    userRemoteDataSource.updateUserPhoto(payload.userId, payload.photoUri)
+                }
+
+                if (result.isSuccess) {
+                    syncQueueDao.markAsSynced(action.id)
+                    val currentUser = _state.value.user
+                    if (currentUser?.id == payload.userId) {
+                        val syncedUser = currentUser.copy(foto = payload.photoUri)
+                        saveUserLocally(syncedUser)
+                        _state.update { it.copy(user = syncedUser) }
+                    }
+                }
+            }
+
+            syncQueueDao.deleteSyncedActions()
+        }
+    }
+
+    private suspend fun queueProfilePhotoUpdate(userId: Int, photoUri: String?) {
+        syncQueueDao.insertSyncAction(
+            SyncQueueEntity(
+                action = PROFILE_PHOTO_UPDATE,
+                payload = json.encodeToString(ProfilePhotoSyncPayload(userId, photoUri))
+            )
+        )
+    }
+
+    private suspend fun hasPendingProfilePhotoUpdate(userId: Int): Boolean {
+        return syncQueueDao.getPendingSyncActions()
+            .filter { it.action == PROFILE_PHOTO_UPDATE }
+            .any { action ->
+                action.decodeProfilePhotoPayload()?.userId == userId
+            }
+    }
+
+    private suspend fun saveUserLocally(user: UserDto) {
+        val userId = user.id ?: return
+        userDao.insertUser(
+            UserEntity(
+                id = userId,
+                nome = user.nome,
+                username = user.username,
+                email = user.email,
+                password = user.password,
+                foto = user.foto,
+                role = user.role,
+                createdAt = user.createdAt,
+                status = user.status
+            )
+        )
+    }
+
+    private fun SyncQueueEntity.decodeProfilePhotoPayload(): ProfilePhotoSyncPayload? {
+        return runCatching {
+            json.decodeFromString<ProfilePhotoSyncPayload>(payload)
+        }.getOrNull()
+    }
+
+    private fun hasInternet(): Boolean {
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
+    private fun isNetworkError(error: Throwable?): Boolean {
+        val message = error?.message.orEmpty()
+        return message.contains("network", ignoreCase = true) ||
+            message.contains("timeout", ignoreCase = true) ||
+            message.contains("unable to resolve host", ignoreCase = true) ||
+            message.contains("failed to connect", ignoreCase = true) ||
+            message.contains("connection", ignoreCase = true)
+    }
+
+    @Serializable
+    private data class ProfilePhotoSyncPayload(
+        val userId: Int,
+        val photoUri: String?
+    )
+
+    private companion object {
+        const val PROFILE_PHOTO_UPDATE = "PROFILE_PHOTO_UPDATE"
     }
 }

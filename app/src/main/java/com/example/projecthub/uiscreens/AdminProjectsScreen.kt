@@ -12,9 +12,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -47,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.projecthub.R
@@ -75,7 +79,7 @@ private val ProjectsGreen = ProjectHubColors.Success
 fun AdminProjectsScreen(
     viewModel: AdminProjectsViewModel = viewModel()
 ) {
-    val state = viewModel.state
+    val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     var isCreatingProject by remember { mutableStateOf(false) }
     var projectToDelete by remember { mutableStateOf<AdminProjectListItem?>(null) }
     var projectToEdit by remember { mutableStateOf<AdminProjectListItem?>(null) }
@@ -249,7 +253,7 @@ private fun ProjectsPage(
 
             state.errorMessage != null -> {
                 Text(
-                    text = state.errorMessage,
+                    text = state.errorMessage.orEmpty(),
                     color = ProjectsRed,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
@@ -265,15 +269,24 @@ private fun ProjectsPage(
             }
 
             else -> {
-                state.visibleProjects.forEach { project ->
-                    ProjectListCard(
-                        project = project,
-                        onToggle = { onToggleProject(project.id) },
-                        onMoreInfo = { onMoreInfo(project) },
-                        onDelete = { onDeleteProject(project) },
-                        onEdit = { onEditProject(project) }
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 760.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(
+                        items = state.visibleProjects,
+                        key = { it.id }
+                    ) { project ->
+                        ProjectListCard(
+                            project = project,
+                            onToggle = { onToggleProject(project.id) },
+                            onMoreInfo = { onMoreInfo(project) },
+                            onDelete = { onDeleteProject(project) },
+                            onEdit = { onEditProject(project) }
+                        )
+                    }
                 }
             }
         }
@@ -381,12 +394,14 @@ private fun ProjectFilters(
                 FilterDropdown(
                     label = state.selectedStatus,
                     options = listOf("Todos", "Concluídos", "Em progresso", "Atrasados"),
+                    displayLabel = { it.toProjectStatusFilterLabel(language) },
                     modifier = Modifier.weight(1f),
                     onOptionSelected = onStatusChange
                 )
                 FilterDropdown(
                     label = state.selectedCoordinator,
                     options = listOf("Todos") + state.coordinators,
+                    displayLabel = { if (it == "Todos") language.t("filters.projects.all") else it },
                     modifier = Modifier.weight(1f),
                     onOptionSelected = onCoordinatorChange
                 )
@@ -400,15 +415,26 @@ private fun FilterDropdown(
     label: String,
     options: List<String>,
     modifier: Modifier = Modifier,
+    displayLabel: (String) -> String = { it },
     onOptionSelected: (String) -> Unit
 ) {
     AppDropdownField(
         selected = label,
         options = options,
-        label = { it ?: label },
+        label = { displayLabel(it ?: label) },
         onOptionSelected = onOptionSelected,
         modifier = modifier
     )
+}
+
+private fun String.toProjectStatusFilterLabel(language: com.example.projecthub.settings.AppLanguage): String {
+    return when (this) {
+        "Todos" -> language.t("filters.projects.all")
+        "Concluídos" -> language.t("filters.projects.completed")
+        "Em progresso" -> language.t("filters.projects.inProgress")
+        "Atrasados" -> language.t("filters.projects.delayed")
+        else -> this
+    }
 }
 
 @Composable
@@ -594,10 +620,19 @@ private fun AdminProjectParticipantsCard(participants: List<com.example.projecth
         if (participants.isEmpty()) {
             Text(language.t("manager.projects.noParticipants"), color = ProjectHubColors.Muted, fontSize = 14.sp)
         } else {
-            participants.forEach { participant ->
-                Text(participant.name, color = ProjectHubColors.Ink, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                Text(participant.email, color = ProjectHubColors.Muted, fontSize = 12.sp)
-                Spacer(modifier = Modifier.height(8.dp))
+            LazyColumn(
+                modifier = Modifier.heightIn(max = 320.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(
+                    items = participants,
+                    key = { it.id }
+                ) { participant ->
+                    Column {
+                        Text(participant.name, color = ProjectHubColors.Ink, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(participant.email, color = ProjectHubColors.Muted, fontSize = 12.sp)
+                    }
+                }
             }
         }
     }
@@ -611,35 +646,44 @@ private fun AdminProjectRatingsCard(participants: List<com.example.projecthub.vi
         if (participants.isEmpty()) {
             Text(language.t("manager.team.noRatings"), color = ProjectHubColors.Muted, fontSize = 14.sp)
         } else {
-            participants.forEach { participant ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = participant.name,
-                        color = ProjectHubColors.Ink,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        text = participant.rating
-                            ?.let { rating ->
-                                val clamped = rating.coerceIn(0, 5)
-                                "${"★".repeat(clamped)}${"☆".repeat(5 - clamped)} $clamped/5"
-                            }
-                            ?: "☆☆☆☆☆ 0/5",
-                        color = participant.rating?.let { ProjectHubColors.Rating } ?: ProjectHubColors.Muted,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp
-                    )
+            LazyColumn(
+                modifier = Modifier.heightIn(max = 360.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(
+                    items = participants,
+                    key = { it.id }
+                ) { participant ->
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = participant.name,
+                                color = ProjectHubColors.Ink,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = participant.rating
+                                    ?.let { rating ->
+                                        val clamped = rating.coerceIn(0, 5)
+                                        "${"★".repeat(clamped)}${"☆".repeat(5 - clamped)} $clamped/5"
+                                    }
+                                    ?: "☆☆☆☆☆ 0/5",
+                                color = participant.rating?.let { ProjectHubColors.Rating } ?: ProjectHubColors.Muted,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                        }
+                        participant.comment?.takeIf { it.isNotBlank() }?.let { comment ->
+                            Text(comment, color = ProjectHubColors.Muted, fontSize = 12.sp)
+                        }
+                    }
                 }
-                participant.comment?.takeIf { it.isNotBlank() }?.let { comment ->
-                    Text(comment, color = ProjectHubColors.Muted, fontSize = 12.sp)
-                }
-                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
@@ -655,9 +699,16 @@ private fun AdminProjectTasksCard(tasks: List<AdminProjectInfoTask>) {
                 detail = language.t("manager.projects.noTasksDetail")
             )
         } else {
-            tasks.forEach { task ->
-                AdminProjectTaskBlock(task = task)
-                Spacer(modifier = Modifier.height(10.dp))
+            LazyColumn(
+                modifier = Modifier.heightIn(max = 620.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(
+                    items = tasks,
+                    key = { it.id }
+                ) { task ->
+                    AdminProjectTaskBlock(task = task)
+                }
             }
         }
     }
@@ -709,8 +760,16 @@ private fun AdminProjectTaskBlock(task: AdminProjectInfoTask) {
         if (task.observations.isEmpty()) {
             Text(language.t("user.tasks.noObservationsDetail"), color = ProjectHubColors.Muted, fontSize = 12.sp)
         } else {
-            task.observations.forEach { observation ->
-                AdminProjectObservationBlock(observation = observation)
+            LazyColumn(
+                modifier = Modifier.heightIn(max = 300.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(
+                    items = task.observations,
+                    key = { it.id ?: it.text.hashCode() }
+                ) { observation ->
+                    AdminProjectObservationBlock(observation = observation)
+                }
             }
         }
     }
@@ -1035,4 +1094,3 @@ private fun LocalDate.toEpochMillis(): Long {
         .toInstant(ZoneOffset.UTC)
         .toEpochMilli()
 }
-

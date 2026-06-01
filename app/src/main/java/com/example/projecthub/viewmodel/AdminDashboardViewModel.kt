@@ -1,12 +1,12 @@
 package com.example.projecthub.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projecthub.remote.supabase.UserRemoteDataSource
 import com.example.projecthub.repository.ProjetoRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.Normalizer
 
@@ -24,8 +24,8 @@ class AdminDashboardViewModel(
     private val userRemoteDataSource: UserRemoteDataSource = UserRemoteDataSource()
 ) : ViewModel() {
 
-    var state by mutableStateOf(AdminDashboardState())
-        private set
+    private val _state = MutableStateFlow(AdminDashboardState())
+    val state: StateFlow<AdminDashboardState> = _state
 
     init {
         loadDashboard()
@@ -33,16 +33,18 @@ class AdminDashboardViewModel(
 
     fun loadDashboard() {
         viewModelScope.launch {
-            state = state.copy(isLoading = true, errorMessage = null)
+            _state.update { it.copy(isLoading = true, errorMessage = null) }
 
             val projetosResult = projetoRepository.getProjetos()
             val usersResult = runCatching { userRemoteDataSource.getUsers() }
 
             if (projetosResult.isFailure || usersResult.isFailure) {
-                state = state.copy(
-                    isLoading = false,
-                    errorMessage = "Não foi possível carregar os dados da dashboard."
-                )
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Não foi possível carregar os dados da dashboard."
+                    )
+                }
                 return@launch
             }
 
@@ -50,7 +52,7 @@ class AdminDashboardViewModel(
             val users = usersResult.getOrDefault(emptyList())
             val completedProjects = projetos.count { it.status.isCompletedStatus() }
 
-            state = AdminDashboardState(
+            _state.value = AdminDashboardState(
                 completedProjects = completedProjects,
                 activeUsers = users.count { it.status.isActiveStatus() },
                 pendingProjects = projetos.size - completedProjects,

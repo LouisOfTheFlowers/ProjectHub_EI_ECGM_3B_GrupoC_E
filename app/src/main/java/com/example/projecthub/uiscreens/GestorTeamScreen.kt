@@ -40,6 +40,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
@@ -61,7 +62,7 @@ fun GestorTeamScreen(
     gestorId: Int?,
     viewModel: GestorTeamViewModel = viewModel()
 ) {
-    val state = viewModel.state
+    val state by viewModel.stateFlow.collectAsStateWithLifecycle()
 
     LaunchedEffect(gestorId) {
         viewModel.loadTeam(gestorId)
@@ -278,7 +279,7 @@ private fun TeamList(state: GestorTeamState) {
 
         state.errorMessage != null -> {
             Text(
-                text = state.errorMessage,
+                text = state.errorMessage.orEmpty(),
                 color = TeamRed,
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp

@@ -288,6 +288,9 @@ fun AppStatusChip(
     contentColor: Color = statusColorForLabel(text),
     modifier: Modifier = Modifier
 ) {
+    val language = currentAppSettings().language
+    val displayText = text.toTranslatedStatusLabel(language)
+
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(999.dp))
@@ -303,13 +306,31 @@ fun AppStatusChip(
         )
         Box(modifier = Modifier.size(6.dp))
         Text(
-            text = text,
+            text = displayText,
             color = contentColor,
             fontSize = 12.sp,
             fontWeight = FontWeight.ExtraBold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
+    }
+}
+
+fun String.toTranslatedStatusLabel(language: com.example.projecthub.settings.AppLanguage): String {
+    return when (trim().lowercase()) {
+        "concluido", "concluído", "concluida", "concluída", "completo", "completa", "completado", "completada", "finalizado", "finalizada" ->
+            language.t("common.completed")
+        "em progresso", "em_progresso", "emprogresso", "a decorrer", "a_decorrer", "in progress", "in_progress", "inprogress" ->
+            language.t("common.inProgress")
+        "pendente", "pendentes", "pending", "por iniciar", "por_iniciar" ->
+            language.t("common.pending")
+        "atrasado", "atrasada", "atrasados", "atrasadas", "delayed" ->
+            language.t("common.delayed")
+        "ativo", "actvo", "activo", "active" ->
+            language.t("status.active")
+        "inativo", "inactvo", "inactivo", "inactive" ->
+            language.t("status.inactive")
+        else -> this
     }
 }
 

@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
@@ -66,7 +67,7 @@ private val ReportsBlue = ProjectHubColors.Info
 fun AdminReportsScreen(
     viewModel: AdminReportsViewModel = viewModel()
 ) {
-    val state = viewModel.state
+    val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     val language = currentAppSettings().language
     val context = LocalContext.current
     var pendingExport by remember { mutableStateOf<AdminReportExport?>(null) }
@@ -80,12 +81,16 @@ fun AdminReportsScreen(
                 try {
                     context.contentResolver.openOutputStream(uri)?.use { output ->
                         output.write(export.content.toByteArray(Charsets.UTF_8))
-                    } ?: error("Não foi possível abrir o ficheiro selecionado.")
+                    } ?: error(language.t("reports.openFileError"))
 
-                    Toast.makeText(context, "${export.label} CSV", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        language.t("reports.exported").format(export.label.lowercase()),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 } catch (e: Exception) {
                     viewModel.setExportError(
-                        e.message ?: "Não foi possível exportar o relatório."
+                        e.message ?: language.t("reports.exportError")
                     )
                 }
             }
@@ -101,10 +106,13 @@ fun AdminReportsScreen(
         when {
             state.isLoading -> ReportsLoading()
 
-            state.errorMessage != null -> ReportsError(
-                message = state.errorMessage,
-                onRetry = viewModel::loadReports
-            )
+            state.errorMessage != null -> {
+                val errorMessage = state.errorMessage.orEmpty()
+                ReportsError(
+                    message = errorMessage,
+                    onRetry = viewModel::loadReports
+                )
+            }
 
             else -> ReportsContent(
                 state = state,
@@ -425,4 +433,3 @@ private fun ExportIcon(color: Color) {
 private fun Float.formatOneDecimal(): String {
     return String.format(java.util.Locale.US, "%.1f", this)
 }
-

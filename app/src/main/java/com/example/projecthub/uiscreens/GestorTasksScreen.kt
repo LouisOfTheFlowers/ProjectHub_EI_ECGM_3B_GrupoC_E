@@ -11,11 +11,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -47,6 +50,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.R
 import com.example.projecthub.settings.currentAppSettings
@@ -77,7 +81,7 @@ fun GestorTasksScreen(
     gestorId: Int?,
     viewModel: GestorTasksViewModel = viewModel()
 ) {
-    val state = viewModel.state
+    val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     val language = currentAppSettings().language
 
     var isCreatingTask by remember { mutableStateOf(false) }
@@ -250,11 +254,12 @@ fun GestorTasksScreen(
 
 @Composable
 private fun TaskStats(state: GestorTasksState) {
+    val language = currentAppSettings().language
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        SmallStat("Total", state.totalTasks.toString(), GestorTasksAccent, Modifier.weight(1f))
-        SmallStat("Pend.", state.pendingTasks.toString(), GestorTasksOrange, Modifier.weight(1f))
-        SmallStat("Progr.", state.inProgressTasks.toString(), GestorTasksBlue, Modifier.weight(1f))
-        SmallStat("Conc.", state.completedTasks.toString(), GestorTasksGreen, Modifier.weight(1f))
+        SmallStat(language.t("common.total"), state.totalTasks.toString(), GestorTasksAccent, Modifier.weight(1f))
+        SmallStat(language.t("common.pending"), state.pendingTasks.toString(), GestorTasksOrange, Modifier.weight(1f))
+        SmallStat(language.t("common.inProgress"), state.inProgressTasks.toString(), GestorTasksBlue, Modifier.weight(1f))
+        SmallStat(language.t("common.completed"), state.completedTasks.toString(), GestorTasksGreen, Modifier.weight(1f))
     }
 }
 
@@ -274,10 +279,12 @@ private fun TaskFilters(
     onSearchChange: (String) -> Unit,
     onStatusChange: (GestorTaskStatusFilter) -> Unit
 ) {
+    val language = currentAppSettings().language
+
     AppSearchField(
         value = state.searchQuery,
         onValueChange = onSearchChange,
-        placeholder = currentAppSettings().language.t("tasks.searchManager"),
+        placeholder = language.t("tasks.searchManager"),
         modifier = Modifier.fillMaxWidth(),
         colors = TextFieldDefaults.colors(
             focusedContainerColor = ProjectHubColors.LightSurface,
@@ -301,12 +308,22 @@ private fun StatusDropdown(
     selected: GestorTaskStatusFilter,
     onOptionSelected: (GestorTaskStatusFilter) -> Unit
 ) {
+    val language = currentAppSettings().language
     AppDropdownField(
         selected = selected,
         options = GestorTaskStatusFilter.entries,
-        label = { it?.label ?: selected.label },
+        label = { (it ?: selected).translatedLabel(language) },
         onOptionSelected = onOptionSelected
     )
+}
+
+private fun GestorTaskStatusFilter.translatedLabel(language: com.example.projecthub.settings.AppLanguage): String {
+    return when (this) {
+        GestorTaskStatusFilter.All -> language.t("filters.tasks.all")
+        GestorTaskStatusFilter.Pending -> language.t("filters.tasks.pending")
+        GestorTaskStatusFilter.InProgress -> language.t("filters.tasks.inProgress")
+        GestorTaskStatusFilter.Completed -> language.t("filters.tasks.completed")
+    }
 }
 
 @Composable
@@ -318,6 +335,8 @@ private fun TaskProjectList(
     onMoreInfo: (GestorTaskListItem) -> Unit,
     onObservations: (GestorTaskListItem) -> Unit
 ) {
+    val language = currentAppSettings().language
+
     when {
         state.isLoading -> {
             Box(
@@ -332,7 +351,7 @@ private fun TaskProjectList(
 
         state.errorMessage != null -> {
             Text(
-                text = state.errorMessage,
+                text = state.errorMessage.orEmpty(),
                 color = GestorTasksRed,
                 fontWeight = FontWeight.Bold
             )
@@ -346,7 +365,7 @@ private fun TaskProjectList(
                 elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
             ) {
                 Text(
-                    text = currentAppSettings().language.t("tasks.noFiltered"),
+                    text = language.t("tasks.noFiltered"),
                     color = ProjectHubColors.Muted,
                     modifier = Modifier.padding(18.dp)
                 )
@@ -354,8 +373,16 @@ private fun TaskProjectList(
         }
 
         else -> {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                state.projectGroups.forEach { group ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 760.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(
+                    items = state.projectGroups,
+                    key = { it.projectId }
+                ) { group ->
                     ProjectTaskGroupCard(
                         group = group,
                         onToggleProject = onToggleProject,
@@ -379,6 +406,8 @@ private fun ProjectTaskGroupCard(
     onMoreInfo: (GestorTaskListItem) -> Unit,
     onObservations: (GestorTaskListItem) -> Unit
 ) {
+    val language = currentAppSettings().language
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -405,8 +434,7 @@ private fun ProjectTaskGroupCard(
                         fontSize = 18.sp
                     )
                     Text(
-                        text = currentAppSettings().language
-                            .t("tasks.groupSummary")
+                        text = language.t("tasks.groupSummary")
                             .format(
                                 group.totalTasks,
                                 group.completedTasks,
@@ -426,12 +454,20 @@ private fun ProjectTaskGroupCard(
 
                 if (group.visibleTasks.isEmpty()) {
                     Text(
-                        text = currentAppSettings().language.t("tasks.noVisible"),
+                        text = language.t("tasks.noVisible"),
                         color = ProjectHubColors.Muted
                     )
                 } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        group.visibleTasks.forEach { task ->
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 520.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(
+                            items = group.visibleTasks,
+                            key = { it.id }
+                        ) { task ->
                             TaskRow(
                                 task = task,
                                 onEditTask = onEditTask,
@@ -455,6 +491,7 @@ private fun TaskRow(
     onMoreInfo: (GestorTaskListItem) -> Unit,
     onObservations: (GestorTaskListItem) -> Unit
 ) {
+    val language = currentAppSettings().language
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -484,7 +521,7 @@ private fun TaskRow(
             StatusPill(task.statusLabel)
 
             AppMoreInfoButton(
-                text = currentAppSettings().language.t("common.moreInfo"),
+                text = language.t("common.moreInfo"),
                 onClick = { onMoreInfo(task) },
                 compact = true
             )
@@ -493,7 +530,7 @@ private fun TaskRow(
 
             TaskActionIcon(
                 painter = painterResource(R.drawable.ic_edit_24),
-                contentDescription = currentAppSettings().language.t("common.edit"),
+                contentDescription = language.t("common.edit"),
                 color = GestorTasksAccent
             ) {
                 onEditTask(task)
@@ -501,7 +538,7 @@ private fun TaskRow(
 
             TaskActionIcon(
                 painter = painterResource(R.drawable.ic_delete_24),
-                contentDescription = currentAppSettings().language.t("common.delete"),
+                contentDescription = language.t("common.delete"),
                 color = GestorTasksRed
             ) {
                 onDeleteTask(task)
@@ -511,8 +548,8 @@ private fun TaskRow(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "${currentAppSettings().language.t("common.start")}: ${task.startDate}   " +
-                    "${currentAppSettings().language.t("common.deadline")}: ${task.dueDate}",
+            text = "${language.t("common.start")}: ${task.startDate}   " +
+                    "${language.t("common.deadline")}: ${task.dueDate}",
             color = ProjectHubColors.Slate,
             fontSize = 12.sp
         )
@@ -520,7 +557,7 @@ private fun TaskRow(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = currentAppSettings().language.t("tasks.assignedTo"),
+            text = language.t("tasks.assignedTo"),
             color = ProjectHubColors.Ink,
             fontWeight = FontWeight.Bold,
             fontSize = 13.sp
@@ -528,7 +565,7 @@ private fun TaskRow(
 
         if (task.assignees.isEmpty()) {
             Text(
-                text = currentAppSettings().language.t("tasks.noAssignees"),
+                text = language.t("tasks.noAssignees"),
                 color = ProjectHubColors.Muted,
                 fontSize = 12.sp
             )
@@ -543,7 +580,7 @@ private fun TaskRow(
         Spacer(modifier = Modifier.height(10.dp))
 
         AppObservationsButton(
-            text = currentAppSettings().language.t("user.tasks.observations"),
+            text = language.t("user.tasks.observations"),
             onClick = { onObservations(task) },
             compact = true
         )
@@ -728,8 +765,14 @@ private fun TaskObservationsSection(
             detail = language.t("user.tasks.noObservationsDetail")
         )
     } else {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            observations.forEach { observation ->
+        LazyColumn(
+            modifier = Modifier.heightIn(max = 620.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            items(
+                items = observations,
+                key = { it.id ?: it.text.hashCode() }
+            ) { observation ->
                 TaskObservationRow(observation = observation)
             }
         }
@@ -809,6 +852,7 @@ private fun EditGestorTaskDialog(
     onDismiss: () -> Unit,
     onSave: (String, String, String, String, String, Set<Int>) -> Unit
 ) {
+    val language = currentAppSettings().language
     var title by remember(task.id) { mutableStateOf(task.title) }
     var description by remember(task.id) { mutableStateOf(task.description) }
     var startDate by remember(task.id) { mutableStateOf(task.startDate.toInputDateText()) }
@@ -821,14 +865,14 @@ private fun EditGestorTaskDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(currentAppSettings().language.t("tasks.editTitle"))
+            Text(language.t("tasks.editTitle"))
         },
         text = {
             Column(modifier = Modifier.responsiveDialogBody()) {
                 AppTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = currentAppSettings().language.t("tasks.titleField"),
+                    label = language.t("tasks.titleField"),
                     singleLine = true
                 )
 
@@ -837,14 +881,14 @@ private fun EditGestorTaskDialog(
                 AppTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = currentAppSettings().language.t("tasks.descriptionField")
+                    label = language.t("tasks.descriptionField")
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 EditTaskDatePickerField(
                     value = startDate,
-                    label = currentAppSettings().language.t("common.start"),
+                    label = language.t("common.start"),
                     onClick = {
                         activeDateField = EditTaskDateField.Start
                     }
@@ -854,7 +898,7 @@ private fun EditGestorTaskDialog(
 
                 EditTaskDatePickerField(
                     value = endDate,
-                    label = currentAppSettings().language.t("common.deadline"),
+                    label = language.t("common.deadline"),
                     onClick = {
                         activeDateField = EditTaskDateField.End
                     }
@@ -863,7 +907,7 @@ private fun EditGestorTaskDialog(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = currentAppSettings().language.t("common.users"),
+                    text = language.t("common.users"),
                     color = ProjectHubColors.Ink,
                     fontWeight = FontWeight.Bold
                 )
@@ -872,13 +916,19 @@ private fun EditGestorTaskDialog(
 
                 if (users.isEmpty()) {
                     Text(
-                        text = currentAppSettings().language.t("common.noProjectUsers"),
+                        text = language.t("common.noProjectUsers"),
                         color = ProjectHubColors.Muted,
                         fontSize = 13.sp
                     )
                 } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        users.forEach { user ->
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 260.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        items(
+                            items = users,
+                            key = { it.id }
+                        ) { user ->
                             UserCheckRow(
                                 user = user,
                                 checked = user.id in selectedUserIds,
@@ -906,7 +956,7 @@ private fun EditGestorTaskDialog(
         },
         confirmButton = {
             AppDialogConfirmButton(
-                text = if (isSaving) "A guardar..." else "Guardar",
+                text = if (isSaving) language.t("common.saving") else language.t("common.save"),
                 enabled = !isSaving,
                 onClick = {
                     onSave(
@@ -922,7 +972,7 @@ private fun EditGestorTaskDialog(
         },
         dismissButton = {
             AppDialogCancelButton(
-                text = currentAppSettings().language.t("common.cancel"),
+                text = language.t("common.cancel"),
                 onClick = onDismiss
             )
         }
@@ -952,6 +1002,8 @@ private fun EditTaskDatePickerField(
     label: String,
     onClick: () -> Unit
 ) {
+    val language = currentAppSettings().language
+
     Column {
         Text(
             text = label,
@@ -980,7 +1032,7 @@ private fun EditTaskDatePickerField(
             )
 
             Text(
-                text = currentAppSettings().language.t("settings.dateFormat"),
+                text = language.t("settings.dateFormat"),
                 color = ProjectHubColors.Muted,
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp
@@ -994,6 +1046,7 @@ private fun EditTaskDatePickerDialog(
     onDismiss: () -> Unit,
     onDateSelected: (String) -> Unit
 ) {
+    val language = currentAppSettings().language
     val datePickerState = rememberDatePickerState()
 
     DatePickerDialog(
@@ -1010,12 +1063,12 @@ private fun EditTaskDatePickerDialog(
                     }
                 }
             ) {
-                Text(currentAppSettings().language.t("common.ok"))
+                Text(language.t("common.ok"))
             }
         },
         dismissButton = {
             TextButton(onClick = rememberSoundClick(onDismiss)) {
-                Text(currentAppSettings().language.t("common.cancel"))
+                Text(language.t("common.cancel"))
             }
         }
     ) {
@@ -1056,6 +1109,7 @@ private fun AddGestorTaskDialog(
     onDismiss: () -> Unit,
     onCreate: (String, String, Int?, String, String, Set<Int>) -> Unit
 ) {
+    val language = currentAppSettings().language
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedProjectId by remember(state.projects) {
@@ -1072,14 +1126,14 @@ private fun AddGestorTaskDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(currentAppSettings().language.t("tasks.newTitle"))
+            Text(language.t("tasks.newTitle"))
         },
         text = {
             Column(modifier = Modifier.responsiveDialogBody()) {
                 AppTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = currentAppSettings().language.t("tasks.titleField"),
+                    label = language.t("tasks.titleField"),
                     singleLine = true
                 )
 
@@ -1088,7 +1142,7 @@ private fun AddGestorTaskDialog(
                 AppTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = currentAppSettings().language.t("tasks.descriptionField")
+                    label = language.t("tasks.descriptionField")
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1107,7 +1161,7 @@ private fun AddGestorTaskDialog(
                 AppTextField(
                     value = startDate,
                     onValueChange = { startDate = it },
-                    label = "${currentAppSettings().language.t("common.start")} dd/mm/aaaa",
+                    label = "${language.t("common.start")} dd/mm/aaaa",
                     singleLine = true
                 )
 
@@ -1116,14 +1170,14 @@ private fun AddGestorTaskDialog(
                 AppTextField(
                     value = endDate,
                     onValueChange = { endDate = it },
-                    label = "${currentAppSettings().language.t("common.deadline")} dd/mm/aaaa",
+                    label = "${language.t("common.deadline")} dd/mm/aaaa",
                     singleLine = true
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = currentAppSettings().language.t("common.users"),
+                    text = language.t("common.users"),
                     color = ProjectHubColors.Ink,
                     fontWeight = FontWeight.Bold
                 )
@@ -1132,13 +1186,19 @@ private fun AddGestorTaskDialog(
 
                 if (availableUsers.isEmpty()) {
                     Text(
-                        text = currentAppSettings().language.t("common.noProjectUsers"),
+                        text = language.t("common.noProjectUsers"),
                         color = ProjectHubColors.Muted,
                         fontSize = 13.sp
                     )
                 } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        availableUsers.forEach { user ->
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 260.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        items(
+                            items = availableUsers,
+                            key = { it.id }
+                        ) { user ->
                             UserCheckRow(
                                 user = user,
                                 checked = user.id in selectedUserIds,
@@ -1167,9 +1227,9 @@ private fun AddGestorTaskDialog(
         confirmButton = {
             AppDialogConfirmButton(
                 text = if (isSaving) {
-                    currentAppSettings().language.t("common.creating")
+                    language.t("common.creating")
                 } else {
-                    currentAppSettings().language.t("common.create")
+                    language.t("common.create")
                 },
                 enabled = !isSaving,
                 onClick = {
@@ -1186,7 +1246,7 @@ private fun AddGestorTaskDialog(
         },
         dismissButton = {
             AppDialogCancelButton(
-                text = currentAppSettings().language.t("common.cancel"),
+                text = language.t("common.cancel"),
                 onClick = onDismiss
             )
         }
@@ -1199,6 +1259,7 @@ private fun ProjectDropdown(
     selectedProjectId: Int?,
     onProjectSelected: (Int) -> Unit
 ) {
+    val language = currentAppSettings().language
     var expanded by remember { mutableStateOf(false) }
     val selected = projects.firstOrNull { it.id == selectedProjectId }
 
@@ -1215,7 +1276,7 @@ private fun ProjectDropdown(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = selected?.name ?: "Seleciona o projeto",
+                text = selected?.name ?: language.t("addTask.projectPlaceholder"),
                 color = ProjectHubColors.Ink,
                 fontWeight = FontWeight.SemiBold
             )

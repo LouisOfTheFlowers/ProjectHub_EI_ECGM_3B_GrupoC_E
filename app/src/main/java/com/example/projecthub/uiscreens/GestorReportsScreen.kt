@@ -44,6 +44,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
@@ -68,7 +69,8 @@ fun GestorReportsScreen(
     gestorId: Int?,
     viewModel: GestorReportsViewModel = viewModel()
 ) {
-    val state = viewModel.state
+    val state by viewModel.stateFlow.collectAsStateWithLifecycle()
+    val language = currentAppSettings().language
     val context = LocalContext.current
     var pendingExport by remember { mutableStateOf<GestorReportExport?>(null) }
 
@@ -85,16 +87,16 @@ fun GestorReportsScreen(
                 try {
                     context.contentResolver.openOutputStream(uri)?.use { output ->
                         output.write(export.content.toByteArray(Charsets.UTF_8))
-                    } ?: error("Não foi possível abrir o ficheiro selecionado.")
+                    } ?: error(language.t("reports.openFileError"))
 
                     Toast.makeText(
                         context,
-                        "Relatório de ${export.label.lowercase()} exportado.",
+                        language.t("reports.exported").format(export.label.lowercase()),
                         Toast.LENGTH_SHORT
                     ).show()
                 } catch (e: Exception) {
                     viewModel.setExportError(
-                        e.message ?: "Não foi possível exportar o relatório."
+                        e.message ?: language.t("reports.exportError")
                     )
                 }
             }
@@ -110,10 +112,13 @@ fun GestorReportsScreen(
         when {
             state.isLoading -> GestorReportsLoading()
 
-            state.errorMessage != null -> GestorReportsError(
-                message = state.errorMessage,
-                onRetry = { viewModel.loadReports(gestorId) }
-            )
+            state.errorMessage != null -> {
+                val errorMessage = state.errorMessage.orEmpty()
+                GestorReportsError(
+                    message = errorMessage,
+                    onRetry = { viewModel.loadReports(gestorId) }
+                )
+            }
 
             else -> GestorReportsContent(
                 state = state,
@@ -434,4 +439,3 @@ private fun GestorExportIcon(color: Color) {
 private fun Float.formatOneDecimal(): String {
     return String.format(java.util.Locale.US, "%.1f", this)
 }
-

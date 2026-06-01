@@ -12,11 +12,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -44,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
@@ -68,7 +72,7 @@ private val TasksRed = ProjectHubColors.Danger
 fun AdminTasksScreen(
     viewModel: AdminTasksViewModel = viewModel()
 ) {
-    val state = viewModel.state
+    val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     var isCreatingTask by remember { mutableStateOf(false) }
 
     if (isCreatingTask) {
@@ -224,12 +228,21 @@ private fun StatusDropdown(
     selected: AdminTaskStatusFilter,
     onOptionSelected: (AdminTaskStatusFilter) -> Unit
 ) {
+    val language = currentAppSettings().language
     AppDropdownField(
         selected = selected,
         options = AdminTaskStatusFilter.entries,
-        label = { it?.label ?: selected.label },
+        label = { (it ?: selected).translatedLabel(language) },
         onOptionSelected = onOptionSelected
     )
+}
+
+private fun AdminTaskStatusFilter.translatedLabel(language: com.example.projecthub.settings.AppLanguage): String {
+    return when (this) {
+        AdminTaskStatusFilter.All -> language.t("filters.tasks.all")
+        AdminTaskStatusFilter.Pending -> language.t("filters.tasks.pending")
+        AdminTaskStatusFilter.Completed -> language.t("filters.tasks.completed")
+    }
 }
 
 @Composable
@@ -252,7 +265,7 @@ private fun TaskProjectList(
 
         state.errorMessage != null -> {
             Text(
-                text = state.errorMessage,
+                text = state.errorMessage.orEmpty(),
                 color = TasksRed,
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp
@@ -268,12 +281,21 @@ private fun TaskProjectList(
         }
 
         else -> {
-            state.projectGroups.forEach { group ->
-                ProjectTaskSection(
-                    group = group,
-                    onToggleProject = { onToggleProject(group.projectId) }
-                )
-                Spacer(modifier = Modifier.height(10.dp))
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 760.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(
+                    items = state.projectGroups,
+                    key = { it.projectId }
+                ) { group ->
+                    ProjectTaskSection(
+                        group = group,
+                        onToggleProject = { onToggleProject(group.projectId) }
+                    )
+                }
             }
         }
     }
@@ -352,8 +374,19 @@ private fun ProjectTaskSection(
                         fontSize = 14.sp
                     )
                 } else {
-                    group.visibleTasks.forEach { task ->
-                        TaskCard(task = task)
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 520.dp)
+                            .padding(bottom = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(
+                            items = group.visibleTasks,
+                            key = { it.id }
+                        ) { task ->
+                            TaskCard(task = task)
+                        }
                     }
                 }
             }
@@ -460,6 +493,3 @@ private fun String.toDisplayDate(pattern: String = "dd/MM/yyyy"): String {
 
     return date.format(DateTimeFormatter.ofPattern(pattern))
 }
-
-
-

@@ -1,8 +1,7 @@
 package com.example.projecthub.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projecthub.remote.supabase.models.TarefaDto
@@ -72,8 +71,11 @@ class AdminTasksViewModel(
 
     private var sourceGroups: List<TaskGroupSource> = emptyList()
 
-    var state by mutableStateOf(AdminTasksState())
-        private set
+    private val _state = MutableStateFlow(AdminTasksState())
+    val stateFlow: StateFlow<AdminTasksState> = _state
+    private var state: AdminTasksState
+        get() = _state.value
+        set(value) { _state.value = value }
 
     init {
         loadTasks()
