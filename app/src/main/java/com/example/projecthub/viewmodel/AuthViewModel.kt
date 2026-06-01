@@ -2,9 +2,6 @@ package com.example.projecthub.viewmodel
 
 import android.app.Application
 import android.content.Intent
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projecthub.local.database.DatabaseProvider
@@ -18,7 +15,20 @@ import io.github.jan.supabase.auth.exception.AuthErrorCode
 import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.auth.exception.AuthWeakPasswordException
 import io.github.jan.supabase.exceptions.RestException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+data class AuthState(
+    val message: String = "",
+    val isLoggedIn: Boolean = false,
+    val isLoading: Boolean = false,
+    val isRestoringSession: Boolean = true,
+    val isRecoverySessionReady: Boolean = false,
+    val jwt: String? = null,
+    val currentUser: UserDto? = null
+)
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -32,26 +42,29 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val settingsRepository = SettingsRepository(application)
     private var currentLanguage: AppLanguage = AppLanguage.Portuguese
 
-    var message by mutableStateOf("")
-        private set
+    private val _state = MutableStateFlow(AuthState())
+    val state: StateFlow<AuthState> = _state
 
-    var isLoggedIn by mutableStateOf(false)
-        private set
+    val message: String
+        get() = _state.value.message
 
-    var isLoading by mutableStateOf(false)
-        private set
+    val isLoggedIn: Boolean
+        get() = _state.value.isLoggedIn
 
-    var isRestoringSession by mutableStateOf(true)
-        private set
+    val isLoading: Boolean
+        get() = _state.value.isLoading
 
-    var isRecoverySessionReady by mutableStateOf(false)
-        private set
+    val isRestoringSession: Boolean
+        get() = _state.value.isRestoringSession
 
-    var jwt by mutableStateOf<String?>(null)
-        private set
+    val isRecoverySessionReady: Boolean
+        get() = _state.value.isRecoverySessionReady
 
-    var currentUser by mutableStateOf<UserDto?>(null)
-        private set
+    val jwt: String?
+        get() = _state.value.jwt
+
+    val currentUser: UserDto?
+        get() = _state.value.currentUser
 
     init {
         viewModelScope.launch {
@@ -63,27 +76,34 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     fun restoreSession(onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
-            isRestoringSession = true
-            message = ""
+            _state.update { it.copy(isRestoringSession = true, message = "") }
 
             val result = repository.restoreSession()
 
             if (result.isSuccess) {
                 val authenticatedUser = result.getOrNull()
-                currentUser = authenticatedUser?.user
-                jwt = authenticatedUser?.jwt
-                isLoggedIn = authenticatedUser != null
-                isRestoringSession = false
+                _state.update {
+                    it.copy(
+                        currentUser = authenticatedUser?.user,
+                        jwt = authenticatedUser?.jwt,
+                        isLoggedIn = authenticatedUser != null,
+                        isRestoringSession = false
+                    )
+                }
                 onResult(authenticatedUser != null)
             } else {
-                currentUser = null
-                jwt = null
-                isLoggedIn = false
-                message = authErrorMessage(
-                    result.exceptionOrNull(),
-                    fallback = text("auth.sessionExpired")
-                )
-                isRestoringSession = false
+                _state.update {
+                    it.copy(
+                        currentUser = null,
+                        jwt = null,
+                        isLoggedIn = false,
+                        message = authErrorMessage(
+                            result.exceptionOrNull(),
+                            fallback = text("auth.sessionExpired")
+                        ),
+                        isRestoringSession = false
+                    )
+                }
                 onResult(false)
             }
         }
@@ -97,25 +117,25 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         onResult: (Boolean, String) -> Unit
     ) {
         viewModelScope.launch {
-            isLoading = true
-            message = ""
+            _state.update { it.copy(isLoading = true, message = "") }
             val result = repository.register(
                 nome = nome.trim(),
                 username = username.trim(),
                 email = email.trim(),
                 password = password
             )
-            isLoading = false
 
             if (result.isSuccess) {
-                message = text("auth.registerSuccess")
-                onResult(true, message)
+                val successMessage = text("auth.registerSuccess")
+                _state.update { it.copy(isLoading = false, message = successMessage) }
+                onResult(true, successMessage)
             } else {
-                message = authErrorMessage(
+                val errorMessage = authErrorMessage(
                     result.exceptionOrNull(),
                     fallback = text("auth.registerError")
                 )
-                onResult(false, message)
+                _state.update { it.copy(isLoading = false, message = errorMessage) }
+                onResult(false, errorMessage)
             }
         }
     }
@@ -126,23 +146,29 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         onResult: (Boolean, String) -> Unit
     ) {
         viewModelScope.launch {
-            isLoading = true
-            message = ""
+            _state.update { it.copy(isLoading = true, message = "") }
             val result = repository.login(email.trim(), password)
-            isLoading = false
 
             if (result.isSuccess) {
-                currentUser = result.getOrNull()?.user
-                isLoggedIn = true
-                jwt = result.getOrNull()?.jwt
-                message = text("auth.loginSuccess")
-                onResult(true, message)
+                val authenticatedUser = result.getOrNull()
+                val successMessage = text("auth.loginSuccess")
+                _state.update {
+                    it.copy(
+                        currentUser = authenticatedUser?.user,
+                        isLoggedIn = true,
+                        jwt = authenticatedUser?.jwt,
+                        isLoading = false,
+                        message = successMessage
+                    )
+                }
+                onResult(true, successMessage)
             } else {
-                message = authErrorMessage(
+                val errorMessage = authErrorMessage(
                     result.exceptionOrNull(),
                     fallback = text("auth.loginError")
                 )
-                onResult(false, message)
+                _state.update { it.copy(isLoading = false, message = errorMessage) }
+                onResult(false, errorMessage)
             }
         }
     }
@@ -150,10 +176,14 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     fun logout(onResult: () -> Unit = {}) {
         viewModelScope.launch {
             repository.logout()
-            jwt = null
-            currentUser = null
-            isLoggedIn = false
-            message = ""
+            _state.update {
+                it.copy(
+                    jwt = null,
+                    currentUser = null,
+                    isLoggedIn = false,
+                    message = ""
+                )
+            }
             onResult()
         }
     }
@@ -163,43 +193,50 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         onResult: (Boolean, String) -> Unit
     ) {
         viewModelScope.launch {
-            isLoading = true
-            message = ""
+            _state.update { it.copy(isLoading = true, message = "") }
             val result = repository.sendPasswordResetEmail(email.trim())
-            isLoading = false
 
             if (result.isSuccess) {
-                message = text("auth.resetEmailSent")
-                onResult(true, message)
+                val successMessage = text("auth.resetEmailSent")
+                _state.update { it.copy(isLoading = false, message = successMessage) }
+                onResult(true, successMessage)
             } else {
-                message = authErrorMessage(
+                val errorMessage = authErrorMessage(
                     result.exceptionOrNull(),
                     fallback = text("auth.resetEmailError")
                 )
-                onResult(false, message)
+                _state.update { it.copy(isLoading = false, message = errorMessage) }
+                onResult(false, errorMessage)
             }
         }
     }
 
     fun handlePasswordRecoveryDeepLink(intent: Intent, onReady: () -> Unit) {
-        isRecoverySessionReady = false
-        message = ""
+        _state.update { it.copy(isRecoverySessionReady = false, message = "") }
 
         viewModelScope.launch {
             val result = repository.importPasswordRecoveryDeepLink(intent)
 
             if (result.isSuccess) {
-                jwt = repository.currentJwt()
-                isRecoverySessionReady = true
-                message = ""
+                _state.update {
+                    it.copy(
+                        jwt = repository.currentJwt(),
+                        isRecoverySessionReady = true,
+                        message = ""
+                    )
+                }
                 onReady()
             } else {
-                jwt = null
-                isRecoverySessionReady = false
-                message = authErrorMessage(
-                    result.exceptionOrNull(),
-                    fallback = text("auth.recoveryInvalid")
-                )
+                _state.update {
+                    it.copy(
+                        jwt = null,
+                        isRecoverySessionReady = false,
+                        message = authErrorMessage(
+                            result.exceptionOrNull(),
+                            fallback = text("auth.recoveryInvalid")
+                        )
+                    )
+                }
             }
         }
     }
@@ -212,43 +249,48 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             if (newPassword.length < 8 || !newPassword.any(Char::isLetter) || !newPassword.any(Char::isDigit)) {
                 val error = text("auth.weakPassword")
-                message = error
+                _state.update { it.copy(message = error) }
                 onResult(false, error)
                 return@launch
             }
 
             if (newPassword != confirmPassword) {
                 val error = text("auth.passwordMismatch")
-                message = error
+                _state.update { it.copy(message = error) }
                 onResult(false, error)
                 return@launch
             }
 
-            isLoading = true
-            message = ""
+            _state.update { it.copy(isLoading = true, message = "") }
 
             val result = repository.updatePasswordAfterRecovery(newPassword)
-            isLoading = false
 
             if (result.isSuccess) {
-                currentUser = null
-                jwt = null
-                isLoggedIn = false
-                isRecoverySessionReady = false
-                message = text("auth.passwordUpdated")
-                onResult(true, message)
+                val successMessage = text("auth.passwordUpdated")
+                _state.update {
+                    it.copy(
+                        currentUser = null,
+                        jwt = null,
+                        isLoggedIn = false,
+                        isRecoverySessionReady = false,
+                        isLoading = false,
+                        message = successMessage
+                    )
+                }
+                onResult(true, successMessage)
             } else {
-                message = authErrorMessage(
+                val errorMessage = authErrorMessage(
                     result.exceptionOrNull(),
                     fallback = text("auth.passwordUpdateError")
                 )
-                onResult(false, message)
+                _state.update { it.copy(isLoading = false, message = errorMessage) }
+                onResult(false, errorMessage)
             }
         }
     }
 
     fun updateCurrentUser(user: UserDto) {
-        currentUser = user
+        _state.update { it.copy(currentUser = user) }
     }
 
     fun shouldShowIntroForCurrentUser(onResult: (Boolean) -> Unit) {

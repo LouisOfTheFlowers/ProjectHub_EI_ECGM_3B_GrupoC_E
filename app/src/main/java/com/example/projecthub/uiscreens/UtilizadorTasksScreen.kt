@@ -295,60 +295,60 @@ private fun TaskObservationsPage(
     val language = currentAppSettings().language
     val task = item.task
 
-    Column {
-        AppBackButton(
-            text = language.t("user.tasks.back"),
-            onClick = onBack,
-            enabled = !isSaving
-        )
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = task.titulo,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 22.sp
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = language.t("user.tasks.observationsTitle"),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            StatusPill(status = task.status)
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        item {
+            AppBackButton(
+                text = language.t("user.tasks.back"),
+                onClick = onBack,
+                enabled = !isSaving
+            )
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = task.titulo,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 22.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = language.t("user.tasks.observationsTitle"),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
 
-        AppObservationsButton(
-            text = if (isSaving) language.t("common.saving") else language.t("user.tasks.addObservation"),
-            onClick = onAddObservation,
-            enabled = !isSaving,
-            modifier = Modifier.fillMaxWidth()
-        )
+                StatusPill(status = task.status)
+            }
+        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        item {
+            AppObservationsButton(
+                text = if (isSaving) language.t("common.saving") else language.t("user.tasks.addObservation"),
+                onClick = onAddObservation,
+                enabled = !isSaving,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
         if (item.observations.isEmpty()) {
-            TaskMessageCard(
-                title = language.t("user.tasks.noObservationsTitle"),
-                detail = language.t("user.tasks.noObservationsDetail")
-            )
+            item {
+                TaskMessageCard(
+                    title = language.t("user.tasks.noObservationsTitle"),
+                    detail = language.t("user.tasks.noObservationsDetail")
+                )
+            }
         } else {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                item.observations.forEach { observation ->
-                    ObservationCard(observation = observation)
-                }
+            items(item.observations) { observation ->
+                ObservationCard(observation = observation)
             }
         }
     }
