@@ -84,6 +84,21 @@ class UserRemoteDataSource {
             }
     }
 
+    suspend fun updateUserProfile(userId: Int, nome: String, username: String) {
+        SupabaseClientProvider.client
+            .from("users")
+            .update(
+                mapOf(
+                    "nome" to nome,
+                    "username" to username
+                )
+            ) {
+                filter {
+                    eq("id", userId)
+                }
+            }
+    }
+
     suspend fun updateOwnEmail(newEmail: String) {
         SupabaseClientProvider.client
             .postgrest

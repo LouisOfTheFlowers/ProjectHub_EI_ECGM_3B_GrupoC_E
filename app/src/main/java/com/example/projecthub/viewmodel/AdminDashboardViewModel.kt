@@ -27,10 +27,6 @@ class AdminDashboardViewModel(
     private val _state = MutableStateFlow(AdminDashboardState())
     val state: StateFlow<AdminDashboardState> = _state
 
-    init {
-        loadDashboard()
-    }
-
     fun loadDashboard() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, errorMessage = null) }

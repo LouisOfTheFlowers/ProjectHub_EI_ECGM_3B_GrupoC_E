@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -226,6 +227,61 @@ fun AppMessageCard(
             Text(title, color = ProjectHubColors.Ink, fontWeight = FontWeight.ExtraBold, fontSize = titleSize.sp)
             Spacer(modifier = Modifier.height(6.dp))
             Text(detail, color = ProjectHubColors.Muted, fontSize = 13.sp)
+        }
+    }
+}
+
+@Composable
+fun AppOfflineState(
+    modifier: Modifier = Modifier
+) {
+    val language = currentAppSettings().language
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 22.dp, vertical = 34.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(76.dp)
+                    .clip(CircleShape)
+                    .background(ProjectHubColors.Warning.copy(alpha = 0.14f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_wifi_off_24),
+                    contentDescription = language.t("offline.title"),
+                    tint = ProjectHubColors.Warning,
+                    modifier = Modifier.size(42.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Text(
+                text = language.t("offline.title"),
+                color = ProjectHubColors.Ink,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 21.sp,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = language.t("offline.detail"),
+                color = ProjectHubColors.Muted,
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }

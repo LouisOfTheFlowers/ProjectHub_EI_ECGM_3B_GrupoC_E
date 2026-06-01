@@ -1,11 +1,17 @@
 package com.example.projecthub
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color as AndroidColor
 import android.graphics.drawable.ColorDrawable
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
@@ -14,11 +20,16 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -93,6 +104,8 @@ class MainActivity : ComponentActivity() {
                         val authViewModel: AuthViewModel = viewModel()
                         val authState by authViewModel.state.collectAsStateWithLifecycle()
                         val navController = rememberNavController()
+                        val hasInternet = rememberHasInternet()
+                        val hasInternetState = rememberUpdatedState(hasInternet)
 
                         LaunchedEffect(Unit) {
                             if (passwordRecoveryIntent != null || emailConfirmationIntent != null) {
@@ -197,50 +210,55 @@ class MainActivity : ComponentActivity() {
                                 route = AppRoutes.AdminDashboard,
                                 selectedRoute = AppRoutes.AdminDashboard,
                                 authViewModel = authViewModel,
-                                navController = navController
+                                navController = navController,
+                                hasInternetState = hasInternetState
                             )
-                            adminRoute(AppRoutes.AdminProjects, AppRoutes.AdminProjects, authViewModel, navController)
-                            adminRoute(AppRoutes.AdminTasks, AppRoutes.AdminTasks, authViewModel, navController)
-                            adminRoute(AppRoutes.AdminTeams, AppRoutes.AdminTeams, authViewModel, navController)
-                            adminRoute(AppRoutes.AdminReports, AppRoutes.AdminReports, authViewModel, navController)
-                            adminRoute(AppRoutes.AdminSettings, AppRoutes.AdminSettings, authViewModel, navController)
-                            adminRoute(AppRoutes.AdminProfile, AppRoutes.AdminProfile, authViewModel, navController)
+                            adminRoute(AppRoutes.AdminProjects, AppRoutes.AdminProjects, authViewModel, navController, hasInternetState)
+                            adminRoute(AppRoutes.AdminTasks, AppRoutes.AdminTasks, authViewModel, navController, hasInternetState)
+                            adminRoute(AppRoutes.AdminTeams, AppRoutes.AdminTeams, authViewModel, navController, hasInternetState)
+                            adminRoute(AppRoutes.AdminReports, AppRoutes.AdminReports, authViewModel, navController, hasInternetState)
+                            adminRoute(AppRoutes.AdminSettings, AppRoutes.AdminSettings, authViewModel, navController, hasInternetState)
+                            adminRoute(AppRoutes.AdminProfile, AppRoutes.AdminProfile, authViewModel, navController, hasInternetState)
 
                             gestorRoute(
                                 route = AppRoutes.GestorDashboard,
                                 selectedRoute = AppRoutes.GestorDashboard,
                                 authViewModel = authViewModel,
-                                navController = navController
+                                navController = navController,
+                                hasInternetState = hasInternetState
                             )
-                            gestorRoute(AppRoutes.GestorProjects, AppRoutes.GestorProjects, authViewModel, navController)
-                            gestorRoute(AppRoutes.GestorTasks, AppRoutes.GestorTasks, authViewModel, navController)
-                            gestorRoute(AppRoutes.GestorTeam, AppRoutes.GestorTeam, authViewModel, navController)
-                            gestorRoute(AppRoutes.GestorReports, AppRoutes.GestorReports, authViewModel, navController)
-                            gestorRoute(AppRoutes.GestorSettings, AppRoutes.GestorSettings, authViewModel, navController)
-                            gestorRoute(AppRoutes.GestorProfile, AppRoutes.GestorProfile, authViewModel, navController)
+                            gestorRoute(AppRoutes.GestorProjects, AppRoutes.GestorProjects, authViewModel, navController, hasInternetState)
+                            gestorRoute(AppRoutes.GestorTasks, AppRoutes.GestorTasks, authViewModel, navController, hasInternetState)
+                            gestorRoute(AppRoutes.GestorTeam, AppRoutes.GestorTeam, authViewModel, navController, hasInternetState)
+                            gestorRoute(AppRoutes.GestorReports, AppRoutes.GestorReports, authViewModel, navController, hasInternetState)
+                            gestorRoute(AppRoutes.GestorSettings, AppRoutes.GestorSettings, authViewModel, navController, hasInternetState)
+                            gestorRoute(AppRoutes.GestorProfile, AppRoutes.GestorProfile, authViewModel, navController, hasInternetState)
 
                             userRoute(
                                 route = AppRoutes.UserDashboard,
                                 selectedRoute = AppRoutes.UserDashboard,
                                 authViewModel = authViewModel,
-                                navController = navController
+                                navController = navController,
+                                hasInternetState = hasInternetState
                             )
-                            userRoute(AppRoutes.UserTasks, AppRoutes.UserTasks, authViewModel, navController)
-                            userRoute(AppRoutes.UserProjects, AppRoutes.UserProjects, authViewModel, navController)
-                            userRoute(AppRoutes.UserSettings, AppRoutes.UserSettings, authViewModel, navController)
-                            userRoute(AppRoutes.UserProfile, AppRoutes.UserProfile, authViewModel, navController)
+                            userRoute(AppRoutes.UserTasks, AppRoutes.UserTasks, authViewModel, navController, hasInternetState)
+                            userRoute(AppRoutes.UserProjects, AppRoutes.UserProjects, authViewModel, navController, hasInternetState)
+                            userRoute(AppRoutes.UserSettings, AppRoutes.UserSettings, authViewModel, navController, hasInternetState)
+                            userRoute(AppRoutes.UserProfile, AppRoutes.UserProfile, authViewModel, navController, hasInternetState)
 
                             composable(
                                 route = AppRoutes.UserTaskObservations,
                                 arguments = listOf(navArgument("taskId") { type = NavType.IntType })
                             ) { backStackEntry ->
+                                val currentHasInternet = hasInternetState.value
                                 UtilizadorDashboardScreen(
                                     userId = authState.currentUser?.id,
                                     currentUser = authState.currentUser,
                                     onUserUpdated = authViewModel::updateCurrentUser,
                                     onLogout = { logoutAndGoToLogin(authViewModel, navController) },
                                     selectedRoute = AppRoutes.UserTasks,
-                                    taskObservationsId = backStackEntry.arguments?.getInt("taskId"),
+                                    hasInternet = currentHasInternet,
+                                    taskObservationsId = if (currentHasInternet) backStackEntry.arguments?.getInt("taskId") else null,
                                     onNavigate = { section ->
                                         navController.navigate(section) {
                                             launchSingleTop = true
@@ -254,13 +272,15 @@ class MainActivity : ComponentActivity() {
                                 route = AppRoutes.UserProjectHistory,
                                 arguments = listOf(navArgument("projectId") { type = NavType.IntType })
                             ) { backStackEntry ->
+                                val currentHasInternet = hasInternetState.value
                                 UtilizadorDashboardScreen(
                                     userId = authState.currentUser?.id,
                                     currentUser = authState.currentUser,
                                     onUserUpdated = authViewModel::updateCurrentUser,
                                     onLogout = { logoutAndGoToLogin(authViewModel, navController) },
                                     selectedRoute = AppRoutes.UserProjects,
-                                    projectHistoryId = backStackEntry.arguments?.getInt("projectId"),
+                                    hasInternet = currentHasInternet,
+                                    projectHistoryId = if (currentHasInternet) backStackEntry.arguments?.getInt("projectId") else null,
                                     onNavigate = { section ->
                                         navController.navigate(section) {
                                             launchSingleTop = true
@@ -329,19 +349,70 @@ private fun navigateAfterAuthentication(
     }
 }
 
+@androidx.compose.runtime.Composable
+private fun rememberHasInternet(): Boolean {
+    val context = LocalContext.current
+    val mainHandler = remember { Handler(Looper.getMainLooper()) }
+    var hasInternet by remember { mutableStateOf(context.hasValidatedInternet()) }
+
+    DisposableEffect(context) {
+        val connectivityManager = context.getSystemService(ConnectivityManager::class.java)
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            private fun refresh() {
+                mainHandler.post {
+                    hasInternet = context.hasValidatedInternet()
+                }
+            }
+
+            override fun onAvailable(network: Network) {
+                refresh()
+            }
+
+            override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+                refresh()
+            }
+
+            override fun onLost(network: Network) {
+                refresh()
+            }
+        }
+
+        hasInternet = context.hasValidatedInternet()
+        runCatching { connectivityManager.registerDefaultNetworkCallback(callback) }
+
+        onDispose {
+            runCatching { connectivityManager.unregisterNetworkCallback(callback) }
+        }
+    }
+
+    return hasInternet
+}
+
+private fun Context.hasValidatedInternet(): Boolean {
+    val connectivityManager = getSystemService(ConnectivityManager::class.java)
+    val network = connectivityManager.activeNetwork ?: return false
+    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+        capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+}
+
 private fun NavGraphBuilder.adminRoute(
     route: String,
     selectedRoute: String,
     authViewModel: AuthViewModel,
-    navController: NavHostController
+    navController: NavHostController,
+    hasInternetState: State<Boolean>
 ) {
     composable(route) {
         val authState by authViewModel.state.collectAsStateWithLifecycle()
+        val hasInternet = hasInternetState.value
+
         AdminDashboardScreen(
             currentUser = authState.currentUser,
             onUserUpdated = authViewModel::updateCurrentUser,
             onLogout = { logoutAndGoToLogin(authViewModel, navController) },
             selectedRoute = selectedRoute,
+            hasInternet = hasInternet,
             onNavigate = { section ->
                 navController.navigate(section) {
                     launchSingleTop = true
@@ -355,16 +426,20 @@ private fun NavGraphBuilder.gestorRoute(
     route: String,
     selectedRoute: String,
     authViewModel: AuthViewModel,
-    navController: NavHostController
+    navController: NavHostController,
+    hasInternetState: State<Boolean>
 ) {
     composable(route) {
         val authState by authViewModel.state.collectAsStateWithLifecycle()
+        val hasInternet = hasInternetState.value
+
         GestorDashboardScreen(
             gestorId = authState.currentUser?.id,
             currentUser = authState.currentUser,
             onUserUpdated = authViewModel::updateCurrentUser,
             onLogout = { logoutAndGoToLogin(authViewModel, navController) },
             selectedRoute = selectedRoute,
+            hasInternet = hasInternet,
             onNavigate = { section ->
                 navController.navigate(section) {
                     launchSingleTop = true
@@ -378,16 +453,20 @@ private fun NavGraphBuilder.userRoute(
     route: String,
     selectedRoute: String,
     authViewModel: AuthViewModel,
-    navController: NavHostController
+    navController: NavHostController,
+    hasInternetState: State<Boolean>
 ) {
     composable(route) {
         val authState by authViewModel.state.collectAsStateWithLifecycle()
+        val hasInternet = hasInternetState.value
+
         UtilizadorDashboardScreen(
             userId = authState.currentUser?.id,
             currentUser = authState.currentUser,
             onUserUpdated = authViewModel::updateCurrentUser,
             onLogout = { logoutAndGoToLogin(authViewModel, navController) },
             selectedRoute = selectedRoute,
+            hasInternet = hasInternet,
             onNavigate = { section ->
                 navController.navigate(section) {
                     launchSingleTop = true

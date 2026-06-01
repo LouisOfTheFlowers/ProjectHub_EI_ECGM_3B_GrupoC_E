@@ -27,6 +27,7 @@ data class ProfileState(
     val isSendingEmailCode: Boolean = false,
     val emailCodeSent: Boolean = false,
     val isDeleting: Boolean = false,
+    val isOffline: Boolean = false,
     val message: String? = null,
     val errorMessage: String? = null
 )
@@ -43,8 +44,24 @@ class ProfileViewModel(
     private val connectivityManager = application.getSystemService(ConnectivityManager::class.java)
     private val json = Json { ignoreUnknownKeys = true }
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        private fun refreshNetworkState() {
+            val online = hasInternet()
+            _state.update { it.copy(isOffline = !online) }
+            if (online) {
+                syncPendingProfileUpdates()
+            }
+        }
+
         override fun onAvailable(network: Network) {
-            syncPendingProfilePhotoUpdates()
+            refreshNetworkState()
+        }
+
+        override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+            refreshNetworkState()
+        }
+
+        override fun onLost(network: Network) {
+            refreshNetworkState()
         }
     }
 
@@ -52,8 +69,9 @@ class ProfileViewModel(
     val state: StateFlow<ProfileState> = _state
 
     init {
+        _state.update { it.copy(isOffline = !hasInternet()) }
         runCatching { connectivityManager.registerDefaultNetworkCallback(networkCallback) }
-        syncPendingProfilePhotoUpdates()
+        syncPendingProfileUpdates()
     }
 
     override fun onCleared() {
@@ -73,15 +91,20 @@ class ProfileViewModel(
             val userId = user.id
             val localUser = userId?.let { userDao.getUserById(it) }
             val hasPendingPhoto = userId?.let { hasPendingProfilePhotoUpdate(it) } == true
-            val mergedUser = if (hasPendingPhoto && localUser != null) {
-                user.copy(foto = localUser.foto)
+            val hasPendingDetails = userId?.let { hasPendingProfileDetailsUpdate(it) } == true
+            val mergedUser = if (localUser != null && (hasPendingPhoto || hasPendingDetails)) {
+                user.copy(
+                    nome = if (hasPendingDetails) localUser.nome else user.nome,
+                    username = if (hasPendingDetails) localUser.username else user.username,
+                    foto = if (hasPendingPhoto) localUser.foto else user.foto
+                )
             } else {
                 user
             }
 
             saveUserLocally(mergedUser)
             _state.update { it.copy(user = mergedUser) }
-            syncPendingProfilePhotoUpdates()
+            syncPendingProfileUpdates()
         }
     }
 
@@ -171,7 +194,7 @@ class ProfileViewModel(
                     )
                 }
                 onUserUpdated(updatedUser)
-                syncPendingProfilePhotoUpdates()
+                syncPendingProfileUpdates()
             } else if (isNetworkError(result.exceptionOrNull())) {
                 saveProfilePhotoOffline(updatedUser, userId, photoUri, onUserUpdated)
             } else {
@@ -203,6 +226,95 @@ class ProfileViewModel(
                 } else {
                     "Foto guardada offline. Será sincronizada quando houver internet."
                 },
+                errorMessage = null
+            )
+        }
+        onUserUpdated(updatedUser)
+    }
+
+    fun updateProfileDetails(
+        nome: String,
+        username: String,
+        onUserUpdated: (UserDto) -> Unit
+    ) {
+        val currentUser = _state.value.user
+        val userId = currentUser?.id
+
+        if (currentUser == null || userId == null) {
+            _state.update { it.copy(errorMessage = "Não foi possível identificar a tua conta.") }
+            return
+        }
+
+        val trimmedName = nome.trim()
+        val trimmedUsername = username.trim()
+
+        if (trimmedName.isBlank()) {
+            _state.update { it.copy(errorMessage = "Indica o teu nome.") }
+            return
+        }
+
+        if (trimmedUsername.isBlank()) {
+            _state.update { it.copy(errorMessage = "Indica o teu username.") }
+            return
+        }
+
+        viewModelScope.launch {
+            _state.update { it.copy(isSaving = true, message = null, errorMessage = null) }
+
+            val updatedUser = currentUser.copy(
+                nome = trimmedName,
+                username = trimmedUsername
+            )
+
+            if (!hasInternet()) {
+                saveProfileDetailsOffline(updatedUser, userId, trimmedName, trimmedUsername, onUserUpdated)
+                return@launch
+            }
+
+            val result = runCatching {
+                userRemoteDataSource.updateUserProfile(userId, trimmedName, trimmedUsername)
+            }
+
+            if (result.isSuccess) {
+                saveUserLocally(updatedUser)
+                _state.update {
+                    it.copy(
+                        user = updatedUser,
+                        isSaving = false,
+                        message = "Dados do perfil atualizados.",
+                        errorMessage = null
+                    )
+                }
+                onUserUpdated(updatedUser)
+                syncPendingProfileUpdates()
+            } else if (isNetworkError(result.exceptionOrNull())) {
+                saveProfileDetailsOffline(updatedUser, userId, trimmedName, trimmedUsername, onUserUpdated)
+            } else {
+                _state.update {
+                    it.copy(
+                        isSaving = false,
+                        errorMessage = result.exceptionOrNull()?.message
+                            ?: "Não foi possível atualizar os dados do perfil."
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun saveProfileDetailsOffline(
+        updatedUser: UserDto,
+        userId: Int,
+        nome: String,
+        username: String,
+        onUserUpdated: (UserDto) -> Unit
+    ) {
+        saveUserLocally(updatedUser)
+        queueProfileDetailsUpdate(userId, nome, username)
+        _state.update {
+            it.copy(
+                user = updatedUser,
+                isSaving = false,
+                message = "Dados do perfil guardados offline. Serão sincronizados quando houver internet.",
                 errorMessage = null
             )
         }
@@ -397,31 +509,58 @@ class ProfileViewModel(
         }
     }
 
-    private fun syncPendingProfilePhotoUpdates() {
+    private fun syncPendingProfileUpdates() {
         viewModelScope.launch {
             if (!hasInternet()) return@launch
 
             val pendingActions = syncQueueDao.getPendingSyncActions()
-                .filter { it.action == PROFILE_PHOTO_UPDATE }
+                .filter { it.action == PROFILE_PHOTO_UPDATE || it.action == PROFILE_DETAILS_UPDATE }
 
             pendingActions.forEach { action ->
-                val payload = action.decodeProfilePhotoPayload() ?: return@forEach
-                val result = runCatching {
-                    userRemoteDataSource.updateUserPhoto(payload.userId, payload.photoUri)
-                }
-
-                if (result.isSuccess) {
-                    syncQueueDao.markAsSynced(action.id)
-                    val currentUser = _state.value.user
-                    if (currentUser?.id == payload.userId) {
-                        val syncedUser = currentUser.copy(foto = payload.photoUri)
-                        saveUserLocally(syncedUser)
-                        _state.update { it.copy(user = syncedUser) }
-                    }
+                when (action.action) {
+                    PROFILE_PHOTO_UPDATE -> syncProfilePhotoAction(action)
+                    PROFILE_DETAILS_UPDATE -> syncProfileDetailsAction(action)
                 }
             }
 
             syncQueueDao.deleteSyncedActions()
+        }
+    }
+
+    private suspend fun syncProfilePhotoAction(action: SyncQueueEntity) {
+        val payload = action.decodeProfilePhotoPayload() ?: return
+        val result = runCatching {
+            userRemoteDataSource.updateUserPhoto(payload.userId, payload.photoUri)
+        }
+
+        if (result.isSuccess) {
+            syncQueueDao.markAsSynced(action.id)
+            val currentUser = _state.value.user
+            if (currentUser?.id == payload.userId) {
+                val syncedUser = currentUser.copy(foto = payload.photoUri)
+                saveUserLocally(syncedUser)
+                _state.update { it.copy(user = syncedUser) }
+            }
+        }
+    }
+
+    private suspend fun syncProfileDetailsAction(action: SyncQueueEntity) {
+        val payload = action.decodeProfileDetailsPayload() ?: return
+        val result = runCatching {
+            userRemoteDataSource.updateUserProfile(payload.userId, payload.nome, payload.username)
+        }
+
+        if (result.isSuccess) {
+            syncQueueDao.markAsSynced(action.id)
+            val currentUser = _state.value.user
+            if (currentUser?.id == payload.userId) {
+                val syncedUser = currentUser.copy(
+                    nome = payload.nome,
+                    username = payload.username
+                )
+                saveUserLocally(syncedUser)
+                _state.update { it.copy(user = syncedUser) }
+            }
         }
     }
 
@@ -434,11 +573,28 @@ class ProfileViewModel(
         )
     }
 
+    private suspend fun queueProfileDetailsUpdate(userId: Int, nome: String, username: String) {
+        syncQueueDao.insertSyncAction(
+            SyncQueueEntity(
+                action = PROFILE_DETAILS_UPDATE,
+                payload = json.encodeToString(ProfileDetailsSyncPayload(userId, nome, username))
+            )
+        )
+    }
+
     private suspend fun hasPendingProfilePhotoUpdate(userId: Int): Boolean {
         return syncQueueDao.getPendingSyncActions()
             .filter { it.action == PROFILE_PHOTO_UPDATE }
             .any { action ->
                 action.decodeProfilePhotoPayload()?.userId == userId
+            }
+    }
+
+    private suspend fun hasPendingProfileDetailsUpdate(userId: Int): Boolean {
+        return syncQueueDao.getPendingSyncActions()
+            .filter { it.action == PROFILE_DETAILS_UPDATE }
+            .any { action ->
+                action.decodeProfileDetailsPayload()?.userId == userId
             }
     }
 
@@ -465,10 +621,17 @@ class ProfileViewModel(
         }.getOrNull()
     }
 
+    private fun SyncQueueEntity.decodeProfileDetailsPayload(): ProfileDetailsSyncPayload? {
+        return runCatching {
+            json.decodeFromString<ProfileDetailsSyncPayload>(payload)
+        }.getOrNull()
+    }
+
     private fun hasInternet(): Boolean {
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 
     private fun isNetworkError(error: Throwable?): Boolean {
@@ -486,7 +649,15 @@ class ProfileViewModel(
         val photoUri: String?
     )
 
+    @Serializable
+    private data class ProfileDetailsSyncPayload(
+        val userId: Int,
+        val nome: String,
+        val username: String
+    )
+
     private companion object {
         const val PROFILE_PHOTO_UPDATE = "PROFILE_PHOTO_UPDATE"
+        const val PROFILE_DETAILS_UPDATE = "PROFILE_DETAILS_UPDATE"
     }
 }

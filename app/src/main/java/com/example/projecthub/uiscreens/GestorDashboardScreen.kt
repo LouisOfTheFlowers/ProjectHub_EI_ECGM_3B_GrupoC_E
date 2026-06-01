@@ -58,13 +58,16 @@ fun GestorDashboardScreen(
     onUserUpdated: (UserDto) -> Unit,
     onLogout: () -> Unit,
     selectedRoute: String = AppRoutes.GestorDashboard,
+    hasInternet: Boolean = true,
     onNavigate: (String) -> Unit = {},
     viewModel: GestorDashboardViewModel = viewModel()
 ) {
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
 
-    LaunchedEffect(gestorId) {
-        viewModel.loadDashboard(gestorId)
+    LaunchedEffect(gestorId, selectedRoute, hasInternet) {
+        if (hasInternet && selectedRoute == AppRoutes.GestorDashboard) {
+            viewModel.loadDashboard(gestorId)
+        }
     }
 
     GestorScaffold(
@@ -74,24 +77,26 @@ fun GestorDashboardScreen(
         profileName = currentUser?.nome,
         onLogout = onLogout
     ) {
-        when (selectedRoute) {
-            AppRoutes.GestorDashboard -> {
+        when {
+            !hasInternet && selectedRoute != AppRoutes.GestorProfile -> AppOfflineState()
+
+            selectedRoute == AppRoutes.GestorDashboard -> {
                 DashboardHeader()
                 Spacer(modifier = Modifier.height(22.dp))
                 DashboardContent(state = state)
             }
 
-            AppRoutes.GestorProjects -> GestorProjectsScreen(gestorId = gestorId)
+            selectedRoute == AppRoutes.GestorProjects -> GestorProjectsScreen(gestorId = gestorId)
 
-            AppRoutes.GestorTasks -> GestorTasksScreen(gestorId = gestorId)
+            selectedRoute == AppRoutes.GestorTasks -> GestorTasksScreen(gestorId = gestorId)
 
-            AppRoutes.GestorTeam -> GestorTeamScreen(gestorId = gestorId)
+            selectedRoute == AppRoutes.GestorTeam -> GestorTeamScreen(gestorId = gestorId)
 
-            AppRoutes.GestorReports -> GestorReportsScreen(gestorId = gestorId)
+            selectedRoute == AppRoutes.GestorReports -> GestorReportsScreen(gestorId = gestorId)
 
-            AppRoutes.GestorSettings -> SettingsScreen()
+            selectedRoute == AppRoutes.GestorSettings -> SettingsScreen()
 
-            AppRoutes.GestorProfile -> ProfileScreen(
+            selectedRoute == AppRoutes.GestorProfile -> ProfileScreen(
                 user = currentUser,
                 onUserUpdated = onUserUpdated,
                 onAccountDeleted = onLogout
