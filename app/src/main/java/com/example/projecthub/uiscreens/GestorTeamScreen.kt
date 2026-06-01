@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +16,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -68,18 +71,66 @@ fun GestorTeamScreen(
         viewModel.loadTeam(gestorId)
     }
 
-    Column {
-        TeamHeader()
-        Spacer(modifier = Modifier.height(18.dp))
-        TeamStats(state = state)
-        Spacer(modifier = Modifier.height(16.dp))
-        TeamFilters(
-            state = state,
-            onSearchChange = viewModel::updateSearchQuery,
-            onProjectChange = viewModel::updateProjectFilter
-        )
-        Spacer(modifier = Modifier.height(18.dp))
-        TeamList(state = state)
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(bottom = 16.dp)
+    ) {
+        item { TeamHeader() }
+        item { TeamStats(state = state) }
+        item {
+            TeamFilters(
+                state = state,
+                onSearchChange = viewModel::updateSearchQuery,
+                onProjectChange = viewModel::updateProjectFilter
+            )
+        }
+        when {
+            state.isLoading -> {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(220.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = TeamAccent)
+                    }
+                }
+            }
+
+            state.errorMessage != null -> {
+                item {
+                    Text(
+                        text = state.errorMessage.orEmpty(),
+                        color = TeamRed,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                }
+            }
+
+            state.visibleMembers.isEmpty() -> {
+                item {
+                    Text(
+                        text = currentAppSettings().language.t("manager.team.noMembers"),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                        fontSize = 15.sp
+                    )
+                }
+            }
+
+            else -> {
+                items(
+                    items = state.visibleMembers,
+                    key = { it.id }
+                ) { member ->
+                    TeamMemberCard(
+                        member = member,
+                        selectedProjectId = state.selectedProjectId
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -257,50 +308,6 @@ private fun ProjectDropdown(
                         onProjectChange(project.id)
                     }
                 )
-            }
-        }
-    }
-}
-
-@Composable
-private fun TeamList(state: GestorTeamState) {
-    val language = currentAppSettings().language
-    when {
-        state.isLoading -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = TeamAccent)
-            }
-        }
-
-        state.errorMessage != null -> {
-            Text(
-                text = state.errorMessage.orEmpty(),
-                color = TeamRed,
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp
-            )
-        }
-
-        state.visibleMembers.isEmpty() -> {
-            Text(
-                text = language.t("manager.team.noMembers"),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
-                fontSize = 15.sp
-            )
-        }
-
-        else -> {
-            state.visibleMembers.forEach { member ->
-                TeamMemberCard(
-                    member = member,
-                    selectedProjectId = state.selectedProjectId
-                )
-                Spacer(modifier = Modifier.height(10.dp))
             }
         }
     }

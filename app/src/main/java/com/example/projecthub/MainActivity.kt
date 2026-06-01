@@ -91,6 +91,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     AppSettingsProvider(settings = settings) {
                         val authViewModel: AuthViewModel = viewModel()
+                        val authState by authViewModel.state.collectAsStateWithLifecycle()
                         val navController = rememberNavController()
 
                         LaunchedEffect(Unit) {
@@ -180,7 +181,7 @@ class MainActivity : ComponentActivity() {
 
                             composable(AppRoutes.Intro) {
                                 IntroSliderScreen(
-                                    role = authViewModel.currentUser?.role.orEmpty(),
+                                    role = authState.currentUser?.role.orEmpty(),
                                     onFinished = {
                                         authViewModel.markIntroSeenForCurrentUser {
                                             navController.navigate(AppRoutes.homeForRole(authViewModel.currentUser?.role)) {
@@ -234,8 +235,8 @@ class MainActivity : ComponentActivity() {
                                 arguments = listOf(navArgument("taskId") { type = NavType.IntType })
                             ) { backStackEntry ->
                                 UtilizadorDashboardScreen(
-                                    userId = authViewModel.currentUser?.id,
-                                    currentUser = authViewModel.currentUser,
+                                    userId = authState.currentUser?.id,
+                                    currentUser = authState.currentUser,
                                     onUserUpdated = authViewModel::updateCurrentUser,
                                     onLogout = { logoutAndGoToLogin(authViewModel, navController) },
                                     selectedRoute = AppRoutes.UserTasks,
@@ -254,8 +255,8 @@ class MainActivity : ComponentActivity() {
                                 arguments = listOf(navArgument("projectId") { type = NavType.IntType })
                             ) { backStackEntry ->
                                 UtilizadorDashboardScreen(
-                                    userId = authViewModel.currentUser?.id,
-                                    currentUser = authViewModel.currentUser,
+                                    userId = authState.currentUser?.id,
+                                    currentUser = authState.currentUser,
                                     onUserUpdated = authViewModel::updateCurrentUser,
                                     onLogout = { logoutAndGoToLogin(authViewModel, navController) },
                                     selectedRoute = AppRoutes.UserProjects,
@@ -335,8 +336,9 @@ private fun NavGraphBuilder.adminRoute(
     navController: NavHostController
 ) {
     composable(route) {
+        val authState by authViewModel.state.collectAsStateWithLifecycle()
         AdminDashboardScreen(
-            currentUser = authViewModel.currentUser,
+            currentUser = authState.currentUser,
             onUserUpdated = authViewModel::updateCurrentUser,
             onLogout = { logoutAndGoToLogin(authViewModel, navController) },
             selectedRoute = selectedRoute,
@@ -356,9 +358,10 @@ private fun NavGraphBuilder.gestorRoute(
     navController: NavHostController
 ) {
     composable(route) {
+        val authState by authViewModel.state.collectAsStateWithLifecycle()
         GestorDashboardScreen(
-            gestorId = authViewModel.currentUser?.id,
-            currentUser = authViewModel.currentUser,
+            gestorId = authState.currentUser?.id,
+            currentUser = authState.currentUser,
             onUserUpdated = authViewModel::updateCurrentUser,
             onLogout = { logoutAndGoToLogin(authViewModel, navController) },
             selectedRoute = selectedRoute,
@@ -378,9 +381,10 @@ private fun NavGraphBuilder.userRoute(
     navController: NavHostController
 ) {
     composable(route) {
+        val authState by authViewModel.state.collectAsStateWithLifecycle()
         UtilizadorDashboardScreen(
-            userId = authViewModel.currentUser?.id,
-            currentUser = authViewModel.currentUser,
+            userId = authState.currentUser?.id,
+            currentUser = authState.currentUser,
             onUserUpdated = authViewModel::updateCurrentUser,
             onLogout = { logoutAndGoToLogin(authViewModel, navController) },
             selectedRoute = selectedRoute,

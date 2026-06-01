@@ -14,6 +14,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
@@ -30,7 +31,8 @@ fun LoginScreen(
     var message by remember { mutableStateOf("") }
     var messageIsSuccess by remember { mutableStateOf(false) }
     var showPasswordResetDialog by remember { mutableStateOf(false) }
-    val isLoading = authViewModel.isLoading
+    val authState by authViewModel.state.collectAsStateWithLifecycle()
+    val isLoading = authState.isLoading
     val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
     val isFormValid = isEmailValid && password.length >= 6
     val language = currentAppSettings().language

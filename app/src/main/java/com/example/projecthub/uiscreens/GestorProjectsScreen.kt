@@ -927,8 +927,11 @@ private fun ProjectObservationDetailPage(
                 detail = currentAppSettings().language.t("common.photoEmpty")
             )
         } else {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                observation.photoUrls.forEach { photoUrl ->
+            LazyColumn(
+                modifier = Modifier.heightIn(max = 620.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(observation.photoUrls) { photoUrl ->
                     AsyncImage(
                         model = photoUrl,
                         contentDescription = currentAppSettings().language.t("profile.photoDescription"),
@@ -1112,8 +1115,14 @@ private fun ProjectMembers(
             fontSize = 14.sp
         )
     } else {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            project.members.forEach { member ->
+        LazyColumn(
+            modifier = Modifier.heightIn(max = 320.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(
+                items = project.members,
+                key = { it.id }
+            ) { member ->
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1200,8 +1209,14 @@ private fun CompleteProjectDialog(
                         color = ProjectHubColors.Muted
                     )
                 } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        project.members.forEach { member ->
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 360.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(
+                            items = project.members,
+                            key = { it.id }
+                        ) { member ->
                             Column {
                                 Text(
                                     text = member.name,

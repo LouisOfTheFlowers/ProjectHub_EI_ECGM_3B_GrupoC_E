@@ -30,6 +30,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
@@ -44,9 +45,10 @@ fun ResetPasswordScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
     var messageIsSuccess by remember { mutableStateOf(false) }
-    val isLoading = authViewModel.isLoading
-    val canSubmit = authViewModel.isRecoverySessionReady && !isLoading
-    val displayMessage = message.ifBlank { authViewModel.message }
+    val authState by authViewModel.state.collectAsStateWithLifecycle()
+    val isLoading = authState.isLoading
+    val canSubmit = authState.isRecoverySessionReady && !isLoading
+    val displayMessage = message.ifBlank { authState.message }
     val language = currentAppSettings().language
 
     Column(
@@ -136,7 +138,7 @@ fun ResetPasswordScreen(
             }
         }
 
-        if (!authViewModel.isRecoverySessionReady && displayMessage.isBlank()) {
+        if (!authState.isRecoverySessionReady && displayMessage.isBlank()) {
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = language.t("resetPassword.validating"),
