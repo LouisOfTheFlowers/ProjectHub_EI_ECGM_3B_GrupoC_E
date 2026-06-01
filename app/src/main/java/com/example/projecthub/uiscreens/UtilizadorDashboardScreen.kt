@@ -68,8 +68,8 @@ fun UtilizadorDashboardScreen(
 ) {
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
 
-    LaunchedEffect(userId, selectedRoute, hasInternet) {
-        if (hasInternet && selectedRoute == AppRoutes.UserDashboard) {
+    LaunchedEffect(userId, hasInternet) {
+        if (hasInternet) {
             viewModel.loadDashboard(userId)
         }
     }

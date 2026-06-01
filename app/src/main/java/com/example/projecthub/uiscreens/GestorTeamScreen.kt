@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,8 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -45,9 +42,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.R
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
-import com.example.projecthub.R
 import com.example.projecthub.viewmodel.GestorTeamMemberItem
 import com.example.projecthub.viewmodel.GestorTeamProjectOption
 import com.example.projecthub.viewmodel.GestorTeamState
@@ -71,59 +68,49 @@ fun GestorTeamScreen(
         viewModel.loadTeam(gestorId)
     }
 
-    LazyColumn(
+    Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(bottom = 16.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
-        item { TeamHeader() }
-        item { TeamStats(state = state) }
-        item {
-            TeamFilters(
-                state = state,
-                onSearchChange = viewModel::updateSearchQuery,
-                onProjectChange = viewModel::updateProjectFilter
-            )
-        }
+        TeamHeader()
+        TeamStats(state = state)
+        TeamFilters(
+            state = state,
+            onSearchChange = viewModel::updateSearchQuery,
+            onProjectChange = viewModel::updateProjectFilter
+        )
+
         when {
             state.isLoading -> {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(220.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = TeamAccent)
-                    }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = TeamAccent)
                 }
             }
 
             state.errorMessage != null -> {
-                item {
-                    Text(
-                        text = state.errorMessage.orEmpty(),
-                        color = TeamRed,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
-                    )
-                }
+                Text(
+                    text = state.errorMessage.orEmpty(),
+                    color = TeamRed,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp
+                )
             }
 
             state.visibleMembers.isEmpty() -> {
-                item {
-                    Text(
-                        text = currentAppSettings().language.t("manager.team.noMembers"),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
-                        fontSize = 15.sp
-                    )
-                }
+                Text(
+                    text = currentAppSettings().language.t("manager.team.noMembers"),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                    fontSize = 15.sp
+                )
             }
 
             else -> {
-                items(
-                    items = state.visibleMembers,
-                    key = { it.id }
-                ) { member ->
+                state.visibleMembers.forEach { member ->
                     TeamMemberCard(
                         member = member,
                         selectedProjectId = state.selectedProjectId
