@@ -59,6 +59,7 @@ fun UtilizadorDashboardScreen(
     onUserUpdated: (UserDto) -> Unit,
     onLogout: () -> Unit,
     selectedRoute: String = AppRoutes.UserDashboard,
+    hasInternet: Boolean = true,
     taskObservationsId: Int? = null,
     projectHistoryId: Int? = null,
     onNavigate: (String) -> Unit = {},
@@ -67,8 +68,10 @@ fun UtilizadorDashboardScreen(
 ) {
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
 
-    LaunchedEffect(userId) {
-        viewModel.loadDashboard(userId)
+    LaunchedEffect(userId, selectedRoute, hasInternet) {
+        if (hasInternet && selectedRoute == AppRoutes.UserDashboard) {
+            viewModel.loadDashboard(userId)
+        }
     }
 
     UtilizadorScaffold(
@@ -78,14 +81,16 @@ fun UtilizadorDashboardScreen(
         profileName = currentUser?.nome,
         onLogout = onLogout
     ) {
-        when (selectedRoute) {
-            AppRoutes.UserDashboard -> {
+        when {
+            !hasInternet && selectedRoute != AppRoutes.UserProfile -> AppOfflineState()
+
+            selectedRoute == AppRoutes.UserDashboard -> {
                 UtilizadorDashboardHeader()
                 Spacer(modifier = Modifier.height(22.dp))
                 UtilizadorDashboardContent(state = state)
             }
 
-            AppRoutes.UserTasks -> UtilizadorTasksSection(
+            selectedRoute == AppRoutes.UserTasks -> UtilizadorTasksSection(
                 state = state,
                 taskObservationsId = taskObservationsId,
                 onOpenObservations = { taskId ->
@@ -111,7 +116,7 @@ fun UtilizadorDashboardScreen(
                 }
             )
 
-            AppRoutes.UserProjects -> UtilizadorProjectsSection(
+            selectedRoute == AppRoutes.UserProjects -> UtilizadorProjectsSection(
                 state = state,
                 projectHistoryId = projectHistoryId,
                 onOpenHistory = { projectId ->
@@ -120,9 +125,9 @@ fun UtilizadorDashboardScreen(
                 onBack = onBack
             )
 
-            AppRoutes.UserSettings -> SettingsScreen()
+            selectedRoute == AppRoutes.UserSettings -> SettingsScreen()
 
-            AppRoutes.UserProfile -> ProfileScreen(
+            selectedRoute == AppRoutes.UserProfile -> ProfileScreen(
                 user = currentUser,
                 onUserUpdated = onUserUpdated,
                 onAccountDeleted = onLogout

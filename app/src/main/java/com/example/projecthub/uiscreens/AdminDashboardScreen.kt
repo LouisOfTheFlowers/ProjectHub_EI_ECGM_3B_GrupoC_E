@@ -21,6 +21,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Icon
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -57,11 +58,18 @@ fun AdminDashboardScreen(
     onUserUpdated: (UserDto) -> Unit,
     onLogout: () -> Unit,
     selectedRoute: String = AppRoutes.AdminDashboard,
+    hasInternet: Boolean = true,
     onNavigate: (String) -> Unit = {},
     viewModel: AdminDashboardViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val language = currentAppSettings().language
+
+    LaunchedEffect(selectedRoute, hasInternet) {
+        if (hasInternet && selectedRoute == AppRoutes.AdminDashboard) {
+            viewModel.loadDashboard()
+        }
+    }
 
     AdminScaffold(
         selectedRoute = selectedRoute,
@@ -70,24 +78,26 @@ fun AdminDashboardScreen(
         profileName = currentUser?.nome,
         onLogout = onLogout
     ) {
-        when (selectedRoute) {
-            AppRoutes.AdminDashboard -> {
+        when {
+            !hasInternet && selectedRoute != AppRoutes.AdminProfile -> AppOfflineState()
+
+            selectedRoute == AppRoutes.AdminDashboard -> {
                 DashboardHeader(language = language)
                 Spacer(modifier = Modifier.height(22.dp))
                 DashboardContent(state = state, language = language)
             }
 
-            AppRoutes.AdminProjects -> AdminProjectsScreen()
+            selectedRoute == AppRoutes.AdminProjects -> AdminProjectsScreen()
 
-            AppRoutes.AdminTasks -> AdminTasksScreen()
+            selectedRoute == AppRoutes.AdminTasks -> AdminTasksScreen()
 
-            AppRoutes.AdminTeams -> AdminTeamsScreen()
+            selectedRoute == AppRoutes.AdminTeams -> AdminTeamsScreen()
 
-            AppRoutes.AdminReports -> AdminReportsScreen()
+            selectedRoute == AppRoutes.AdminReports -> AdminReportsScreen()
 
-            AppRoutes.AdminSettings -> SettingsScreen()
+            selectedRoute == AppRoutes.AdminSettings -> SettingsScreen()
 
-            AppRoutes.AdminProfile -> ProfileScreen(
+            selectedRoute == AppRoutes.AdminProfile -> ProfileScreen(
                 user = currentUser,
                 onUserUpdated = onUserUpdated,
                 onAccountDeleted = onLogout
