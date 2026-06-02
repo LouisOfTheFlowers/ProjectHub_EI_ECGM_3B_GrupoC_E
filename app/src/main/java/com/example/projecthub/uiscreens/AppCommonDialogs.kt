@@ -53,19 +53,43 @@ import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
 
-data class AppObservationUiModel(
-    val text: String,
-    val userName: String? = null,
-    val date: String? = null,
-    val completionPercent: Int? = null,
-    val spentHours: Float? = null,
-    val location: String? = null,
-    val photoUrls: List<String> = emptyList()
-)
-data class AppDashboardMetric(
-    val label: String,
-    val value: String,
-    val accent: Color,
-    val detail: String,
-    val iconRes: Int
-)
+@Composable
+fun AppDialogConfirmButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    TextButton(
+        onClick = rememberSoundClick(onClick),
+        enabled = enabled,
+        modifier = modifier
+    ) {
+        Text(
+            text = text,
+            color = AuthAccent,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+fun AppDialogCancelButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    TextButton(
+        onClick = rememberSoundClick(onClick),
+        enabled = enabled,
+        modifier = modifier
+    ) {
+        Text(
+            text = text,
+            color = ProjectHubColors.Muted,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
