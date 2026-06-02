@@ -1,4 +1,4 @@
-package com.example.projecthub.uiscreens.admin
+package com.example.projecthub.uiscreens.admin.projects
 
 import com.example.projecthub.uiscreens.*
 
@@ -13,7 +13,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
-import com.example.projecthub.uiscreens.admin.AdminAddProjectScreen
 import com.example.projecthub.viewmodel.AdminProjectListItem
 import com.example.projecthub.viewmodel.AdminProjectsViewModel
 

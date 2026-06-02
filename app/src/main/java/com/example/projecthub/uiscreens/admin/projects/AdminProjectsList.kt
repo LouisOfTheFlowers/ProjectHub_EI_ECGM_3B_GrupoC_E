@@ -1,4 +1,4 @@
-package com.example.projecthub.uiscreens.admin
+package com.example.projecthub.uiscreens.admin.projects
 
 import com.example.projecthub.uiscreens.*
 
@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.projecthub.R
+import com.example.projecthub.settings.AppLanguage
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
@@ -291,7 +292,7 @@ private fun FilterDropdown(
     )
 }
 
-private fun String.toProjectStatusFilterLabel(language: com.example.projecthub.settings.AppLanguage): String {
+private fun String.toProjectStatusFilterLabel(language: AppLanguage): String {
     return when (this) {
         "Todos" -> language.t("filters.projects.all")
         "ConcluÃ­dos" -> language.t("filters.projects.completed")
@@ -364,9 +365,18 @@ private fun ProjectListCard(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 ProjectInfoRow(language.t("addProject.manager"), project.coordinator)
-                ProjectInfoRow(language.t("manager.projects.participants"), project.memberCount.toString())
-                ProjectInfoRow(language.t("common.start"), project.startDate.toAdminProjectDisplayDate(currentAppSettings().dateFormat.pattern))
-                ProjectInfoRow(language.t("common.deadline"), project.dueDate.toAdminProjectDisplayDate(currentAppSettings().dateFormat.pattern))
+                ProjectInfoRow(
+                    language.t("manager.projects.participants"),
+                    project.memberCount.toString()
+                )
+                ProjectInfoRow(
+                    language.t("common.start"),
+                    project.startDate.toAdminProjectDisplayDate(currentAppSettings().dateFormat.pattern)
+                )
+                ProjectInfoRow(
+                    language.t("common.deadline"),
+                    project.dueDate.toAdminProjectDisplayDate(currentAppSettings().dateFormat.pattern)
+                )
 
                 Spacer(modifier = Modifier.height(12.dp))
 

@@ -1,4 +1,4 @@
-package com.example.projecthub.uiscreens.admin
+package com.example.projecthub.uiscreens.admin.projects
 
 import com.example.projecthub.uiscreens.*
 
@@ -108,8 +108,14 @@ private fun AdminProjectDetailsCard(project: AdminProjectListItem) {
         Spacer(modifier = Modifier.height(12.dp))
         ProjectInfoRow(language.t("addProject.manager"), project.coordinator)
         ProjectInfoRow(language.t("common.status"), project.statusLabel)
-        ProjectInfoRow(language.t("common.start"), project.startDate.toAdminProjectDisplayDate(currentAppSettings().dateFormat.pattern))
-        ProjectInfoRow(language.t("common.deadline"), project.dueDate.toAdminProjectDisplayDate(currentAppSettings().dateFormat.pattern))
+        ProjectInfoRow(
+            language.t("common.start"),
+            project.startDate.toAdminProjectDisplayDate(currentAppSettings().dateFormat.pattern)
+        )
+        ProjectInfoRow(
+            language.t("common.deadline"),
+            project.dueDate.toAdminProjectDisplayDate(currentAppSettings().dateFormat.pattern)
+        )
     }
 }
 
@@ -246,7 +252,8 @@ private fun AdminProjectTaskBlock(task: AdminProjectInfoTask) {
         ProjectInfoRow(language.t("common.deadline"), task.dueDate)
         ProjectInfoRow(
             language.t("tasks.responsibles"),
-            task.assignees.takeIf { it.isNotEmpty() }?.joinToString() ?: language.t("tasks.noAssignees")
+            task.assignees.takeIf { it.isNotEmpty() }?.joinToString()
+                ?: language.t("tasks.noAssignees")
         )
 
         Spacer(modifier = Modifier.height(8.dp))

@@ -1,4 +1,4 @@
-package com.example.projecthub.uiscreens.admin
+package com.example.projecthub.uiscreens.admin.projects
 
 import com.example.projecthub.uiscreens.*
 

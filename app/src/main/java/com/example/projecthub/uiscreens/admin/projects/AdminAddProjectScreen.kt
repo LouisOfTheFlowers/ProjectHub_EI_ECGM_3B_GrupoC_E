@@ -1,4 +1,4 @@
-package com.example.projecthub.uiscreens.admin
+package com.example.projecthub.uiscreens.admin.projects
 
 import com.example.projecthub.uiscreens.*
 
@@ -14,18 +14,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -37,7 +30,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -71,16 +63,16 @@ fun AdminAddProjectScreen(
     var activeDateField by remember { mutableStateOf<DateField?>(null) }
     val language = currentAppSettings().language
     Column {
-        _root_ide_package_.com.example.projecthub.uiscreens.AppBackButton(
+        AppBackButton(
             text = language.t("addProject.back"),
             onClick = onBack
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        _root_ide_package_.com.example.projecthub.uiscreens.AppFormCard(title = language.t("addProject.title")) {
-            _root_ide_package_.com.example.projecthub.uiscreens.AppFormLabel(language.t("addProject.name"))
-            _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
+        AppFormCard(title = language.t("addProject.title")) {
+            AppFormLabel(language.t("addProject.name"))
+            AppTextField(
                 value = name,
                 onValueChange = { name = it },
                 singleLine = true,
@@ -92,8 +84,8 @@ fun AdminAddProjectScreen(
             )
             Spacer(modifier = Modifier.height(14.dp))
 
-            _root_ide_package_.com.example.projecthub.uiscreens.AppFormLabel(language.t("projects.description"))
-            _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
+            AppFormLabel(language.t("projects.description"))
+            AppTextField(
                 value = description,
                 onValueChange = { description = it },
                 modifier = Modifier
@@ -107,7 +99,7 @@ fun AdminAddProjectScreen(
             )
             Spacer(modifier = Modifier.height(14.dp))
 
-            _root_ide_package_.com.example.projecthub.uiscreens.AppFormLabel(language.t("addProject.startDate"))
+            AppFormLabel(language.t("addProject.startDate"))
             DatePickerField(
                 value = startDate,
                 onClick = rememberSoundClick { activeDateField = DateField.Start }
@@ -115,7 +107,7 @@ fun AdminAddProjectScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            _root_ide_package_.com.example.projecthub.uiscreens.AppFormLabel(language.t("addProject.endDate"))
+            AppFormLabel(language.t("addProject.endDate"))
             DatePickerField(
                 value = endDate,
                 onClick = rememberSoundClick { activeDateField = DateField.End }
@@ -123,7 +115,7 @@ fun AdminAddProjectScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            _root_ide_package_.com.example.projecthub.uiscreens.AppFormLabel(language.t("addProject.manager"))
+            AppFormLabel(language.t("addProject.manager"))
             ManagerDropdown(
                 selectedManager = selectedManager,
                 managers = state.managers,
@@ -142,7 +134,7 @@ fun AdminAddProjectScreen(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            _root_ide_package_.com.example.projecthub.uiscreens.AppPrimaryButton(
+            AppPrimaryButton(
                 text = language.t("addProject.submit"),
                 onClick = {
                     onCreate(name.text, description.text, startDate, endDate, selectedManager?.id)
@@ -154,7 +146,7 @@ fun AdminAddProjectScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            _root_ide_package_.com.example.projecthub.uiscreens.AppSecondaryButton(
+            AppSecondaryButton(
                 text = language.t("common.cancel"),
                 onClick = onBack,
                 enabled = !state.isCreating
@@ -294,7 +286,7 @@ private fun ManagerDropdown(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp
             )
-            _root_ide_package_.com.example.projecthub.uiscreens.AppExpandIcon(expanded = expanded)
+            AppExpandIcon(expanded = expanded)
         }
 
         DropdownMenu(
