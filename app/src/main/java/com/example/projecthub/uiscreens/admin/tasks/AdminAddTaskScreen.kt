@@ -1,4 +1,4 @@
-package com.example.projecthub.uiscreens.admin
+package com.example.projecthub.uiscreens.admin.tasks
 
 import com.example.projecthub.uiscreens.*
 
@@ -13,19 +13,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -37,7 +30,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -271,12 +263,6 @@ private fun TaskDatePickerField(
             color = if (value.isBlank()) ProjectHubColors.Muted else ProjectHubColors.Ink,
             fontWeight = FontWeight.SemiBold,
             fontSize = 15.sp
-        )
-        Text(
-            text = currentAppSettings().language.t("settings.dateFormat"),
-            color = ProjectHubColors.Muted,
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.sp
         )
     }
 }

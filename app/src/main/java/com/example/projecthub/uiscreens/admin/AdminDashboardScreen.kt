@@ -30,6 +30,9 @@ import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.uiscreens.admin.projects.AdminProjectsScreen
+import com.example.projecthub.uiscreens.admin.reports.AdminReportsScreen
+import com.example.projecthub.uiscreens.admin.tasks.AdminTasksScreen
+import com.example.projecthub.uiscreens.admin.teams.AdminTeamsScreen
 import com.example.projecthub.viewmodel.AdminDashboardState
 import com.example.projecthub.viewmodel.AdminDashboardViewModel
 

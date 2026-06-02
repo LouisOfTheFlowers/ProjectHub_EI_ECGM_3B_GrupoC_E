@@ -47,12 +47,12 @@ import com.example.projecthub.settings.AppThemeMode
 import com.example.projecthub.ui.theme.ProjectHubTheme
 import com.example.projecthub.uiscreens.admin.AdminDashboardScreen
 import com.example.projecthub.uiscreens.EmailConfirmedScreen
-import com.example.projecthub.uiscreens.GestorDashboardScreen
+import com.example.projecthub.uiscreens.gestor.GestorDashboardScreen
 import com.example.projecthub.uiscreens.IntroSliderScreen
 import com.example.projecthub.uiscreens.LoginScreen
 import com.example.projecthub.uiscreens.RegisterScreen
 import com.example.projecthub.uiscreens.ResetPasswordScreen
-import com.example.projecthub.uiscreens.UtilizadorDashboardScreen
+import com.example.projecthub.uiscreens.utilizador.UtilizadorDashboardScreen
 import com.example.projecthub.viewmodel.AuthViewModel
 import com.example.projecthub.viewmodel.SettingsViewModel
 

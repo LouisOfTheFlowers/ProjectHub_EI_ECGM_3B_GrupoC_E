@@ -571,10 +571,16 @@ class AdminProjectsViewModel(
         memberCounts: Map<Int, Int>
     ): AdminProjectListItem? {
         val projectId = id ?: return null
+        val today = LocalDate.now()
+        val startDate = data_inicio?.toLocalDateOrNull()
         val dueDate = data_fim?.toLocalDateOrNull()
         val isCompleted = status.isCompletedStatus()
-        val isInProgress = status.isInProgressStatus()
-        val isDelayed = !isCompleted && dueDate != null && dueDate.isBefore(LocalDate.now())
+        val isDelayed = !isCompleted && dueDate != null && dueDate.isBefore(today)
+        val hasStarted = startDate == null || !startDate.isAfter(today)
+        val isInProgress = !isCompleted && !isDelayed && hasStarted && (
+            status.isInProgressStatus() ||
+                status.isPendingStatus()
+        )
 
         return AdminProjectListItem(
             id = projectId,
@@ -614,6 +620,14 @@ class AdminProjectsViewModel(
             "EMPROGRESSO",
             "EM_ANDAMENTO",
             "ANDAMENTO"
+        )
+    }
+
+    private fun String.isPendingStatus(): Boolean {
+        return normalizedStatus() in setOf(
+            "PENDENTE",
+            "PENDING",
+            "POR_INICIAR"
         )
     }
 

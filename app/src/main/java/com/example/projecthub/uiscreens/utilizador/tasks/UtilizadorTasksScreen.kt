@@ -1,4 +1,4 @@
-package com.example.projecthub.uiscreens
+package com.example.projecthub.uiscreens.utilizador.tasks
 
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -87,7 +87,7 @@ fun UtilizadorTasksSection(
                         .height(220.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = AuthAccent)
+                    CircularProgressIndicator(color = _root_ide_package_.com.example.projecthub.uiscreens.AuthAccent)
                 }
             }
 
@@ -99,7 +99,7 @@ fun UtilizadorTasksSection(
             )
 
             else -> Column {
-                AppBackButton(
+                _root_ide_package_.com.example.projecthub.uiscreens.AppBackButton(
                     text = language.t("user.tasks.back"),
                     onClick = onBack
                 )
@@ -156,7 +156,7 @@ fun UtilizadorTasksSection(
                         .height(220.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = AuthAccent)
+                    CircularProgressIndicator(color = _root_ide_package_.com.example.projecthub.uiscreens.AuthAccent)
                 }
             }
 
@@ -274,14 +274,14 @@ private fun UserTaskCard(
                 )
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    AppObservationsButton(
+                    _root_ide_package_.com.example.projecthub.uiscreens.AppObservationsButton(
                         text = language.t("user.tasks.observations"),
                         onClick = onOpenObservations,
                         enabled = !isSaving,
                         compact = true
                     )
 
-                    AppFilledActionButton(
+                    _root_ide_package_.com.example.projecthub.uiscreens.AppFilledActionButton(
                         text = if (completed) language.t("user.tasks.completed") else language.t("user.tasks.complete"),
                         onClick = onComplete,
                         enabled = !isSaving && !completed,
@@ -305,7 +305,7 @@ private fun TaskObservationsPage(
 
     LazyColumn(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
-            AppBackButton(
+            _root_ide_package_.com.example.projecthub.uiscreens.AppBackButton(
                 text = language.t("user.tasks.back"),
                 onClick = onBack,
                 enabled = !isSaving
@@ -339,7 +339,7 @@ private fun TaskObservationsPage(
         }
 
         item {
-            AppObservationsButton(
+            _root_ide_package_.com.example.projecthub.uiscreens.AppObservationsButton(
                 text = if (isSaving) language.t("common.saving") else language.t("user.tasks.addObservation"),
                 onClick = onAddObservation,
                 enabled = !isSaving,
@@ -364,8 +364,8 @@ private fun TaskObservationsPage(
 
 @Composable
 private fun ObservationCard(observation: UtilizadorTaskObservation) {
-    AppObservationCard(
-        observation = AppObservationUiModel(
+    _root_ide_package_.com.example.projecthub.uiscreens.AppObservationCard(
+        observation = _root_ide_package_.com.example.projecthub.uiscreens.AppObservationUiModel(
             text = observation.observation.texto,
             date = observation.record.data.toUiDate(),
             completionPercent = observation.record.taxa_conclusao,
@@ -416,7 +416,7 @@ private fun AddObservationDialog(
                     fontSize = 13.sp
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                AppTextField(
+                _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
                     value = text,
                     onValueChange = { text = it },
                     label = language.t("user.tasks.observationText"),
@@ -444,14 +444,14 @@ private fun AddObservationDialog(
             }
         },
         confirmButton = {
-            AppDialogConfirmButton(
+            _root_ide_package_.com.example.projecthub.uiscreens.AppDialogConfirmButton(
                 text = if (isSaving) language.t("common.saving") else language.t("common.save"),
                 onClick = { onSave(text, photoUri) },
                 enabled = !isSaving && text.isNotBlank()
             )
         },
         dismissButton = {
-            AppDialogCancelButton(
+            _root_ide_package_.com.example.projecthub.uiscreens.AppDialogCancelButton(
                 text = language.t("common.cancel"),
                 onClick = onDismiss,
                 enabled = !isSaving
@@ -514,7 +514,7 @@ private fun CompleteTaskDialog(
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                AppTextField(
+                _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
                     value = location,
                     onValueChange = { location = it },
                     label = language.t("user.tasks.completionLocation"),
@@ -522,7 +522,7 @@ private fun CompleteTaskDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                AppTextField(
+                _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
                     value = hours,
                     onValueChange = { hours = it },
                     label = language.t("user.tasks.spentHours"),
@@ -533,14 +533,14 @@ private fun CompleteTaskDialog(
             }
         },
         confirmButton = {
-            AppDialogConfirmButton(
+            _root_ide_package_.com.example.projecthub.uiscreens.AppDialogConfirmButton(
                 text = if (isSaving) language.t("common.completing") else language.t("user.tasks.complete"),
                 onClick = { onSave(date, location, hours) },
                 enabled = !isSaving && date.isNotBlank() && location.isNotBlank() && hours.isNotBlank()
             )
         },
         dismissButton = {
-            AppDialogCancelButton(
+            _root_ide_package_.com.example.projecthub.uiscreens.AppDialogCancelButton(
                 text = language.t("common.cancel"),
                 onClick = onDismiss,
                 enabled = !isSaving
@@ -611,7 +611,7 @@ private fun CompletionDatePickerField(
                         isDialogOpen = false
                     }
                 ) {
-                    Text(language.t("common.confirm"), color = AuthAccent, fontWeight = FontWeight.Bold)
+                    Text(language.t("common.confirm"), color = _root_ide_package_.com.example.projecthub.uiscreens.AuthAccent, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -650,7 +650,7 @@ private fun TaskMeta(
 
 @Composable
 private fun StatusPill(status: String) {
-    AppStatusChip(text = status)
+    _root_ide_package_.com.example.projecthub.uiscreens.AppStatusChip(text = status)
 }
 
 @Composable
@@ -658,7 +658,10 @@ private fun TaskMessageCard(
     title: String,
     detail: String
 ) {
-    AppMessageCard(title = title, detail = detail)
+    _root_ide_package_.com.example.projecthub.uiscreens.AppMessageCard(
+        title = title,
+        detail = detail
+    )
 }
 
 private fun String?.toUiDate(): String {

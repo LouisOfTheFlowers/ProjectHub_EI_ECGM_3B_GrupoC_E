@@ -1,9 +1,10 @@
-package com.example.projecthub.uiscreens
+package com.example.projecthub.uiscreens.admin.reports
+
+import com.example.projecthub.uiscreens.*
 
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,7 +28,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.Icon
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,10 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -50,33 +47,29 @@ import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
 import com.example.projecthub.R
-import com.example.projecthub.viewmodel.GestorReportCard
-import com.example.projecthub.viewmodel.GestorReportExport
-import com.example.projecthub.viewmodel.GestorReportExportType
-import com.example.projecthub.viewmodel.GestorReportSummary
-import com.example.projecthub.viewmodel.GestorReportsState
-import com.example.projecthub.viewmodel.GestorReportsViewModel
+import com.example.projecthub.viewmodel.AdminReportCard
+import com.example.projecthub.viewmodel.AdminReportExport
+import com.example.projecthub.viewmodel.AdminReportExportType
+import com.example.projecthub.viewmodel.AdminReportSummary
+import com.example.projecthub.viewmodel.AdminReportsState
+import com.example.projecthub.viewmodel.AdminReportsViewModel
 import com.example.projecthub.ui.theme.ProjectHubColors
+import java.util.Locale
 
-private val GestorReportsAccent = AuthAccent
-private val GestorReportsGreen = ProjectHubColors.SuccessDark
-private val GestorReportsOrange = ProjectHubColors.Warning
-private val GestorReportsRed = ProjectHubColors.DangerDark
-private val GestorReportsBlue = ProjectHubColors.Info
+private val ReportsAccent = AuthAccent
+private val ReportsGreen = ProjectHubColors.SuccessDark
+private val ReportsOrange = ProjectHubColors.Warning
+private val ReportsRed = ProjectHubColors.DangerDark
+private val ReportsBlue = ProjectHubColors.Info
 
 @Composable
-fun GestorReportsScreen(
-    gestorId: Int?,
-    viewModel: GestorReportsViewModel = viewModel()
+fun AdminReportsScreen(
+    viewModel: AdminReportsViewModel = viewModel()
 ) {
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     val language = currentAppSettings().language
     val context = LocalContext.current
-    var pendingExport by remember { mutableStateOf<GestorReportExport?>(null) }
-
-    LaunchedEffect(gestorId) {
-        viewModel.loadReports(gestorId)
-    }
+    var pendingExport by remember { mutableStateOf<AdminReportExport?>(null) }
 
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv"),
@@ -106,24 +99,24 @@ fun GestorReportsScreen(
     )
 
     Column {
-        GestorReportsHeader()
+        ReportsHeader()
         Spacer(modifier = Modifier.height(18.dp))
 
         when {
-            state.isLoading -> GestorReportsLoading()
+            state.isLoading -> ReportsLoading()
 
             state.errorMessage != null -> {
                 val errorMessage = state.errorMessage.orEmpty()
-                GestorReportsError(
+                ReportsError(
                     message = errorMessage,
-                    onRetry = { viewModel.loadReports(gestorId) }
+                    onRetry = viewModel::loadReports
                 )
             }
 
-            else -> GestorReportsContent(
+            else -> ReportsContent(
                 state = state,
                 onExport = { type ->
-                    val export = viewModel.buildExport(type) ?: return@GestorReportsContent
+                    val export = viewModel.buildExport(type) ?: return@ReportsContent
                     pendingExport = export
                     exportLauncher.launch(export.fileName)
                 }
@@ -133,17 +126,17 @@ fun GestorReportsScreen(
 }
 
 @Composable
-private fun GestorReportsHeader() {
+private fun ReportsHeader() {
     val language = currentAppSettings().language
     Column {
         Text(
-            text = language.t("reports.managerTitle"),
+            text = language.t("reports.adminTitle"),
             color = ProjectHubColors.Ink,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 24.sp
         )
         Text(
-            text = language.t("reports.managerSubtitle"),
+            text = language.t("reports.adminSubtitle"),
             color = ProjectHubColors.Muted,
             fontSize = 14.sp
         )
@@ -151,19 +144,19 @@ private fun GestorReportsHeader() {
 }
 
 @Composable
-private fun GestorReportsLoading() {
+private fun ReportsLoading() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(240.dp),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = GestorReportsAccent)
+        CircularProgressIndicator(color = ReportsAccent)
     }
 }
 
 @Composable
-private fun GestorReportsError(
+private fun ReportsError(
     message: String,
     onRetry: () -> Unit
 ) {
@@ -177,7 +170,7 @@ private fun GestorReportsError(
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = message,
-                color = GestorReportsRed,
+                color = ReportsRed,
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp
             )
@@ -185,7 +178,7 @@ private fun GestorReportsError(
             TextButton(onClick = rememberSoundClick(onRetry)) {
                 Text(
                     text = language.t("common.retry"),
-                    color = GestorReportsAccent,
+                    color = ReportsAccent,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -194,19 +187,19 @@ private fun GestorReportsError(
 }
 
 @Composable
-private fun GestorReportsContent(
-    state: GestorReportsState,
-    onExport: (GestorReportExportType) -> Unit
+private fun ReportsContent(
+    state: AdminReportsState,
+    onExport: (AdminReportExportType) -> Unit
 ) {
     val language = currentAppSettings().language
-    GestorReportSummaryGrid(summary = state.summary)
+    ReportSummaryGrid(summary = state.summary)
 
     Spacer(modifier = Modifier.height(16.dp))
 
     state.exportErrorMessage?.let { message ->
         Text(
             text = message,
-            color = GestorReportsRed,
+            color = ReportsRed,
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp
         )
@@ -223,7 +216,7 @@ private fun GestorReportsContent(
     Spacer(modifier = Modifier.height(12.dp))
 
     state.cards.forEach { card ->
-        GestorReportExportCard(
+        ReportExportCard(
             card = card,
             onExport = { onExport(card.type) }
         )
@@ -232,50 +225,50 @@ private fun GestorReportsContent(
 }
 
 @Composable
-private fun GestorReportSummaryGrid(summary: GestorReportSummary) {
+private fun ReportSummaryGrid(summary: AdminReportSummary) {
     val language = currentAppSettings().language
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            GestorSummaryCard(
-                label = language.t("reports.team"),
+            SummaryCard(
+                label = language.t("reports.users"),
                 value = summary.totalUsers.toString(),
-                accent = GestorReportsAccent,
+                accent = ReportsAccent,
                 modifier = Modifier.weight(1f)
             )
-            GestorSummaryCard(
+            SummaryCard(
                 label = language.t("reports.projects"),
                 value = summary.totalProjects.toString(),
-                accent = GestorReportsBlue,
+                accent = ReportsBlue,
                 modifier = Modifier.weight(1f)
             )
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            GestorSummaryCard(
+            SummaryCard(
                 label = language.t("reports.tasks"),
                 value = summary.totalTasks.toString(),
-                accent = GestorReportsOrange,
+                accent = ReportsOrange,
                 modifier = Modifier.weight(1f)
             )
-            GestorSummaryCard(
+            SummaryCard(
                 label = language.t("common.progress"),
                 value = "${summary.averageCompletion}%",
-                accent = GestorReportsGreen,
+                accent = ReportsGreen,
                 modifier = Modifier.weight(1f)
             )
         }
 
-        GestorSummaryCard(
+        SummaryCard(
             label = language.t("reports.registeredHours"),
             value = "${summary.totalHours.formatOneDecimal()} h",
-            accent = GestorReportsRed,
+            accent = ReportsRed,
             modifier = Modifier.fillMaxWidth()
         )
     }
 }
 
 @Composable
-private fun GestorSummaryCard(
+private fun SummaryCard(
     label: String,
     value: String,
     accent: Color,
@@ -311,15 +304,15 @@ private fun GestorSummaryCard(
 }
 
 @Composable
-private fun GestorReportExportCard(
-    card: GestorReportCard,
+private fun ReportExportCard(
+    card: AdminReportCard,
     onExport: () -> Unit
 ) {
     val language = currentAppSettings().language
     val accent = when (card.type) {
-        GestorReportExportType.Users -> GestorReportsAccent
-        GestorReportExportType.Projects -> GestorReportsBlue
-        GestorReportExportType.Tasks -> GestorReportsOrange
+        AdminReportExportType.Users -> ReportsAccent
+        AdminReportExportType.Projects -> ReportsBlue
+        AdminReportExportType.Tasks -> ReportsOrange
     }
     val exportClick = rememberSoundClick(onExport)
 
@@ -338,7 +331,7 @@ private fun GestorReportExportCard(
                         .background(accent.copy(alpha = 0.14f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    GestorReportTypeIcon(type = card.type, color = accent)
+                    ReportTypeIcon(type = card.type, color = accent)
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -362,9 +355,9 @@ private fun GestorReportExportCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                GestorReportChip(text = "${card.rows} ${language.t("common.rows")}", color = accent)
-                GestorReportChip(text = card.primaryMetric, color = GestorReportsGreen)
-                GestorReportChip(text = card.secondaryMetric, color = ProjectHubColors.Muted)
+                ReportChip(text = "${card.rows} ${language.t("common.rows")}", color = accent)
+                ReportChip(text = card.primaryMetric, color = ReportsGreen)
+                ReportChip(text = card.secondaryMetric, color = ProjectHubColors.Muted)
             }
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -378,7 +371,7 @@ private fun GestorReportExportCard(
                 ),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                GestorExportIcon(color = Color.White)
+                ExportIcon(color = Color.White)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = language.t("common.exportCsv"),
@@ -391,7 +384,7 @@ private fun GestorReportExportCard(
 }
 
 @Composable
-private fun GestorReportChip(
+private fun ReportChip(
     text: String,
     color: Color
 ) {
@@ -408,14 +401,14 @@ private fun GestorReportChip(
 }
 
 @Composable
-private fun GestorReportTypeIcon(
-    type: GestorReportExportType,
+private fun ReportTypeIcon(
+    type: AdminReportExportType,
     color: Color
 ) {
     val iconRes = when (type) {
-        GestorReportExportType.Users -> R.drawable.ic_group_24
-        GestorReportExportType.Projects -> R.drawable.ic_folder_24
-        GestorReportExportType.Tasks -> R.drawable.ic_tasks_24
+        AdminReportExportType.Users -> R.drawable.ic_group_24
+        AdminReportExportType.Projects -> R.drawable.ic_folder_24
+        AdminReportExportType.Tasks -> R.drawable.ic_tasks_24
     }
 
     Icon(
@@ -427,7 +420,7 @@ private fun GestorReportTypeIcon(
 }
 
 @Composable
-private fun GestorExportIcon(color: Color) {
+private fun ExportIcon(color: Color) {
     Icon(
         painter = painterResource(R.drawable.ic_download_24),
         contentDescription = null,
@@ -437,5 +430,5 @@ private fun GestorExportIcon(color: Color) {
 }
 
 private fun Float.formatOneDecimal(): String {
-    return String.format(java.util.Locale.US, "%.1f", this)
+    return String.format(Locale.US, "%.1f", this)
 }

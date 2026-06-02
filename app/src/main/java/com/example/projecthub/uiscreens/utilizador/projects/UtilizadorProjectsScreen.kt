@@ -1,4 +1,4 @@
-package com.example.projecthub.uiscreens
+package com.example.projecthub.uiscreens.utilizador.projects
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -19,7 +19,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,9 +31,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.projecthub.remote.supabase.models.TarefaDto
 import com.example.projecthub.settings.currentAppSettings
-import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
+import com.example.projecthub.uiscreens.AppBackButton
+import com.example.projecthub.uiscreens.AppMessageCard
+import com.example.projecthub.uiscreens.AppOutlinedActionButton
+import com.example.projecthub.uiscreens.AppStatusChip
+import com.example.projecthub.uiscreens.AuthAccent
+import com.example.projecthub.uiscreens.isLandscapeLayout
 import com.example.projecthub.viewmodel.UtilizadorDashboardState
 import com.example.projecthub.viewmodel.UtilizadorProjectItem
 import java.text.Normalizer

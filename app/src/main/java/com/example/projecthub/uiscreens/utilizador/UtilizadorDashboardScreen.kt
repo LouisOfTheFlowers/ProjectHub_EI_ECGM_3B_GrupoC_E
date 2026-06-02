@@ -1,37 +1,20 @@
-package com.example.projecthub.uiscreens
+package com.example.projecthub.uiscreens.utilizador
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,10 +26,12 @@ import com.example.projecthub.remote.supabase.models.UserDto
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
+import com.example.projecthub.uiscreens.utilizador.projects.UtilizadorProjectsSection
+import com.example.projecthub.uiscreens.utilizador.tasks.UtilizadorTasksSection
 import com.example.projecthub.viewmodel.UtilizadorDashboardState
 import com.example.projecthub.viewmodel.UtilizadorDashboardViewModel
 
-private val UtilizadorAccent = AuthAccent
+private val UtilizadorAccent = _root_ide_package_.com.example.projecthub.uiscreens.AuthAccent
 private val UtilizadorGreen = ProjectHubColors.Success
 private val UtilizadorBlue = ProjectHubColors.InfoLight
 private val UtilizadorOrange = ProjectHubColors.Warning
@@ -82,7 +67,7 @@ fun UtilizadorDashboardScreen(
         onLogout = onLogout
     ) {
         when {
-            !hasInternet && selectedRoute != AppRoutes.UserProfile -> AppOfflineState()
+            !hasInternet && selectedRoute != AppRoutes.UserProfile -> _root_ide_package_.com.example.projecthub.uiscreens.AppOfflineState()
 
             selectedRoute == AppRoutes.UserDashboard -> {
                 UtilizadorDashboardHeader()
@@ -125,9 +110,9 @@ fun UtilizadorDashboardScreen(
                 onBack = onBack
             )
 
-            selectedRoute == AppRoutes.UserSettings -> SettingsScreen()
+            selectedRoute == AppRoutes.UserSettings -> _root_ide_package_.com.example.projecthub.uiscreens.SettingsScreen()
 
-            selectedRoute == AppRoutes.UserProfile -> ProfileScreen(
+            selectedRoute == AppRoutes.UserProfile -> _root_ide_package_.com.example.projecthub.uiscreens.ProfileScreen(
                 user = currentUser,
                 onUserUpdated = onUserUpdated,
                 onAccountDeleted = onLogout
@@ -158,7 +143,7 @@ private fun UtilizadorDashboardHeader() {
 @Composable
 private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
     val language = currentAppSettings().language
-    val isLandscape = isLandscapeLayout()
+    val isLandscape = _root_ide_package_.com.example.projecthub.uiscreens.isLandscapeLayout()
 
     when {
         state.isLoading -> {
@@ -173,8 +158,8 @@ private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
         }
 
         state.errorMessage != null -> {
-            AppDashboardMetricCard(
-                metric = AppDashboardMetric(
+            _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetricCard(
+                metric = _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetric(
                     label = language.t("dashboard.state"),
                     value = language.t("dashboard.error"),
                     accent = UtilizadorRed,
@@ -186,8 +171,8 @@ private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
 
         else -> {
             val cards: @Composable (Modifier) -> Unit = { modifier ->
-                AppDashboardMetricCard(
-                    metric = AppDashboardMetric(
+                _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetricCard(
+                    metric = _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetric(
                         label = language.t("common.inProgress"),
                         value = state.inProgressTasks.toString(),
                         accent = UtilizadorBlue,
@@ -197,8 +182,8 @@ private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
                     modifier = modifier
                 )
                 if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
-                AppDashboardMetricCard(
-                    metric = AppDashboardMetric(
+                _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetricCard(
+                    metric = _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetric(
                         label = language.t("common.completed"),
                         value = state.completedTasks.toString(),
                         accent = UtilizadorGreen,
@@ -208,8 +193,8 @@ private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
                     modifier = modifier
                 )
                 if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
-                AppDashboardMetricCard(
-                    metric = AppDashboardMetric(
+                _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetricCard(
+                    metric = _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetric(
                         label = language.t("common.pending"),
                         value = state.pendingTasks.toString(),
                         accent = UtilizadorOrange,
@@ -219,8 +204,8 @@ private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
                     modifier = modifier
                 )
                 if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
-                AppDashboardMetricCard(
-                    metric = AppDashboardMetric(
+                _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetricCard(
+                    metric = _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetric(
                         label = language.t("common.delayed"),
                         value = state.lateTasks.toString(),
                         accent = UtilizadorRed,

@@ -1,6 +1,5 @@
-package com.example.projecthub.uiscreens
+package com.example.projecthub.uiscreens.gestor
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,11 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,11 +44,14 @@ import com.example.projecthub.navigation.SidebarDestination
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
+import com.example.projecthub.uiscreens.AuthAccent
+import com.example.projecthub.uiscreens.TopBarProfilePhoto
+import com.example.projecthub.uiscreens.isLandscapeLayout
 
-private val UtilizadorScaffoldAccent = AuthAccent
+private val GestorScaffoldAccent = AuthAccent
 
 @Composable
-fun UtilizadorScaffold(
+fun GestorScaffold(
     selectedRoute: String,
     onNavigate: (String) -> Unit,
     profilePhotoUri: String?,
@@ -62,6 +60,7 @@ fun UtilizadorScaffold(
     content: @Composable () -> Unit
 ) {
     var isSidebarOpen by remember { mutableStateOf(false) }
+    val openSidebar = { isSidebarOpen = true }
 
     Box(
         modifier = Modifier
@@ -74,11 +73,11 @@ fun UtilizadorScaffold(
                 .border(5.dp, ProjectHubColors.HeaderBackground)
                 .background(MaterialTheme.colorScheme.surface)
         ) {
-            UtilizadorTopBar(
-                onMenuClick = { isSidebarOpen = true },
+            GestorTopBar(
+                onMenuClick = openSidebar,
                 profilePhotoUri = profilePhotoUri,
                 profileName = profileName,
-                onProfileClick = { onNavigate(AppRoutes.UserProfile) }
+                onProfileClick = { onNavigate(AppRoutes.GestorProfile) }
             )
 
             LazyColumn(
@@ -94,30 +93,21 @@ fun UtilizadorScaffold(
         }
 
         if (isSidebarOpen) {
-            Row(modifier = Modifier.fillMaxSize()) {
-                UtilizadorSidebar(
-                    selectedSection = selectedRoute,
-                    onNavigate = { section ->
-                        onNavigate(section)
-                        isSidebarOpen = false
-                    },
-                    onLogout = onLogout
-                )
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .background(Color.Black.copy(alpha = 0.35f))
-                        .clickable { isSidebarOpen = false }
-                )
-            }
+            GestorSidebarOverlay(
+                selectedSection = selectedRoute,
+                onDismiss = { isSidebarOpen = false },
+                onNavigate = { section ->
+                    onNavigate(section)
+                    isSidebarOpen = false
+                },
+                onLogout = onLogout
+            )
         }
     }
 }
 
 @Composable
-private fun UtilizadorTopBar(
+private fun GestorTopBar(
     onMenuClick: () -> Unit,
     profilePhotoUri: String?,
     profileName: String?,
@@ -140,7 +130,7 @@ private fun UtilizadorTopBar(
                 .clickable(onClick = onMenuClick),
             contentAlignment = Alignment.Center
         ) {
-            UtilizadorMenuIcon(color = ProjectHubColors.HeaderContent)
+            GestorMenuIcon(color = ProjectHubColors.HeaderContent)
         }
 
         Text(
@@ -163,7 +153,31 @@ private fun UtilizadorTopBar(
 }
 
 @Composable
-private fun UtilizadorSidebar(
+private fun GestorSidebarOverlay(
+    selectedSection: String,
+    onDismiss: () -> Unit,
+    onNavigate: (String) -> Unit,
+    onLogout: () -> Unit
+) {
+    Row(modifier = Modifier.fillMaxSize()) {
+        GestorSidebar(
+            selectedSection = selectedSection,
+            onNavigate = onNavigate,
+            onLogout = onLogout
+        )
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .background(Color.Black.copy(alpha = 0.35f))
+                .clickable(onClick = onDismiss)
+        )
+    }
+}
+
+@Composable
+private fun GestorSidebar(
     selectedSection: String,
     onNavigate: (String) -> Unit,
     onLogout: () -> Unit
@@ -205,7 +219,7 @@ private fun UtilizadorSidebar(
                     fontSize = 20.sp
                 )
                 Text(
-                    text = language.t("role.user"),
+                    text = language.t("role.manager"),
                     color = ProjectHubColors.SidebarMutedText,
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp
@@ -216,14 +230,16 @@ private fun UtilizadorSidebar(
         Spacer(modifier = Modifier.height(if (isLandscape) 12.dp else 24.dp))
 
         val destinations = listOf(
-            SidebarDestination(AppRoutes.UserDashboard, language.t("sidebar.dashboard"), UtilizadorSidebarIcon.Dashboard),
-            SidebarDestination(AppRoutes.UserTasks, language.t("user.tasks.title"), UtilizadorSidebarIcon.Tasks),
-            SidebarDestination(AppRoutes.UserProjects, language.t("user.projects.title"), UtilizadorSidebarIcon.Projects),
-            SidebarDestination(AppRoutes.UserSettings, language.t("sidebar.settings"), UtilizadorSidebarIcon.Settings)
+            SidebarDestination(AppRoutes.GestorDashboard, language.t("sidebar.dashboard"), GestorSidebarIcon.Dashboard),
+            SidebarDestination(AppRoutes.GestorProjects, language.t("manager.projects.title"), GestorSidebarIcon.Projects),
+            SidebarDestination(AppRoutes.GestorTasks, language.t("tasks.managementTitle"), GestorSidebarIcon.Tasks),
+            SidebarDestination(AppRoutes.GestorTeam, language.t("manager.team.title"), GestorSidebarIcon.Team),
+            SidebarDestination(AppRoutes.GestorReports, language.t("reports.managerTitle"), GestorSidebarIcon.Reports),
+            SidebarDestination(AppRoutes.GestorSettings, language.t("sidebar.settings"), GestorSidebarIcon.Settings)
         )
 
         destinations.forEach { destination ->
-            UtilizadorSidebarItem(
+            GestorSidebarItem(
                 label = destination.label,
                 icon = destination.icon,
                 selected = selectedSection == destination.route,
@@ -232,18 +248,18 @@ private fun UtilizadorSidebar(
         }
         Spacer(modifier = Modifier.height(if (isLandscape) 12.dp else 24.dp))
 
-        UtilizadorSidebarItem(
+        GestorSidebarItem(
             label = language.t("sidebar.logout"),
-            icon = UtilizadorSidebarIcon.Logout,
+            icon = GestorSidebarIcon.Logout,
             onClick = onLogout
         )
     }
 }
 
 @Composable
-private fun UtilizadorSidebarItem(
+private fun GestorSidebarItem(
     label: String,
-    icon: UtilizadorSidebarIcon,
+    icon: GestorSidebarIcon,
     selected: Boolean = false,
     onClick: () -> Unit = {}
 ) {
@@ -258,7 +274,7 @@ private fun UtilizadorSidebarItem(
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        UtilizadorSidebarItemIcon(icon = icon, color = Color.White)
+        GestorSidebarItemIcon(icon = icon, color = Color.White)
         Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = label,
@@ -271,25 +287,29 @@ private fun UtilizadorSidebarItem(
     Spacer(modifier = Modifier.height(if (isLandscapeLayout()) 4.dp else 8.dp))
 }
 
-private enum class UtilizadorSidebarIcon {
+private enum class GestorSidebarIcon {
     Dashboard,
-    Tasks,
     Projects,
+    Tasks,
+    Team,
+    Reports,
     Settings,
     Logout
 }
 
 @Composable
-private fun UtilizadorSidebarItemIcon(
-    icon: UtilizadorSidebarIcon,
+private fun GestorSidebarItemIcon(
+    icon: GestorSidebarIcon,
     color: Color
 ) {
     val iconRes = when (icon) {
-        UtilizadorSidebarIcon.Projects -> R.drawable.ic_folder_24
-        UtilizadorSidebarIcon.Dashboard -> R.drawable.ic_dashboard_24
-        UtilizadorSidebarIcon.Tasks -> R.drawable.ic_tasks_24
-        UtilizadorSidebarIcon.Logout -> R.drawable.ic_logout_24
-        UtilizadorSidebarIcon.Settings -> R.drawable.ic_settings_24
+        GestorSidebarIcon.Dashboard -> R.drawable.ic_dashboard_24
+        GestorSidebarIcon.Projects -> R.drawable.ic_folder_24
+        GestorSidebarIcon.Tasks -> R.drawable.ic_tasks_24
+        GestorSidebarIcon.Logout -> R.drawable.ic_logout_24
+        GestorSidebarIcon.Settings -> R.drawable.ic_settings_24
+        GestorSidebarIcon.Team -> R.drawable.ic_group_24
+        GestorSidebarIcon.Reports -> R.drawable.ic_bar_chart_24
     }
 
     Icon(
@@ -300,7 +320,7 @@ private fun UtilizadorSidebarItemIcon(
     )
 }
 @Composable
-private fun UtilizadorMenuIcon(
+private fun GestorMenuIcon(
     modifier: Modifier = Modifier,
     color: Color
 ) {

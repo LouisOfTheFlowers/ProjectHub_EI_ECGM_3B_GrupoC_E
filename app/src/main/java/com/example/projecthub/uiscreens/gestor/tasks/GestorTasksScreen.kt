@@ -1,4 +1,4 @@
-package com.example.projecthub.uiscreens
+package com.example.projecthub.uiscreens.gestor.tasks
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -57,6 +57,8 @@ import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
+import com.example.projecthub.uiscreens.gestor.tasks.GestorAddTaskScreen
+import com.example.projecthub.uiscreens.responsiveDialogBody
 import com.example.projecthub.viewmodel.GestorProjectTaskGroup
 import com.example.projecthub.viewmodel.GestorTaskInfoObservation
 import com.example.projecthub.viewmodel.GestorTaskInfoState
@@ -70,7 +72,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-private val GestorTasksAccent = AuthAccent
+private val GestorTasksAccent = _root_ide_package_.com.example.projecthub.uiscreens.AuthAccent
 private val GestorTasksGreen = ProjectHubColors.Success
 private val GestorTasksOrange = ProjectHubColors.Warning
 private val GestorTasksRed = ProjectHubColors.Danger
@@ -165,7 +167,7 @@ fun GestorTasksScreen(
                     )
                 }
 
-                AppFilledActionButton(
+                _root_ide_package_.com.example.projecthub.uiscreens.AppFilledActionButton(
                     text = language.t("tasks.add"),
                     onClick = {
                         viewModel.clearCreateError()
@@ -209,7 +211,7 @@ fun GestorTasksScreen(
             title = { Text(language.t("tasks.deleteTitle")) },
             text = { Text(language.t("tasks.deleteQuestion").format(task.title)) },
             confirmButton = {
-                AppDialogConfirmButton(
+                _root_ide_package_.com.example.projecthub.uiscreens.AppDialogConfirmButton(
                     text = language.t("common.delete"),
                     onClick = {
                         viewModel.deleteTask(gestorId, task.id)
@@ -218,7 +220,7 @@ fun GestorTasksScreen(
                 )
             },
             dismissButton = {
-                AppDialogCancelButton(
+                _root_ide_package_.com.example.projecthub.uiscreens.AppDialogCancelButton(
                     text = language.t("common.cancel"),
                     onClick = { taskToDelete = null }
                 )
@@ -270,7 +272,13 @@ private fun SmallStat(
     accent: Color,
     modifier: Modifier
 ) {
-    AppCompactStatCard(title = title, value = value, accent = accent, modifier = modifier, heightDp = 72)
+    _root_ide_package_.com.example.projecthub.uiscreens.AppCompactStatCard(
+        title = title,
+        value = value,
+        accent = accent,
+        modifier = modifier,
+        heightDp = 72
+    )
 }
 
 @Composable
@@ -281,7 +289,7 @@ private fun TaskFilters(
 ) {
     val language = currentAppSettings().language
 
-    AppSearchField(
+    _root_ide_package_.com.example.projecthub.uiscreens.AppSearchField(
         value = state.searchQuery,
         onValueChange = onSearchChange,
         placeholder = language.t("tasks.searchManager"),
@@ -309,7 +317,7 @@ private fun StatusDropdown(
     onOptionSelected: (GestorTaskStatusFilter) -> Unit
 ) {
     val language = currentAppSettings().language
-    AppDropdownField(
+    _root_ide_package_.com.example.projecthub.uiscreens.AppDropdownField(
         selected = selected,
         options = GestorTaskStatusFilter.entries,
         label = { (it ?: selected).translatedLabel(language) },
@@ -446,7 +454,7 @@ private fun ProjectTaskGroupCard(
                     )
                 }
 
-                AppExpandIcon(expanded = group.isExpanded)
+                _root_ide_package_.com.example.projecthub.uiscreens.AppExpandIcon(expanded = group.isExpanded)
             }
 
             if (group.isExpanded) {
@@ -520,7 +528,7 @@ private fun TaskRow(
         ) {
             StatusPill(task.statusLabel)
 
-            AppMoreInfoButton(
+            _root_ide_package_.com.example.projecthub.uiscreens.AppMoreInfoButton(
                 text = language.t("common.moreInfo"),
                 onClick = { onMoreInfo(task) },
                 compact = true
@@ -579,7 +587,7 @@ private fun TaskRow(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        AppObservationsButton(
+        _root_ide_package_.com.example.projecthub.uiscreens.AppObservationsButton(
             text = language.t("user.tasks.observations"),
             onClick = { onObservations(task) },
             compact = true
@@ -595,7 +603,7 @@ private fun GestorTaskInfoPage(
     val language = currentAppSettings().language
 
     Column {
-        AppBackButton(
+        _root_ide_package_.com.example.projecthub.uiscreens.AppBackButton(
             text = language.t("user.tasks.back"),
             onClick = onBack
         )
@@ -697,7 +705,7 @@ private fun GestorTaskObservationsPage(
     val language = currentAppSettings().language
 
     Column {
-        AppBackButton(
+        _root_ide_package_.com.example.projecthub.uiscreens.AppBackButton(
             text = language.t("user.tasks.back"),
             onClick = onBack
         )
@@ -794,8 +802,8 @@ private fun TaskInfoMeta(
 
 @Composable
 private fun TaskObservationRow(observation: GestorTaskInfoObservation) {
-    AppObservationCard(
-        observation = AppObservationUiModel(
+    _root_ide_package_.com.example.projecthub.uiscreens.AppObservationCard(
+        observation = _root_ide_package_.com.example.projecthub.uiscreens.AppObservationUiModel(
             text = observation.text,
             userName = observation.userName,
             date = observation.date,
@@ -811,7 +819,10 @@ private fun TaskInfoMessageCard(
     title: String,
     detail: String
 ) {
-    AppMessageCard(title = title, detail = detail)
+    _root_ide_package_.com.example.projecthub.uiscreens.AppMessageCard(
+        title = title,
+        detail = detail
+    )
 }
 
 @Composable
@@ -840,7 +851,7 @@ private fun TaskActionIcon(
 
 @Composable
 private fun StatusPill(status: String) {
-    AppStatusChip(text = status)
+    _root_ide_package_.com.example.projecthub.uiscreens.AppStatusChip(text = status)
 }
 
 @Composable
@@ -868,8 +879,8 @@ private fun EditGestorTaskDialog(
             Text(language.t("tasks.editTitle"))
         },
         text = {
-            Column(modifier = Modifier.responsiveDialogBody()) {
-                AppTextField(
+            Column(modifier = _root_ide_package_.androidx.compose.ui.Modifier.Companion.responsiveDialogBody()) {
+                _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
                     value = title,
                     onValueChange = { title = it },
                     label = language.t("tasks.titleField"),
@@ -878,7 +889,7 @@ private fun EditGestorTaskDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                AppTextField(
+                _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
                     value = description,
                     onValueChange = { description = it },
                     label = language.t("tasks.descriptionField")
@@ -955,7 +966,7 @@ private fun EditGestorTaskDialog(
             }
         },
         confirmButton = {
-            AppDialogConfirmButton(
+            _root_ide_package_.com.example.projecthub.uiscreens.AppDialogConfirmButton(
                 text = if (isSaving) language.t("common.saving") else language.t("common.save"),
                 enabled = !isSaving,
                 onClick = {
@@ -971,7 +982,7 @@ private fun EditGestorTaskDialog(
             )
         },
         dismissButton = {
-            AppDialogCancelButton(
+            _root_ide_package_.com.example.projecthub.uiscreens.AppDialogCancelButton(
                 text = language.t("common.cancel"),
                 onClick = onDismiss
             )
@@ -1130,7 +1141,7 @@ private fun AddGestorTaskDialog(
         },
         text = {
             Column(modifier = Modifier.responsiveDialogBody()) {
-                AppTextField(
+                _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
                     value = title,
                     onValueChange = { title = it },
                     label = language.t("tasks.titleField"),
@@ -1139,7 +1150,7 @@ private fun AddGestorTaskDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                AppTextField(
+                _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
                     value = description,
                     onValueChange = { description = it },
                     label = language.t("tasks.descriptionField")
@@ -1158,7 +1169,7 @@ private fun AddGestorTaskDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                AppTextField(
+                _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
                     value = startDate,
                     onValueChange = { startDate = it },
                     label = "${language.t("common.start")} dd/mm/aaaa",
@@ -1167,7 +1178,7 @@ private fun AddGestorTaskDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                AppTextField(
+                _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
                     value = endDate,
                     onValueChange = { endDate = it },
                     label = "${language.t("common.deadline")} dd/mm/aaaa",
@@ -1225,7 +1236,7 @@ private fun AddGestorTaskDialog(
             }
         },
         confirmButton = {
-            AppDialogConfirmButton(
+            _root_ide_package_.com.example.projecthub.uiscreens.AppDialogConfirmButton(
                 text = if (isSaving) {
                     language.t("common.creating")
                 } else {
@@ -1245,7 +1256,7 @@ private fun AddGestorTaskDialog(
             )
         },
         dismissButton = {
-            AppDialogCancelButton(
+            _root_ide_package_.com.example.projecthub.uiscreens.AppDialogCancelButton(
                 text = language.t("common.cancel"),
                 onClick = onDismiss
             )
@@ -1281,7 +1292,7 @@ private fun ProjectDropdown(
                 fontWeight = FontWeight.SemiBold
             )
 
-            AppExpandIcon(expanded = expanded)
+            _root_ide_package_.com.example.projecthub.uiscreens.AppExpandIcon(expanded = expanded)
         }
 
         DropdownMenu(

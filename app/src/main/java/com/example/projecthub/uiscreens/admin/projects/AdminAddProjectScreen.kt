@@ -198,10 +198,6 @@ private fun DatePickerField(
             fontWeight = FontWeight.SemiBold,
             fontSize = 15.sp
         )
-        Text(
-            text = "ðŸ“…",
-            fontSize = 18.sp
-        )
     }
 }
 

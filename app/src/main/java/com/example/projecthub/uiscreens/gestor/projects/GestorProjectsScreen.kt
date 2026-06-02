@@ -1,4 +1,4 @@
-package com.example.projecthub.uiscreens
+package com.example.projecthub.uiscreens.gestor.projects
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -66,7 +66,7 @@ import com.example.projecthub.viewmodel.GestorProjectsState
 import com.example.projecthub.viewmodel.GestorProjectsViewModel
 import com.example.projecthub.viewmodel.GestorUserOption
 
-private val GestorProjectsAccent = AuthAccent
+private val GestorProjectsAccent = _root_ide_package_.com.example.projecthub.uiscreens.AuthAccent
 private val GestorProjectsBlue = ProjectHubColors.Info
 private val GestorProjectsGreen = ProjectHubColors.Success
 private val GestorProjectsRed = ProjectHubColors.Danger
@@ -240,7 +240,7 @@ private fun StatusDropdown(
     onOptionSelected: (String) -> Unit
 ) {
     val language = currentAppSettings().language
-    AppDropdownField(
+    _root_ide_package_.com.example.projecthub.uiscreens.AppDropdownField(
         selected = selected,
         options = GestorProjectStatuses,
         label = { (it ?: selected).toGestorProjectStatusFilterLabel(language) },
@@ -376,7 +376,7 @@ private fun ProjectCard(
 
                 Column(horizontalAlignment = Alignment.End) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        AppMoreInfoButton(
+                        _root_ide_package_.com.example.projecthub.uiscreens.AppMoreInfoButton(
                             text = currentAppSettings().language.t("common.moreInfo"),
                             onClick = { onMoreInfo(project) },
                             compact = true
@@ -384,7 +384,7 @@ private fun ProjectCard(
 
                         Spacer(modifier = Modifier.width(10.dp))
 
-                        AppExpandIcon(
+                        _root_ide_package_.com.example.projecthub.uiscreens.AppExpandIcon(
                             expanded = project.isExpanded,
                             modifier = Modifier.clickable(onClick = toggleClick)
                         )
@@ -430,7 +430,7 @@ private fun ProjectInfoPage(
     onBack: () -> Unit
 ) {
     Column {
-        AppBackButton(
+        _root_ide_package_.com.example.projecthub.uiscreens.AppBackButton(
             text = currentAppSettings().language.t("manager.projects.back"),
             onClick = onBack
         )
@@ -739,7 +739,7 @@ private fun ProjectInfoTaskCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            AppObservationsButton(
+            _root_ide_package_.com.example.projecthub.uiscreens.AppObservationsButton(
                 text = language.t("user.tasks.observations"),
                 onClick = onOpenObservations,
                 modifier = Modifier.fillMaxWidth(),
@@ -771,7 +771,7 @@ private fun ProjectTaskObservationsPage(
     }
 
     Column {
-        AppBackButton(
+        _root_ide_package_.com.example.projecthub.uiscreens.AppBackButton(
             text = language.t("manager.projects.backProject"),
             onClick = onBack
         )
@@ -829,7 +829,7 @@ private fun ProjectObservationDetailPage(
     onBack: () -> Unit
 ) {
     Column {
-        AppBackButton(
+        _root_ide_package_.com.example.projecthub.uiscreens.AppBackButton(
             text = currentAppSettings().language.t("tasks.backObservations"),
             onClick = onBack
         )
@@ -952,8 +952,8 @@ private fun ProjectObservationRow(
     observation: GestorProjectInfoObservation,
     onClick: () -> Unit
 ) {
-    AppObservationCard(
-        observation = AppObservationUiModel(
+    _root_ide_package_.com.example.projecthub.uiscreens.AppObservationCard(
+        observation = _root_ide_package_.com.example.projecthub.uiscreens.AppObservationUiModel(
             text = observation.text,
             userName = observation.userName,
             date = observation.date,
@@ -970,7 +970,7 @@ private fun ProjectObservationRow(
 private fun InfoTaskStatusPill(
     status: String
 ) {
-    AppStatusChip(text = status)
+    _root_ide_package_.com.example.projecthub.uiscreens.AppStatusChip(text = status)
 }
 
 @Composable
@@ -978,7 +978,10 @@ private fun InfoMessageCard(
     title: String,
     detail: String
 ) {
-    AppMessageCard(title = title, detail = detail)
+    _root_ide_package_.com.example.projecthub.uiscreens.AppMessageCard(
+        title = title,
+        detail = detail
+    )
 }
 
 @Composable
@@ -1037,7 +1040,11 @@ private fun DetailItem(
     value: String,
     modifier: Modifier = Modifier
 ) {
-    AppDetailItem(label = label, value = value, modifier = modifier)
+    _root_ide_package_.com.example.projecthub.uiscreens.AppDetailItem(
+        label = label,
+        value = value,
+        modifier = modifier
+    )
 }
 
 @Composable
@@ -1163,7 +1170,7 @@ private fun CompleteIconButton(
     enabled: Boolean = true,
     onClick: () -> Unit
 ) {
-    AppActionIconButton(
+    _root_ide_package_.com.example.projecthub.uiscreens.AppActionIconButton(
         painter = painterResource(R.drawable.ic_check_circle_24),
         contentDescription = currentAppSettings().language.t("common.complete"),
         color = GestorProjectsGreen,
@@ -1330,7 +1337,7 @@ private fun StarRatingText(
 private fun StatusPill(
     status: String
 ) {
-    AppStatusChip(text = status)
+    _root_ide_package_.com.example.projecthub.uiscreens.AppStatusChip(text = status)
 }
 
 @Composable
@@ -1450,7 +1457,7 @@ private fun UserDropdown(
                 fontSize = 14.sp
             )
 
-            AppExpandIcon(expanded = expanded)
+            _root_ide_package_.com.example.projecthub.uiscreens.AppExpandIcon(expanded = expanded)
         }
 
         DropdownMenu(

@@ -1,6 +1,5 @@
-package com.example.projecthub.uiscreens
+package com.example.projecthub.uiscreens.gestor.teams
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -51,6 +50,9 @@ import com.example.projecthub.viewmodel.GestorTeamState
 import com.example.projecthub.viewmodel.GestorTeamViewModel
 import java.util.Locale
 import com.example.projecthub.ui.theme.ProjectHubColors
+import com.example.projecthub.uiscreens.AppExpandIcon
+import com.example.projecthub.uiscreens.AuthAccent
+import com.example.projecthub.uiscreens.appTextFieldColors
 
 private val TeamAccent = AuthAccent
 private val TeamGreen = ProjectHubColors.Success

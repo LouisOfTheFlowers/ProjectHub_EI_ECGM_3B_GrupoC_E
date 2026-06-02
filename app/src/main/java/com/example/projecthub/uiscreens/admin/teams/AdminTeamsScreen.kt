@@ -1,4 +1,4 @@
-package com.example.projecthub.uiscreens.admin
+package com.example.projecthub.uiscreens.admin.teams
 
 import com.example.projecthub.uiscreens.*
 
@@ -29,10 +29,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projecthub.settings.AppLanguage
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
@@ -294,7 +293,7 @@ private fun RoleFilter(
     }
 }
 
-private fun String.toRoleFilterLabel(language: com.example.projecthub.settings.AppLanguage): String {
+private fun String.toRoleFilterLabel(language: AppLanguage): String {
     return when (uppercase()) {
         "ADMIN" -> language.t("role.admin")
         "GESTOR" -> language.t("role.manager")
