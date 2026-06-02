@@ -57,57 +57,14 @@ import com.example.projecthub.viewmodel.admin.AdminTeamsState
 import com.example.projecthub.viewmodel.admin.AdminTeamsViewModel
 import com.example.projecthub.ui.theme.ProjectHubColors
 
-@Composable
-fun AdminTeamsScreen(
-    viewModel: AdminTeamsViewModel = viewModel()
-) {
-    val state by viewModel.stateFlow.collectAsStateWithLifecycle()
-    var userToDelete by remember { mutableStateOf<AdminTeamUserItem?>(null) }
+internal val TeamsAccent = AuthAccent
+internal val TeamsGreen = ProjectHubColors.SuccessDark
+internal val TeamsOrange = ProjectHubColors.Warning
+internal val TeamsRed = ProjectHubColors.DangerDark
 
-    Column {
-        TeamsHeader()
-        Spacer(modifier = Modifier.height(18.dp))
-        TeamBadges(state = state)
-        Spacer(modifier = Modifier.height(16.dp))
-        TeamFilters(
-            state = state,
-            onSearchChange = viewModel::updateSearchQuery,
-            onRoleSelected = viewModel::updateRoleFilter,
-            onProjectSelected = viewModel::updateProjectFilter
-        )
-        Spacer(modifier = Modifier.height(18.dp))
-        TeamUserList(
-            state = state,
-            onRoleSelected = viewModel::updateUserRole,
-            onDeleteUser = { userToDelete = it }
-        )
-    }
 
-    userToDelete?.let { user ->
-        AdminTeamRemovalDialog(
-            user = user,
-            onDismiss = { userToDelete = null },
-            onConfirm = {
-                viewModel.deleteUser(user)
-                userToDelete = null
-            }
-        )
-    }
-}
 @Composable
-private fun TeamsHeader() {
-    val language = currentAppSettings().language
-    Column {
-        Text(
-            text = language.t("teams.title"),
-            color = ProjectHubColors.Ink,
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 24.sp
-        )
-        Text(
-            text = language.t("teams.subtitle"),
-            color = ProjectHubColors.Muted,
-            fontSize = 14.sp
-        )
-    }
+internal fun StatusChip(text: String, color: Color) {
+    AppStatusChip(text = text, contentColor = color)
 }
+
