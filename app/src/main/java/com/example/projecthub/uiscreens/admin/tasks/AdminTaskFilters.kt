@@ -58,88 +58,56 @@ import java.time.format.DateTimeParseException
 import com.example.projecthub.ui.theme.ProjectHubColors
 
 @Composable
-fun AdminTasksScreen(
-    viewModel: AdminTasksViewModel = viewModel()
+internal fun TaskFilters(
+    state: AdminTasksState,
+    onSearchChange: (String) -> Unit,
+    onStatusChange: (AdminTaskStatusFilter) -> Unit
 ) {
-    val state by viewModel.stateFlow.collectAsStateWithLifecycle()
-    var isCreatingTask by remember { mutableStateOf(false) }
-
-    if (isCreatingTask) {
-        AdminAddTaskScreen(
-            state = state,
-            onBack = {
-                viewModel.clearCreateError()
-                isCreatingTask = false
-            },
-            onCreate = { title, description, projectId, startDate, endDate ->
-                viewModel.createTask(
-                    title = title,
-                    description = description,
-                    projectId = projectId,
-                    startDateText = startDate,
-                    endDateText = endDate,
-                    onSuccess = { isCreatingTask = false }
-                )
-            }
-        )
-    } else {
-        Column {
-            TasksHeader(onAddTask = {
-                viewModel.clearCreateError()
-                isCreatingTask = true
-            })
-            Spacer(modifier = Modifier.height(18.dp))
-            TaskStats(state = state)
-            Spacer(modifier = Modifier.height(16.dp))
-            TaskFilters(
-                state = state,
-                onSearchChange = viewModel::updateSearchQuery,
-                onStatusChange = viewModel::updateStatusFilter
-            )
-            Spacer(modifier = Modifier.height(18.dp))
-            TaskProjectList(
-                state = state,
-                onToggleProject = viewModel::toggleProject
-            )
-        }
-    }
-}
-@Composable
-private fun TasksHeader(onAddTask: () -> Unit) {
     val language = currentAppSettings().language
-    val addTaskClick = rememberSoundClick(onAddTask)
-    Row(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = language.t("tasks.title"),
-                color = ProjectHubColors.Ink,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 24.sp
+        Column(modifier = Modifier.padding(14.dp)) {
+            OutlinedTextField(
+                value = state.searchQuery,
+                onValueChange = onSearchChange,
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                placeholder = { Text(language.t("tasks.search")) }
             )
-            Text(
-                text = language.t("tasks.subtitle"),
-                color = ProjectHubColors.Muted,
-                fontSize = 14.sp
-            )
-        }
 
-        Button(
-            onClick = addTaskClick,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = TasksAccent,
-                contentColor = Color.White
-            ),
-            shape = RoundedCornerShape(8.dp)
-        ) {
-            Text(
-                text = language.t("tasks.add"),
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
+            Spacer(modifier = Modifier.height(10.dp))
+
+            StatusDropdown(
+                selected = state.selectedStatus,
+                onOptionSelected = onStatusChange
             )
         }
     }
 }
+
+@Composable
+private fun StatusDropdown(
+    selected: AdminTaskStatusFilter,
+    onOptionSelected: (AdminTaskStatusFilter) -> Unit
+) {
+    val language = currentAppSettings().language
+    AppDropdownField(
+        selected = selected,
+        options = AdminTaskStatusFilter.entries,
+        label = { (it ?: selected).translatedLabel(language) },
+        onOptionSelected = onOptionSelected
+    )
+}
+
+internal fun AdminTaskStatusFilter.translatedLabel(language: AppLanguage): String {
+    return when (this) {
+        AdminTaskStatusFilter.All -> language.t("filters.tasks.all")
+        AdminTaskStatusFilter.Pending -> language.t("filters.tasks.pending")
+        AdminTaskStatusFilter.Completed -> language.t("filters.tasks.completed")
+    }
+}
+
