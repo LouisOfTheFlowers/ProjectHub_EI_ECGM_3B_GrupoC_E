@@ -1,4 +1,6 @@
-package com.example.projecthub.uiscreens
+package com.example.projecthub.uiscreens.admin
+
+import com.example.projecthub.uiscreens.*
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

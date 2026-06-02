@@ -150,11 +150,23 @@ class AdminTeamsViewModel(
 
             val updatedUser = user.source.copy(role = role)
             val result = runCatching {
-                userRemoteDataSource.updateUser(user.id, updatedUser)
+                userRemoteDataSource.updateUserRole(user.id, role)
             }
 
             if (result.isSuccess) {
-                loadTeams()
+                val updatedItem = user.copy(
+                    role = role,
+                    source = updatedUser
+                )
+                val updatedUsers = state.users.map { item ->
+                    if (item.id == user.id) updatedItem else item
+                }
+                state = state.copy(
+                    users = updatedUsers,
+                    roles = (updatedUsers.map { it.role } + AdminTeamEditableRoles).distinct().sorted(),
+                    updatingRoleUserId = null
+                )
+                applyFilters()
             } else {
                 state = state.copy(
                     updatingRoleUserId = null,

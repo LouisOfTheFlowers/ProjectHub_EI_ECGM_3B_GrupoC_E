@@ -1,6 +1,5 @@
 package com.example.projecthub.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -52,7 +51,9 @@ fun ProjectHubTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
+    ProjectHubColors.applyTheme(darkTheme)
+
+    val baseColorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -61,8 +62,17 @@ fun ProjectHubTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
-
-    ProjectHubColors.applyTheme(darkTheme)
+    val colorScheme = if (darkTheme) {
+        baseColorScheme
+    } else {
+        baseColorScheme.copy(
+            surfaceContainerLowest = ProjectHubColors.LightSurface,
+            surfaceContainerLow = ProjectHubColors.LightSurface,
+            surfaceContainer = ProjectHubColors.LightSurface,
+            surfaceContainerHigh = ProjectHubColors.LightSurface,
+            surfaceContainerHighest = ProjectHubColors.LightSurface
+        )
+    }
 
     MaterialTheme(
         colorScheme = colorScheme,

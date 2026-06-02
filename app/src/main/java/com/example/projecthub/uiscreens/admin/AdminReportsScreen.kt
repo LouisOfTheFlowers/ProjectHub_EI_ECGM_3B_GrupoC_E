@@ -1,4 +1,6 @@
-package com.example.projecthub.uiscreens
+package com.example.projecthub.uiscreens.admin
+
+import com.example.projecthub.uiscreens.*
 
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult

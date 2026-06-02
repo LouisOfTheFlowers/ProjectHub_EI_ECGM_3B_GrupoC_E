@@ -279,75 +279,67 @@ private fun ProjectTaskHistoryPage(
     onBack: () -> Unit
 ) {
     val language = currentAppSettings().language
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        item {
-            AppBackButton(
-                text = language.t("user.projects.back"),
-                onClick = onBack
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        AppBackButton(
+            text = language.t("user.projects.back"),
+            onClick = onBack
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = item.project.nome,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 22.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = language.t("user.projects.historySubtitle"),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            ProjectStatusPill(status = item.project.status)
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            ProjectMetric(
+                label = language.t("common.completed"),
+                value = item.completedTasks.toString(),
+                color = ProjectHubColors.Success,
+                modifier = Modifier.weight(1f)
+            )
+            ProjectMetric(
+                label = language.t("common.total"),
+                value = item.tasksCount.toString(),
+                color = AuthAccent,
+                modifier = Modifier.weight(1f)
+            )
+            ProjectMetric(
+                label = language.t("common.progress"),
+                value = projectProgress(item),
+                color = ProjectHubColors.InfoLight,
+                modifier = Modifier.weight(1f)
             )
         }
 
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = item.project.nome,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 22.sp
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = language.t("user.projects.historySubtitle"),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                ProjectStatusPill(status = item.project.status)
-            }
-        }
-
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                ProjectMetric(
-                    label = language.t("common.completed"),
-                    value = item.completedTasks.toString(),
-                    color = ProjectHubColors.Success,
-                    modifier = Modifier.weight(1f)
-                )
-                ProjectMetric(
-                    label = language.t("common.total"),
-                    value = item.tasksCount.toString(),
-                    color = AuthAccent,
-                    modifier = Modifier.weight(1f)
-                )
-                ProjectMetric(
-                    label = language.t("common.progress"),
-                    value = projectProgress(item),
-                    color = ProjectHubColors.InfoLight,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-
         if (item.completedTaskHistory.isEmpty()) {
-            item {
-                ProjectMessageCard(
-                    title = language.t("user.projects.noCompletedTitle"),
-                    detail = language.t("user.projects.noCompletedDetail")
-                )
-            }
+            ProjectMessageCard(
+                title = language.t("user.projects.noCompletedTitle"),
+                detail = language.t("user.projects.noCompletedDetail")
+            )
         } else {
-            items(item.completedTaskHistory) { task ->
+            item.completedTaskHistory.forEach { task ->
                 CompletedTaskHistoryRow(task = task)
             }
         }

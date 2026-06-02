@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,11 +25,16 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,7 +59,9 @@ import com.example.projecthub.viewmodel.UtilizadorTaskObservation
 import com.example.projecthub.viewmodel.UtilizadorTaskItem
 import coil.compose.AsyncImage
 import java.text.Normalizer
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -460,7 +468,17 @@ private fun CompleteTaskDialog(
     onSave: (String, String, String) -> Unit
 ) {
     val language = currentAppSettings().language
-    var date by remember(task.id) { mutableStateOf(LocalDate.now().toString()) }
+    val startDate = remember(task.id) { task.data_inicio.toLocalDateOrNull() }
+    val minimumCompletionDate = remember(task.id) { startDate?.plusDays(1) }
+    val initialDate = remember(task.id) {
+        val today = LocalDate.now()
+        when {
+            minimumCompletionDate == null -> today
+            today.isBefore(minimumCompletionDate) -> minimumCompletionDate
+            else -> today
+        }
+    }
+    var date by remember(task.id) { mutableStateOf(initialDate.toString()) }
     var location by remember(task.id) { mutableStateOf("") }
     var hours by remember(task.id) { mutableStateOf("") }
 
@@ -480,14 +498,21 @@ private fun CompleteTaskDialog(
                     fontSize = 13.sp
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                AppTextField(
+                CompletionDatePickerField(
                     value = date,
-                    onValueChange = { date = it },
                     label = language.t("user.tasks.completionDate"),
-                    placeholder = language.t("user.tasks.datePlaceholder"),
-                    singleLine = true,
+                    minDate = minimumCompletionDate,
+                    onDateSelected = { date = it },
                     modifier = Modifier.fillMaxWidth()
                 )
+                if (startDate != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "A data tem de ser posterior a ${startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}.",
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                        fontSize = 12.sp
+                    )
+                }
                 Spacer(modifier = Modifier.height(8.dp))
                 AppTextField(
                     value = location,
@@ -522,6 +547,82 @@ private fun CompleteTaskDialog(
             )
         }
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CompletionDatePickerField(
+    value: String,
+    label: String,
+    minDate: LocalDate?,
+    onDateSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isDialogOpen by remember { mutableStateOf(false) }
+    val language = currentAppSettings().language
+    val selectedDate = value.toLocalDateOrNull()
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = selectedDate?.toEpochMillis(),
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                val date = Instant
+                    .ofEpochMilli(utcTimeMillis)
+                    .atZone(ZoneOffset.UTC)
+                    .toLocalDate()
+
+                return minDate == null || !date.isBefore(minDate)
+            }
+        }
+    )
+
+    Box(modifier = modifier) {
+        OutlinedTextField(
+            value = value.toDisplayDate(),
+            onValueChange = {},
+            modifier = Modifier.fillMaxWidth(),
+            readOnly = true,
+            enabled = true,
+            singleLine = true,
+            label = { Text(label) }
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .clickable(onClick = rememberSoundClick { isDialogOpen = true })
+        )
+    }
+
+    if (isDialogOpen) {
+        DatePickerDialog(
+            onDismissRequest = { isDialogOpen = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val selected = Instant
+                                .ofEpochMilli(millis)
+                                .atZone(ZoneOffset.UTC)
+                                .toLocalDate()
+
+                            onDateSelected(selected.toString())
+                        }
+
+                        isDialogOpen = false
+                    }
+                ) {
+                    Text(language.t("common.confirm"), color = AuthAccent, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = rememberSoundClick { isDialogOpen = false }) {
+                    Text(language.t("common.cancel"))
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 }
 
 @Composable
@@ -564,6 +665,19 @@ private fun String?.toUiDate(): String {
     val date = this?.take(10)?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
         ?: return "-"
     return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+}
+
+private fun String.toDisplayDate(): String {
+    val date = toLocalDateOrNull() ?: return this
+    return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+}
+
+private fun String?.toLocalDateOrNull(): LocalDate? {
+    return this?.take(10)?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+}
+
+private fun LocalDate.toEpochMillis(): Long {
+    return atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
 }
 
 private fun String.isCompletedStatus(): Boolean {

@@ -45,7 +45,7 @@ import com.example.projecthub.settings.AppNotificationHelper
 import com.example.projecthub.settings.AppSettingsProvider
 import com.example.projecthub.settings.AppThemeMode
 import com.example.projecthub.ui.theme.ProjectHubTheme
-import com.example.projecthub.uiscreens.AdminDashboardScreen
+import com.example.projecthub.uiscreens.admin.AdminDashboardScreen
 import com.example.projecthub.uiscreens.EmailConfirmedScreen
 import com.example.projecthub.uiscreens.GestorDashboardScreen
 import com.example.projecthub.uiscreens.IntroSliderScreen

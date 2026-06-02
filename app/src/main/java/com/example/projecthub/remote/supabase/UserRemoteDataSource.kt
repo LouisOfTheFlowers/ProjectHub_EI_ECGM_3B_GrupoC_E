@@ -74,6 +74,16 @@ class UserRemoteDataSource {
             }
     }
 
+    suspend fun updateUserRole(userId: Int, role: String) {
+        SupabaseClientProvider.client
+            .from("users")
+            .update(mapOf("role" to role)) {
+                filter {
+                    eq("id", userId)
+                }
+            }
+    }
+
     suspend fun updateUserPhoto(userId: Int, photoUri: String?) {
         SupabaseClientProvider.client
             .from("users")

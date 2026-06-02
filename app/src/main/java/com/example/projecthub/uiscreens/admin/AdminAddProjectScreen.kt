@@ -1,4 +1,6 @@
-package com.example.projecthub.uiscreens
+package com.example.projecthub.uiscreens.admin
+
+import com.example.projecthub.uiscreens.*
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -52,7 +54,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import com.example.projecthub.ui.theme.ProjectHubColors
 
-private val AddProjectAccent = AuthAccent
+private val AddProjectAccent = _root_ide_package_.com.example.projecthub.uiscreens.AuthAccent
 private val AddProjectRed = ProjectHubColors.Danger
 
 @Composable
@@ -69,94 +71,94 @@ fun AdminAddProjectScreen(
     var activeDateField by remember { mutableStateOf<DateField?>(null) }
     val language = currentAppSettings().language
     Column {
-        AppBackButton(
+        _root_ide_package_.com.example.projecthub.uiscreens.AppBackButton(
             text = language.t("addProject.back"),
             onClick = onBack
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        AppFormCard(title = language.t("addProject.title")) {
-                AppFormLabel(language.t("addProject.name"))
-                AppTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Words,
-                        keyboardType = KeyboardType.Text
-                    ),
-                    placeholder = language.t("addProject.namePlaceholder")
+        _root_ide_package_.com.example.projecthub.uiscreens.AppFormCard(title = language.t("addProject.title")) {
+            _root_ide_package_.com.example.projecthub.uiscreens.AppFormLabel(language.t("addProject.name"))
+            _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
+                value = name,
+                onValueChange = { name = it },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    keyboardType = KeyboardType.Text
+                ),
+                placeholder = language.t("addProject.namePlaceholder")
+            )
+            Spacer(modifier = Modifier.height(14.dp))
+
+            _root_ide_package_.com.example.projecthub.uiscreens.AppFormLabel(language.t("projects.description"))
+            _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
+                value = description,
+                onValueChange = { description = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    keyboardType = KeyboardType.Text
+                ),
+                placeholder = language.t("addProject.descriptionPlaceholder")
+            )
+            Spacer(modifier = Modifier.height(14.dp))
+
+            _root_ide_package_.com.example.projecthub.uiscreens.AppFormLabel(language.t("addProject.startDate"))
+            DatePickerField(
+                value = startDate,
+                onClick = rememberSoundClick { activeDateField = DateField.Start }
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            _root_ide_package_.com.example.projecthub.uiscreens.AppFormLabel(language.t("addProject.endDate"))
+            DatePickerField(
+                value = endDate,
+                onClick = rememberSoundClick { activeDateField = DateField.End }
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            _root_ide_package_.com.example.projecthub.uiscreens.AppFormLabel(language.t("addProject.manager"))
+            ManagerDropdown(
+                selectedManager = selectedManager,
+                managers = state.managers,
+                onManagerSelected = { selectedManager = it }
+            )
+
+            if (state.createErrorMessage != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = state.createErrorMessage,
+                    color = AddProjectRed,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
                 )
-                Spacer(modifier = Modifier.height(14.dp))
+            }
 
-                AppFormLabel(language.t("projects.description"))
-                AppTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp),
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        keyboardType = KeyboardType.Text
-                    ),
-                    placeholder = language.t("addProject.descriptionPlaceholder")
-                )
-                Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-                AppFormLabel(language.t("addProject.startDate"))
-                DatePickerField(
-                    value = startDate,
-                    onClick = rememberSoundClick { activeDateField = DateField.Start }
-                )
+            _root_ide_package_.com.example.projecthub.uiscreens.AppPrimaryButton(
+                text = language.t("addProject.submit"),
+                onClick = {
+                    onCreate(name.text, description.text, startDate, endDate, selectedManager?.id)
+                },
+                enabled = !state.isCreating,
+                isLoading = state.isCreating,
+                containerColor = AddProjectAccent
+            )
 
-                Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-                AppFormLabel(language.t("addProject.endDate"))
-                DatePickerField(
-                    value = endDate,
-                    onClick = rememberSoundClick { activeDateField = DateField.End }
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                AppFormLabel(language.t("addProject.manager"))
-                ManagerDropdown(
-                    selectedManager = selectedManager,
-                    managers = state.managers,
-                    onManagerSelected = { selectedManager = it }
-                )
-
-                if (state.createErrorMessage != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = state.createErrorMessage,
-                        color = AddProjectRed,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(18.dp))
-
-                AppPrimaryButton(
-                    text = language.t("addProject.submit"),
-                    onClick = {
-                        onCreate(name.text, description.text, startDate, endDate, selectedManager?.id)
-                    },
-                    enabled = !state.isCreating,
-                    isLoading = state.isCreating,
-                    containerColor = AddProjectAccent
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                AppSecondaryButton(
-                    text = language.t("common.cancel"),
-                    onClick = onBack,
-                    enabled = !state.isCreating
-                )
+            _root_ide_package_.com.example.projecthub.uiscreens.AppSecondaryButton(
+                text = language.t("common.cancel"),
+                onClick = onBack,
+                enabled = !state.isCreating
+            )
         }
     }
 
@@ -292,7 +294,7 @@ private fun ManagerDropdown(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp
             )
-            AppExpandIcon(expanded = expanded)
+            _root_ide_package_.com.example.projecthub.uiscreens.AppExpandIcon(expanded = expanded)
         }
 
         DropdownMenu(

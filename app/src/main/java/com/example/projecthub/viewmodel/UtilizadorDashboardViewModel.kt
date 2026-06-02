@@ -277,8 +277,16 @@ class UtilizadorDashboardViewModel(
             return
         }
 
-        if (completionDate.toLocalDateOrNull() == null) {
+        val parsedCompletionDate = completionDate.toLocalDateOrNull()
+        if (parsedCompletionDate == null) {
             state = state.copy(errorMessage = "Indica uma data de conclusão válida.")
+            return
+        }
+
+        val task = state.tasks.firstOrNull { it.task.id == taskId }?.task
+        val startDate = task?.data_inicio?.toLocalDateOrNull()
+        if (startDate != null && !parsedCompletionDate.isAfter(startDate)) {
+            state = state.copy(errorMessage = "A data de conclusão tem de ser posterior à data de início da tarefa.")
             return
         }
 
