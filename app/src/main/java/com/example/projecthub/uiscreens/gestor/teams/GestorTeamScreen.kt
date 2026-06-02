@@ -44,10 +44,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.R
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
-import com.example.projecthub.viewmodel.GestorTeamMemberItem
-import com.example.projecthub.viewmodel.GestorTeamProjectOption
-import com.example.projecthub.viewmodel.GestorTeamState
-import com.example.projecthub.viewmodel.GestorTeamViewModel
+import com.example.projecthub.viewmodel.gestor.GestorTeamMemberItem
+import com.example.projecthub.viewmodel.gestor.GestorTeamProjectOption
+import com.example.projecthub.viewmodel.gestor.GestorTeamState
+import com.example.projecthub.viewmodel.gestor.GestorTeamViewModel
 import java.util.Locale
 import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.uiscreens.AppExpandIcon

@@ -40,8 +40,8 @@ import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
-import com.example.projecthub.viewmodel.AdminProjectListItem
-import com.example.projecthub.viewmodel.AdminProjectsState
+import com.example.projecthub.viewmodel.admin.AdminProjectListItem
+import com.example.projecthub.viewmodel.admin.AdminProjectsState
 
 @Composable
 internal fun ProjectsPage(

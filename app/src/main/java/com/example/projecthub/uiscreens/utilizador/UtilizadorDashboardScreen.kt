@@ -28,8 +28,10 @@ import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.uiscreens.utilizador.projects.UtilizadorProjectsSection
 import com.example.projecthub.uiscreens.utilizador.tasks.UtilizadorTasksSection
-import com.example.projecthub.viewmodel.UtilizadorDashboardState
-import com.example.projecthub.viewmodel.UtilizadorDashboardViewModel
+import com.example.projecthub.viewmodel.utilizador.UtilizadorDashboardState
+import com.example.projecthub.viewmodel.utilizador.UtilizadorDashboardViewModel
+import com.example.projecthub.viewmodel.utilizador.UtilizadorProjectsViewModel
+import com.example.projecthub.viewmodel.utilizador.UtilizadorTasksViewModel
 
 private val UtilizadorAccent = _root_ide_package_.com.example.projecthub.uiscreens.AuthAccent
 private val UtilizadorGreen = ProjectHubColors.Success
@@ -49,13 +51,21 @@ fun UtilizadorDashboardScreen(
     projectHistoryId: Int? = null,
     onNavigate: (String) -> Unit = {},
     onBack: () -> Unit = {},
-    viewModel: UtilizadorDashboardViewModel = viewModel()
+    dashboardViewModel: UtilizadorDashboardViewModel = viewModel(),
+    tasksViewModel: UtilizadorTasksViewModel = viewModel(),
+    projectsViewModel: UtilizadorProjectsViewModel = viewModel()
 ) {
-    val state by viewModel.stateFlow.collectAsStateWithLifecycle()
+    val dashboardState by dashboardViewModel.stateFlow.collectAsStateWithLifecycle()
+    val tasksState by tasksViewModel.stateFlow.collectAsStateWithLifecycle()
+    val projectsState by projectsViewModel.stateFlow.collectAsStateWithLifecycle()
 
-    LaunchedEffect(userId, hasInternet) {
+    LaunchedEffect(userId, hasInternet, selectedRoute) {
         if (hasInternet) {
-            viewModel.loadDashboard(userId)
+            when (selectedRoute) {
+                AppRoutes.UserDashboard -> dashboardViewModel.loadDashboard(userId)
+                AppRoutes.UserTasks -> tasksViewModel.loadTasks(userId)
+                AppRoutes.UserProjects -> projectsViewModel.loadProjects(userId)
+            }
         }
     }
 
@@ -72,18 +82,18 @@ fun UtilizadorDashboardScreen(
             selectedRoute == AppRoutes.UserDashboard -> {
                 UtilizadorDashboardHeader()
                 Spacer(modifier = Modifier.height(22.dp))
-                UtilizadorDashboardContent(state = state)
+                UtilizadorDashboardContent(state = dashboardState)
             }
 
             selectedRoute == AppRoutes.UserTasks -> UtilizadorTasksSection(
-                state = state,
+                state = tasksState,
                 taskObservationsId = taskObservationsId,
                 onOpenObservations = { taskId ->
                     onNavigate(AppRoutes.userTaskObservations(taskId))
                 },
                 onBack = onBack,
                 onAddObservation = { taskId, text, photoUri ->
-                    viewModel.addObservation(
+                    tasksViewModel.addObservation(
                         userId = userId,
                         taskId = taskId,
                         text = text,
@@ -91,7 +101,7 @@ fun UtilizadorDashboardScreen(
                     )
                 },
                 onCompleteTask = { taskId, date, location, hours ->
-                    viewModel.completeTask(
+                    tasksViewModel.completeTask(
                         userId = userId,
                         taskId = taskId,
                         completionDate = date,
@@ -102,7 +112,7 @@ fun UtilizadorDashboardScreen(
             )
 
             selectedRoute == AppRoutes.UserProjects -> UtilizadorProjectsSection(
-                state = state,
+                state = projectsState,
                 projectHistoryId = projectHistoryId,
                 onOpenHistory = { projectId ->
                     onNavigate(AppRoutes.userProjectHistory(projectId))

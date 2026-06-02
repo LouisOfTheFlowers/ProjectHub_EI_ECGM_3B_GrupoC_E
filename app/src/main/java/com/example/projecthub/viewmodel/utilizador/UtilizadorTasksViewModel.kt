@@ -1,33 +1,26 @@
-package com.example.projecthub.viewmodel
+package com.example.projecthub.viewmodel.utilizador
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projecthub.remote.supabase.models.ObservacaoDto
 import com.example.projecthub.remote.supabase.models.ObservacaoFotoDto
-import com.example.projecthub.remote.supabase.models.ProjetoDto
 import com.example.projecthub.remote.supabase.models.RegistoTarefaDto
 import com.example.projecthub.remote.supabase.models.TarefaDto
 import com.example.projecthub.repository.ObservacaoFotoRepository
 import com.example.projecthub.repository.ObservacaoRepository
 import com.example.projecthub.repository.ProjetoRepository
-import com.example.projecthub.repository.ProjetoUserRepository
 import com.example.projecthub.repository.RegistoTarefaRepository
 import com.example.projecthub.repository.TarefaRepository
 import com.example.projecthub.repository.TarefaUserRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.text.Normalizer
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
-data class UtilizadorDashboardState(
-    val inProgressTasks: Int = 0,
-    val completedTasks: Int = 0,
-    val pendingTasks: Int = 0,
-    val lateTasks: Int = 0,
+data class UtilizadorTasksState(
     val tasks: List<UtilizadorTaskItem> = emptyList(),
-    val projects: List<UtilizadorProjectItem> = emptyList(),
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val errorMessage: String? = null
@@ -46,17 +39,8 @@ data class UtilizadorTaskObservation(
     val photos: List<ObservacaoFotoDto>
 )
 
-data class UtilizadorProjectItem(
-    val project: ProjetoDto,
-    val tasksCount: Int,
-    val completedTasks: Int,
-    val lateTasks: Int,
-    val completedTaskHistory: List<TarefaDto>
-)
-
-class UtilizadorDashboardViewModel(
+class UtilizadorTasksViewModel(
     private val projetoRepository: ProjetoRepository = ProjetoRepository(),
-    private val projetoUserRepository: ProjetoUserRepository = ProjetoUserRepository(),
     private val tarefaRepository: TarefaRepository = TarefaRepository(),
     private val tarefaUserRepository: TarefaUserRepository = TarefaUserRepository(),
     private val registoTarefaRepository: RegistoTarefaRepository = RegistoTarefaRepository(),
@@ -64,17 +48,15 @@ class UtilizadorDashboardViewModel(
     private val observacaoFotoRepository: ObservacaoFotoRepository = ObservacaoFotoRepository()
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(UtilizadorDashboardState())
-    val stateFlow: StateFlow<UtilizadorDashboardState> = _state
-    private var state: UtilizadorDashboardState
+    private val _state = MutableStateFlow(UtilizadorTasksState())
+    val stateFlow: StateFlow<UtilizadorTasksState> = _state
+    private var state: UtilizadorTasksState
         get() = _state.value
         set(value) { _state.value = value }
 
-    fun loadDashboard(userId: Int?) {
+    fun loadTasks(userId: Int?) {
         if (userId == null) {
-            state = UtilizadorDashboardState(
-                errorMessage = "Não foi possível identificar o utilizador autenticado."
-            )
+            state = UtilizadorTasksState(errorMessage = "Não foi possível identificar o utilizador autenticado.")
             return
         }
 
@@ -97,10 +79,10 @@ class UtilizadorDashboardViewModel(
 
             val tasksResult = tarefaRepository.getTarefas()
             val projectsResult = projetoRepository.getProjetos()
-            val projectAssociationsResult = projetoUserRepository.getProjetosByUser(userId)
             val recordsResult = registoTarefaRepository.getRegistosByUser(userId)
             val observationsResult = observacaoRepository.getObservacoes()
             val photosResult = observacaoFotoRepository.getFotos()
+
             if (tasksResult.isFailure) {
                 state = state.copy(
                     isLoading = false,
@@ -109,18 +91,13 @@ class UtilizadorDashboardViewModel(
                 return@launch
             }
 
-            val today = LocalDate.now()
-            val allProjects = projectsResult.getOrDefault(emptyList())
-            val projectsById = allProjects
+            val projectsById = projectsResult.getOrDefault(emptyList())
                 .mapNotNull { project -> project.id?.let { it to project } }
                 .toMap()
-            val recordsByTask = recordsResult.getOrDefault(emptyList())
-                .groupBy { it.tarefa_id }
-            val recordsById = recordsResult.getOrDefault(emptyList())
-                .mapNotNull { record -> record.id?.let { it to record } }
-                .toMap()
-            val photosByObservation = photosResult.getOrDefault(emptyList())
-                .groupBy { it.observacao_id }
+            val records = recordsResult.getOrDefault(emptyList())
+            val recordsByTask = records.groupBy { it.tarefa_id }
+            val recordsById = records.mapNotNull { record -> record.id?.let { it to record } }.toMap()
+            val photosByObservation = photosResult.getOrDefault(emptyList()).groupBy { it.observacao_id }
             val observationsByTask = observationsResult.getOrDefault(emptyList())
                 .mapNotNull { observation ->
                     val record = recordsById[observation.registo_id] ?: return@mapNotNull null
@@ -131,50 +108,22 @@ class UtilizadorDashboardViewModel(
                     )
                 }
                 .groupBy({ it.first }, { it.second })
-            val userTasks = tasksResult
+
+            val taskItems = tasksResult
                 .getOrDefault(emptyList())
                 .filter { it.id in taskIds }
                 .sortedWith(compareBy<TarefaDto> { it.status.isCompletedStatus() }.thenBy { it.data_fim.orEmpty() })
-
-            val taskItems = userTasks.map { task ->
-                UtilizadorTaskItem(
-                    task = task,
-                    projectName = projectsById[task.projeto_id]?.nome.orEmpty(),
-                    recordsCount = task.id?.let { recordsByTask[it].orEmpty().size } ?: 0,
-                    observations = task.id?.let { observationsByTask[it].orEmpty() }.orEmpty()
-                        .sortedByDescending { it.record.created_at.orEmpty() }
-                )
-            }
-            val associatedProjectIds = projectAssociationsResult
-                .getOrDefault(emptyList())
-                .map { it.projeto_id }
-                .toSet() + userTasks.map { it.projeto_id }.toSet()
-            val tasksByProject = userTasks.groupBy { it.projeto_id }
-            val projectItems = associatedProjectIds
-                .mapNotNull { projectId ->
-                    val project = projectsById[projectId] ?: return@mapNotNull null
-                    val projectTasks = tasksByProject[projectId].orEmpty()
-                    UtilizadorProjectItem(
-                        project = project,
-                        tasksCount = projectTasks.size,
-                        completedTasks = projectTasks.count { it.status.isCompletedStatus() },
-                        lateTasks = projectTasks.count { it.isLate(today) },
-                        completedTaskHistory = projectTasks
-                            .filter { it.status.isCompletedStatus() }
-                            .sortedByDescending { it.data_fim.orEmpty() }
+                .map { task ->
+                    UtilizadorTaskItem(
+                        task = task,
+                        projectName = projectsById[task.projeto_id]?.nome.orEmpty(),
+                        recordsCount = task.id?.let { recordsByTask[it].orEmpty().size } ?: 0,
+                        observations = task.id?.let { observationsByTask[it].orEmpty() }.orEmpty()
+                            .sortedByDescending { it.record.created_at.orEmpty() }
                     )
                 }
-                .sortedBy { it.project.nome.lowercase() }
 
-            state = UtilizadorDashboardState(
-                inProgressTasks = userTasks.count { it.isInProgress(today) },
-                completedTasks = userTasks.count { it.status.isCompletedStatus() },
-                pendingTasks = userTasks.count { it.isPending(today) },
-                lateTasks = userTasks.count { it.isLate(today) },
-                tasks = taskItems,
-                projects = projectItems,
-                isLoading = false
-            )
+            state = UtilizadorTasksState(tasks = taskItems, isLoading = false)
         }
     }
 
@@ -249,13 +198,13 @@ class UtilizadorDashboardViewModel(
                             fallback = "A observação foi guardada, mas não foi possível guardar a fotografia."
                         )
                     )
-                    loadDashboard(userId)
+                    loadTasks(userId)
                     return@launch
                 }
             }
 
             state = state.copy(isSaving = false)
-            loadDashboard(userId)
+            loadTasks(userId)
         }
     }
 
@@ -329,27 +278,8 @@ class UtilizadorDashboardViewModel(
             }
 
             state = state.copy(isSaving = false)
-            loadDashboard(userId)
+            loadTasks(userId)
         }
-    }
-
-    private fun com.example.projecthub.remote.supabase.models.TarefaDto.isPending(today: LocalDate): Boolean {
-        if (status.isCompletedStatus()) return false
-        val startDate = data_inicio?.toLocalDateOrNull()
-        return status.isPendingStatus() || (startDate != null && startDate.isAfter(today))
-    }
-
-    private fun com.example.projecthub.remote.supabase.models.TarefaDto.isInProgress(today: LocalDate): Boolean {
-        if (status.isCompletedStatus()) return false
-        val startDate = data_inicio?.toLocalDateOrNull()
-        val hasStarted = startDate == null || !startDate.isAfter(today)
-        return hasStarted && (status.isInProgressStatus() || status.isPendingStatus())
-    }
-
-    private fun com.example.projecthub.remote.supabase.models.TarefaDto.isLate(today: LocalDate): Boolean {
-        if (status.isCompletedStatus()) return false
-        val endDate = data_fim?.toLocalDateOrNull() ?: return false
-        return endDate.isBefore(today)
     }
 
     private fun String.isCompletedStatus(): Boolean {
@@ -362,24 +292,6 @@ class UtilizadorDashboardViewModel(
             "COMPLETADA",
             "FINALIZADO",
             "FINALIZADA"
-        )
-    }
-
-    private fun String.isInProgressStatus(): Boolean {
-        return normalizedStatus() in setOf(
-            "EM_PROGRESSO",
-            "EMPROGRESSO",
-            "IN_PROGRESS",
-            "INPROGRESS",
-            "A_DECORRER"
-        )
-    }
-
-    private fun String.isPendingStatus(): Boolean {
-        return normalizedStatus() in setOf(
-            "PENDENTE",
-            "PENDING",
-            "POR_INICIAR"
         )
     }
 

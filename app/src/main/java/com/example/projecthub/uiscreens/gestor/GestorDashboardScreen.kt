@@ -30,8 +30,8 @@ import com.example.projecthub.uiscreens.gestor.projects.GestorProjectsScreen
 import com.example.projecthub.uiscreens.gestor.reports.GestorReportsScreen
 import com.example.projecthub.uiscreens.gestor.tasks.GestorTasksScreen
 import com.example.projecthub.uiscreens.gestor.teams.GestorTeamScreen
-import com.example.projecthub.viewmodel.GestorDashboardState
-import com.example.projecthub.viewmodel.GestorDashboardViewModel
+import com.example.projecthub.viewmodel.gestor.GestorDashboardState
+import com.example.projecthub.viewmodel.gestor.GestorDashboardViewModel
 
 private val GestorAccent = _root_ide_package_.com.example.projecthub.uiscreens.AuthAccent
 private val GestorOrange = ProjectHubColors.Warning

@@ -50,11 +50,11 @@ import com.example.projecthub.settings.AppLanguage
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
-import com.example.projecthub.viewmodel.AdminTeamProjectOption
-import com.example.projecthub.viewmodel.AdminTeamUserItem
-import com.example.projecthub.viewmodel.AdminTeamEditableRoles
-import com.example.projecthub.viewmodel.AdminTeamsState
-import com.example.projecthub.viewmodel.AdminTeamsViewModel
+import com.example.projecthub.viewmodel.admin.AdminTeamProjectOption
+import com.example.projecthub.viewmodel.admin.AdminTeamUserItem
+import com.example.projecthub.viewmodel.admin.AdminTeamEditableRoles
+import com.example.projecthub.viewmodel.admin.AdminTeamsState
+import com.example.projecthub.viewmodel.admin.AdminTeamsViewModel
 import com.example.projecthub.ui.theme.ProjectHubColors
 
 private val TeamsAccent = AuthAccent

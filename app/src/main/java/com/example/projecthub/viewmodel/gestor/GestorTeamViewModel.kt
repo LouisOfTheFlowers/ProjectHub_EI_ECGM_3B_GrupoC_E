@@ -1,4 +1,4 @@
-package com.example.projecthub.viewmodel
+package com.example.projecthub.viewmodel.gestor
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projecthub.remote.supabase.UserRemoteDataSource
 import com.example.projecthub.remote.supabase.models.AvaliacaoDto
-import com.example.projecthub.remote.supabase.models.TarefaDto
 import com.example.projecthub.repository.AvaliacaoRepository
 import com.example.projecthub.repository.ProjetoRepository
 import com.example.projecthub.repository.ProjetoUserRepository

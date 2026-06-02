@@ -39,15 +39,15 @@ import com.example.projecthub.uiscreens.AppOutlinedActionButton
 import com.example.projecthub.uiscreens.AppStatusChip
 import com.example.projecthub.uiscreens.AuthAccent
 import com.example.projecthub.uiscreens.isLandscapeLayout
-import com.example.projecthub.viewmodel.UtilizadorDashboardState
-import com.example.projecthub.viewmodel.UtilizadorProjectItem
+import com.example.projecthub.viewmodel.utilizador.UtilizadorProjectItem
+import com.example.projecthub.viewmodel.utilizador.UtilizadorProjectsState
 import java.text.Normalizer
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun UtilizadorProjectsSection(
-    state: UtilizadorDashboardState,
+    state: UtilizadorProjectsState,
     projectHistoryId: Int?,
     onOpenHistory: (Int) -> Unit,
     onBack: () -> Unit

@@ -30,11 +30,11 @@ import androidx.compose.ui.unit.sp
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
-import com.example.projecthub.viewmodel.AdminProjectInfoObservation
-import com.example.projecthub.viewmodel.AdminProjectInfoParticipant
-import com.example.projecthub.viewmodel.AdminProjectInfoState
-import com.example.projecthub.viewmodel.AdminProjectInfoTask
-import com.example.projecthub.viewmodel.AdminProjectListItem
+import com.example.projecthub.viewmodel.admin.AdminProjectInfoObservation
+import com.example.projecthub.viewmodel.admin.AdminProjectInfoParticipant
+import com.example.projecthub.viewmodel.admin.AdminProjectInfoState
+import com.example.projecthub.viewmodel.admin.AdminProjectInfoTask
+import com.example.projecthub.viewmodel.admin.AdminProjectListItem
 
 @Composable
 internal fun AdminProjectDetailPage(

@@ -47,11 +47,11 @@ import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
 import com.example.projecthub.R
 import com.example.projecthub.settings.AppLanguage
-import com.example.projecthub.viewmodel.AdminProjectTaskGroup
-import com.example.projecthub.viewmodel.AdminTaskListItem
-import com.example.projecthub.viewmodel.AdminTaskStatusFilter
-import com.example.projecthub.viewmodel.AdminTasksState
-import com.example.projecthub.viewmodel.AdminTasksViewModel
+import com.example.projecthub.viewmodel.admin.AdminProjectTaskGroup
+import com.example.projecthub.viewmodel.admin.AdminTaskListItem
+import com.example.projecthub.viewmodel.admin.AdminTaskStatusFilter
+import com.example.projecthub.viewmodel.admin.AdminTasksState
+import com.example.projecthub.viewmodel.admin.AdminTasksViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException

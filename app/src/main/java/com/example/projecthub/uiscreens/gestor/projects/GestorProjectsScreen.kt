@@ -1,13 +1,11 @@
 package com.example.projecthub.uiscreens.gestor.projects
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,10 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -58,13 +53,13 @@ import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.R
-import com.example.projecthub.viewmodel.GestorProjectInfoObservation
-import com.example.projecthub.viewmodel.GestorProjectInfoState
-import com.example.projecthub.viewmodel.GestorProjectInfoTask
-import com.example.projecthub.viewmodel.GestorProjectListItem
-import com.example.projecthub.viewmodel.GestorProjectsState
-import com.example.projecthub.viewmodel.GestorProjectsViewModel
-import com.example.projecthub.viewmodel.GestorUserOption
+import com.example.projecthub.viewmodel.gestor.GestorProjectInfoObservation
+import com.example.projecthub.viewmodel.gestor.GestorProjectInfoState
+import com.example.projecthub.viewmodel.gestor.GestorProjectInfoTask
+import com.example.projecthub.viewmodel.gestor.GestorProjectListItem
+import com.example.projecthub.viewmodel.gestor.GestorProjectsState
+import com.example.projecthub.viewmodel.gestor.GestorProjectsViewModel
+import com.example.projecthub.viewmodel.gestor.GestorUserOption
 
 private val GestorProjectsAccent = _root_ide_package_.com.example.projecthub.uiscreens.AuthAccent
 private val GestorProjectsBlue = ProjectHubColors.Info

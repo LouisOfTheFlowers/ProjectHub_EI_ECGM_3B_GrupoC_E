@@ -1,12 +1,14 @@
-package com.example.projecthub.viewmodel
+package com.example.projecthub.viewmodel.gestor
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projecthub.remote.supabase.UserRemoteDataSource
+import com.example.projecthub.remote.supabase.models.AvaliacaoDto
 import com.example.projecthub.remote.supabase.models.ProjetoDto
 import com.example.projecthub.remote.supabase.models.TarefaDto
+import com.example.projecthub.remote.supabase.models.UserDto
 import com.example.projecthub.repository.AvaliacaoRepository
 import com.example.projecthub.repository.ObservacaoFotoRepository
 import com.example.projecthub.repository.ObservacaoRepository
@@ -15,10 +17,12 @@ import com.example.projecthub.repository.ProjetoUserRepository
 import com.example.projecthub.repository.RegistoTarefaRepository
 import com.example.projecthub.repository.TarefaRepository
 import com.example.projecthub.repository.TarefaUserRepository
+import com.example.projecthub.viewmodel.ProjectUiListItem
 import kotlinx.coroutines.launch
 import java.text.Normalizer
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlin.collections.get
 
 data class GestorProjectMember(
     val id: Int,
@@ -600,8 +604,8 @@ class GestorProjectsViewModel(
     private fun ProjetoDto.toListItem(
         tasks: List<TarefaDto>,
         memberIds: List<Int>,
-        usersById: Map<Int, com.example.projecthub.remote.supabase.models.UserDto>,
-        ratingsByProjectAndUser: Map<Pair<Int, Int>, com.example.projecthub.remote.supabase.models.AvaliacaoDto>,
+        usersById: Map<Int, UserDto>,
+        ratingsByProjectAndUser: Map<Pair<Int, Int>, AvaliacaoDto>,
         isExpanded: Boolean
     ): GestorProjectListItem? {
         val projectId = id ?: return null

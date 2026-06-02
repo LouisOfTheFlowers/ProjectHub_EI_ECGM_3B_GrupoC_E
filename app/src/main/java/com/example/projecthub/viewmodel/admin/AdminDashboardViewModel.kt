@@ -1,4 +1,4 @@
-package com.example.projecthub.viewmodel
+package com.example.projecthub.viewmodel.admin
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

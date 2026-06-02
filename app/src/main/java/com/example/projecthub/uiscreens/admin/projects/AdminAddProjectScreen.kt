@@ -39,8 +39,8 @@ import androidx.compose.ui.unit.sp
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
-import com.example.projecthub.viewmodel.AdminProjectManager
-import com.example.projecthub.viewmodel.AdminProjectsState
+import com.example.projecthub.viewmodel.admin.AdminProjectManager
+import com.example.projecthub.viewmodel.admin.AdminProjectsState
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter

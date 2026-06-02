@@ -33,8 +33,8 @@ import com.example.projecthub.uiscreens.admin.projects.AdminProjectsScreen
 import com.example.projecthub.uiscreens.admin.reports.AdminReportsScreen
 import com.example.projecthub.uiscreens.admin.tasks.AdminTasksScreen
 import com.example.projecthub.uiscreens.admin.teams.AdminTeamsScreen
-import com.example.projecthub.viewmodel.AdminDashboardState
-import com.example.projecthub.viewmodel.AdminDashboardViewModel
+import com.example.projecthub.viewmodel.admin.AdminDashboardState
+import com.example.projecthub.viewmodel.admin.AdminDashboardViewModel
 
 private val AdminAccent = AuthAccent
 private val AdminOrange = ProjectHubColors.Warning

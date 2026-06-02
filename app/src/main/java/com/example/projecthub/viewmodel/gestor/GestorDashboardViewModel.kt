@@ -1,4 +1,4 @@
-package com.example.projecthub.viewmodel
+package com.example.projecthub.viewmodel.gestor
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

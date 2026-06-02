@@ -1,4 +1,4 @@
-package com.example.projecthub.viewmodel
+package com.example.projecthub.viewmodel.admin
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +15,7 @@ import com.example.projecthub.repository.ProjetoUserRepository
 import com.example.projecthub.repository.RegistoTarefaRepository
 import com.example.projecthub.repository.TarefaRepository
 import com.example.projecthub.repository.TarefaUserRepository
+import com.example.projecthub.viewmodel.ProjectUiListItem
 import kotlinx.coroutines.launch
 import java.text.Normalizer
 import java.time.LocalDate

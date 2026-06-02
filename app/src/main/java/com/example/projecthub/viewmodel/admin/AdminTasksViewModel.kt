@@ -1,4 +1,4 @@
-package com.example.projecthub.viewmodel
+package com.example.projecthub.viewmodel.admin
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -7,9 +7,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.projecthub.remote.supabase.models.TarefaDto
 import com.example.projecthub.repository.ProjetoRepository
 import com.example.projecthub.repository.TarefaRepository
+import com.example.projecthub.viewmodel.TaskUiListItem
 import kotlinx.coroutines.launch
 import java.text.Normalizer
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 enum class AdminTaskStatusFilter(val label: String) {
     All("Todas"),
@@ -321,7 +323,7 @@ class AdminTasksViewModel(
         val trimmed = trim()
 
         return runCatching {
-            LocalDate.parse(trimmed, java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+            LocalDate.parse(trimmed, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
         }.getOrElse {
             runCatching { LocalDate.parse(trimmed) }.getOrNull()
         }

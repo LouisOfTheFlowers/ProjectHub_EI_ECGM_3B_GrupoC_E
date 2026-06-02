@@ -47,12 +47,12 @@ import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
 import com.example.projecthub.R
-import com.example.projecthub.viewmodel.AdminReportCard
-import com.example.projecthub.viewmodel.AdminReportExport
-import com.example.projecthub.viewmodel.AdminReportExportType
-import com.example.projecthub.viewmodel.AdminReportSummary
-import com.example.projecthub.viewmodel.AdminReportsState
-import com.example.projecthub.viewmodel.AdminReportsViewModel
+import com.example.projecthub.viewmodel.admin.AdminReportCard
+import com.example.projecthub.viewmodel.admin.AdminReportExport
+import com.example.projecthub.viewmodel.admin.AdminReportExportType
+import com.example.projecthub.viewmodel.admin.AdminReportSummary
+import com.example.projecthub.viewmodel.admin.AdminReportsState
+import com.example.projecthub.viewmodel.admin.AdminReportsViewModel
 import com.example.projecthub.ui.theme.ProjectHubColors
 import java.util.Locale
 

@@ -13,8 +13,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
-import com.example.projecthub.viewmodel.AdminProjectListItem
-import com.example.projecthub.viewmodel.AdminProjectsViewModel
+import com.example.projecthub.viewmodel.admin.AdminProjectListItem
+import com.example.projecthub.viewmodel.admin.AdminProjectsViewModel
 
 @Composable
 fun AdminProjectsScreen(
