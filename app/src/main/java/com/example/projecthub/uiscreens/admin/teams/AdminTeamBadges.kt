@@ -58,56 +58,71 @@ import com.example.projecthub.viewmodel.admin.AdminTeamsViewModel
 import com.example.projecthub.ui.theme.ProjectHubColors
 
 @Composable
-fun AdminTeamsScreen(
-    viewModel: AdminTeamsViewModel = viewModel()
-) {
-    val state by viewModel.stateFlow.collectAsStateWithLifecycle()
-    var userToDelete by remember { mutableStateOf<AdminTeamUserItem?>(null) }
-
-    Column {
-        TeamsHeader()
-        Spacer(modifier = Modifier.height(18.dp))
-        TeamBadges(state = state)
-        Spacer(modifier = Modifier.height(16.dp))
-        TeamFilters(
-            state = state,
-            onSearchChange = viewModel::updateSearchQuery,
-            onRoleSelected = viewModel::updateRoleFilter,
-            onProjectSelected = viewModel::updateProjectFilter
-        )
-        Spacer(modifier = Modifier.height(18.dp))
-        TeamUserList(
-            state = state,
-            onRoleSelected = viewModel::updateUserRole,
-            onDeleteUser = { userToDelete = it }
-        )
-    }
-
-    userToDelete?.let { user ->
-        AdminTeamRemovalDialog(
-            user = user,
-            onDismiss = { userToDelete = null },
-            onConfirm = {
-                viewModel.deleteUser(user)
-                userToDelete = null
-            }
-        )
-    }
-}
-@Composable
-private fun TeamsHeader() {
+internal fun TeamBadges(state: AdminTeamsState) {
     val language = currentAppSettings().language
-    Column {
-        Text(
-            text = language.t("teams.title"),
-            color = ProjectHubColors.Ink,
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 24.sp
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        TeamBadge(
+            label = language.t("teams.totalUsers"),
+            value = state.totalUsers.toString(),
+            accent = TeamsAccent,
+            modifier = Modifier.fillMaxWidth()
         )
-        Text(
-            text = language.t("teams.subtitle"),
-            color = ProjectHubColors.Muted,
-            fontSize = 14.sp
+        TeamBadge(
+            label = language.t("teams.activeUsers"),
+            value = state.activeUsers.toString(),
+            accent = TeamsGreen,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
+
+@Composable
+private fun TeamBadge(
+    label: String,
+    value: String,
+    accent: Color,
+    modifier: Modifier = Modifier
+) {
+    val language = currentAppSettings().language
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(accent.copy(alpha = 0.14f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = value,
+                    color = accent,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 18.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Text(
+                text = label,
+                color = ProjectHubColors.Ink,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
