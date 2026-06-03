@@ -294,60 +294,59 @@ private fun TaskObservationsPage(
     val language = currentAppSettings().language
     val task = item.task
 
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        item {
-            _root_ide_package_.com.example.projecthub.uiscreens.AppBackButton(
-                text = language.t("user.tasks.back"),
-                onClick = onBack,
-                enabled = !isSaving
-            )
-        }
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        _root_ide_package_.com.example.projecthub.uiscreens.AppBackButton(
+            text = language.t("user.tasks.back"),
+            onClick = onBack,
+            enabled = !isSaving
+        )
 
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = task.titulo,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 22.sp
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = language.t("user.tasks.observationsTitle"),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                StatusPill(status = task.status)
-            }
-        }
-
-        item {
-            _root_ide_package_.com.example.projecthub.uiscreens.AppObservationsButton(
-                text = if (isSaving) language.t("common.saving") else language.t("user.tasks.addObservation"),
-                onClick = onAddObservation,
-                enabled = !isSaving,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        if (item.observations.isEmpty()) {
-            item {
-                TaskMessageCard(
-                    title = language.t("user.tasks.noObservationsTitle"),
-                    detail = language.t("user.tasks.noObservationsDetail")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = task.titulo,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 22.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = language.t("user.tasks.observationsTitle"),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
+
+            StatusPill(status = task.status)
+        }
+
+        _root_ide_package_.com.example.projecthub.uiscreens.AppObservationsButton(
+            text = if (isSaving) language.t("common.saving") else language.t("user.tasks.addObservation"),
+            onClick = onAddObservation,
+            enabled = !isSaving,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        if (item.observations.isEmpty()) {
+            TaskMessageCard(
+                title = language.t("user.tasks.noObservationsTitle"),
+                detail = language.t("user.tasks.noObservationsDetail")
+            )
         } else {
-            items(item.observations) { observation ->
-                ObservationCard(observation = observation)
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 620.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(item.observations) { observation ->
+                    ObservationCard(observation = observation)
+                }
             }
         }
     }
