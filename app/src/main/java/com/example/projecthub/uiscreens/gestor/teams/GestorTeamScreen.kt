@@ -50,7 +50,7 @@ import com.example.projecthub.viewmodel.gestor.GestorTeamState
 import com.example.projecthub.viewmodel.gestor.GestorTeamViewModel
 import java.util.Locale
 import com.example.projecthub.ui.theme.ProjectHubColors
-import com.example.projecthub.uiscreens.AppExpandIcon
+import com.example.projecthub.uiscreens.components.AppExpandIcon
 import com.example.projecthub.uiscreens.AuthAccent
 import com.example.projecthub.uiscreens.appTextFieldColors
 

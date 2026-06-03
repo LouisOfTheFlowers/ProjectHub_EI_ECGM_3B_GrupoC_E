@@ -3,8 +3,6 @@ package com.example.projecthub.uiscreens.gestor.projects
 import com.example.projecthub.uiscreens.*
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,25 +18,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,22 +31,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.example.projecthub.R
-import com.example.projecthub.settings.AppLanguage
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
-import com.example.projecthub.viewmodel.gestor.GestorProjectInfoObservation
-import com.example.projecthub.viewmodel.gestor.GestorProjectInfoState
-import com.example.projecthub.viewmodel.gestor.GestorProjectInfoTask
+import com.example.projecthub.uiscreens.components.AppActionIconButton
+import com.example.projecthub.uiscreens.components.AppDetailItem
+import com.example.projecthub.uiscreens.components.AppStatusChip
 import com.example.projecthub.viewmodel.gestor.GestorProjectListItem
-import com.example.projecthub.viewmodel.gestor.GestorProjectsState
-import com.example.projecthub.viewmodel.gestor.GestorProjectsViewModel
-import com.example.projecthub.viewmodel.gestor.GestorUserOption
+
 internal val GestorProjectsAccent = AuthAccent
 internal val GestorProjectsBlue = ProjectHubColors.Info
 internal val GestorProjectsGreen = ProjectHubColors.Success

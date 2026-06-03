@@ -1,7 +1,5 @@
 package com.example.projecthub.uiscreens.admin.projects
 
-import com.example.projecthub.uiscreens.*
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,6 +28,10 @@ import androidx.compose.ui.unit.sp
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
+import com.example.projecthub.uiscreens.components.AppBackButton
+import com.example.projecthub.uiscreens.components.AppMessageCard
+import com.example.projecthub.uiscreens.components.AppObservationCard
+import com.example.projecthub.uiscreens.components.AppObservationUiModel
 import com.example.projecthub.viewmodel.admin.AdminProjectInfoObservation
 import com.example.projecthub.viewmodel.admin.AdminProjectInfoParticipant
 import com.example.projecthub.viewmodel.admin.AdminProjectInfoState

@@ -1,7 +1,5 @@
 package com.example.projecthub.uiscreens.admin.projects
 
-import com.example.projecthub.uiscreens.*
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -40,6 +38,11 @@ import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
+import com.example.projecthub.uiscreens.components.AppActionIconButton
+import com.example.projecthub.uiscreens.components.AppDropdownField
+import com.example.projecthub.uiscreens.components.AppExpandIcon
+import com.example.projecthub.uiscreens.components.AppFilledActionButton
+import com.example.projecthub.uiscreens.components.AppMoreInfoButton
 import com.example.projecthub.viewmodel.admin.AdminProjectListItem
 import com.example.projecthub.viewmodel.admin.AdminProjectsState
 

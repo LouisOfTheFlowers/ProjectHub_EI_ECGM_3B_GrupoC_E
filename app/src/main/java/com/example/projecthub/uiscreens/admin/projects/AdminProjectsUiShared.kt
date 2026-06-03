@@ -4,6 +4,7 @@ import com.example.projecthub.uiscreens.*
 
 import androidx.compose.runtime.Composable
 import com.example.projecthub.ui.theme.ProjectHubColors
+import com.example.projecthub.uiscreens.components.AppInfoRow
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter

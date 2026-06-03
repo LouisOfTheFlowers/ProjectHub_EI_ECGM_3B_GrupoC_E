@@ -44,6 +44,13 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import com.example.projecthub.ui.theme.ProjectHubColors
+import com.example.projecthub.uiscreens.components.AppBackButton
+import com.example.projecthub.uiscreens.components.AppExpandIcon
+import com.example.projecthub.uiscreens.components.AppFormCard
+import com.example.projecthub.uiscreens.components.AppFormLabel
+import com.example.projecthub.uiscreens.components.AppPrimaryButton
+import com.example.projecthub.uiscreens.components.AppSecondaryButton
+import com.example.projecthub.uiscreens.components.AppTextField
 
 private val AddTaskAccent = AuthAccent
 private val AddTaskRed = ProjectHubColors.Danger
@@ -70,88 +77,88 @@ fun AdminAddTaskScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         AppFormCard(title = language.t("addTask.title")) {
-                AppFormLabel(language.t("addTask.taskTitle"))
-                AppTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        keyboardType = KeyboardType.Text
-                    ),
-                    placeholder = language.t("addTask.titlePlaceholder")
+            AppFormLabel(language.t("addTask.taskTitle"))
+            AppTextField(
+                value = title,
+                onValueChange = { title = it },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    keyboardType = KeyboardType.Text
+                ),
+                placeholder = language.t("addTask.titlePlaceholder")
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            AppFormLabel(language.t("projects.description"))
+            AppTextField(
+                value = description,
+                onValueChange = { description = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    keyboardType = KeyboardType.Text
+                ),
+                placeholder = language.t("addTask.descriptionPlaceholder")
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            AppFormLabel(language.t("teams.project"))
+            ProjectDropdown(
+                selectedProject = selectedProject,
+                projects = state.projects,
+                onProjectSelected = { selectedProject = it }
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            AppFormLabel(language.t("addProject.startDate"))
+            TaskDatePickerField(
+                value = startDate,
+                onClick = rememberSoundClick { activeDateField = TaskDateField.Start }
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            AppFormLabel(language.t("addProject.endDate"))
+            TaskDatePickerField(
+                value = endDate,
+                onClick = rememberSoundClick { activeDateField = TaskDateField.End }
+            )
+
+            if (state.createErrorMessage != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = state.createErrorMessage,
+                    color = AddTaskRed,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
                 )
+            }
 
-                Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-                AppFormLabel(language.t("projects.description"))
-                AppTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp),
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        keyboardType = KeyboardType.Text
-                    ),
-                    placeholder = language.t("addTask.descriptionPlaceholder")
-                )
+            AppPrimaryButton(
+                text = language.t("addTask.submit"),
+                onClick = {
+                    onCreate(title, description, selectedProject?.id, startDate, endDate)
+                },
+                enabled = !state.isCreating,
+                isLoading = state.isCreating,
+                containerColor = AddTaskAccent
+            )
 
-                Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-                AppFormLabel(language.t("teams.project"))
-                ProjectDropdown(
-                    selectedProject = selectedProject,
-                    projects = state.projects,
-                    onProjectSelected = { selectedProject = it }
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                AppFormLabel(language.t("addProject.startDate"))
-                TaskDatePickerField(
-                    value = startDate,
-                    onClick = rememberSoundClick { activeDateField = TaskDateField.Start }
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                AppFormLabel(language.t("addProject.endDate"))
-                TaskDatePickerField(
-                    value = endDate,
-                    onClick = rememberSoundClick { activeDateField = TaskDateField.End }
-                )
-
-                if (state.createErrorMessage != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = state.createErrorMessage,
-                        color = AddTaskRed,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(18.dp))
-
-                AppPrimaryButton(
-                    text = language.t("addTask.submit"),
-                    onClick = {
-                        onCreate(title, description, selectedProject?.id, startDate, endDate)
-                    },
-                    enabled = !state.isCreating,
-                    isLoading = state.isCreating,
-                    containerColor = AddTaskAccent
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                AppSecondaryButton(
-                    text = language.t("common.cancel"),
-                    onClick = onBack,
-                    enabled = !state.isCreating
-                )
+            AppSecondaryButton(
+                text = language.t("common.cancel"),
+                onClick = onBack,
+                enabled = !state.isCreating
+            )
         }
     }
 

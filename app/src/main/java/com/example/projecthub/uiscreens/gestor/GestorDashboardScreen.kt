@@ -26,10 +26,13 @@ import com.example.projecthub.remote.supabase.models.UserDto
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
+import com.example.projecthub.uiscreens.components.AppDashboardMetric
 import com.example.projecthub.uiscreens.gestor.projects.GestorProjectsScreen
 import com.example.projecthub.uiscreens.gestor.reports.GestorReportsScreen
 import com.example.projecthub.uiscreens.gestor.tasks.GestorTasksScreen
 import com.example.projecthub.uiscreens.gestor.teams.GestorTeamScreen
+import com.example.projecthub.uiscreens.components.AppDashboardMetricCard
+import com.example.projecthub.uiscreens.components.AppOfflineState
 import com.example.projecthub.viewmodel.gestor.GestorDashboardState
 import com.example.projecthub.viewmodel.gestor.GestorDashboardViewModel
 
@@ -64,7 +67,7 @@ fun GestorDashboardScreen(
         onLogout = onLogout
     ) {
         when {
-            !hasInternet && selectedRoute != AppRoutes.GestorProfile -> _root_ide_package_.com.example.projecthub.uiscreens.AppOfflineState()
+            !hasInternet && selectedRoute != AppRoutes.GestorProfile -> AppOfflineState()
 
             selectedRoute == AppRoutes.GestorDashboard -> {
                 DashboardHeader()
@@ -145,8 +148,8 @@ private fun DashboardContent(state: GestorDashboardState) {
         }
 
         state.errorMessage != null -> {
-            _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetricCard(
-                metric = _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetric(
+            AppDashboardMetricCard(
+                metric = AppDashboardMetric(
                     label = language.t("dashboard.state"),
                     value = language.t("dashboard.error"),
                     accent = GestorRed,
@@ -158,8 +161,8 @@ private fun DashboardContent(state: GestorDashboardState) {
 
         else -> {
             val cards: @Composable (Modifier) -> Unit = { modifier ->
-                _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetricCard(
-                    metric = _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetric(
+                AppDashboardMetricCard(
+                    metric = AppDashboardMetric(
                         label = language.t("manager.dashboard.projects"),
                         value = state.totalProjects.toString(),
                         accent = GestorOrange,
@@ -169,8 +172,8 @@ private fun DashboardContent(state: GestorDashboardState) {
                     modifier = modifier
                 )
                 if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
-                _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetricCard(
-                    metric = _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetric(
+                AppDashboardMetricCard(
+                    metric = AppDashboardMetric(
                         label = language.t("common.completed"),
                         value = state.completedTasks.toString(),
                         accent = GestorAccent,
@@ -180,8 +183,8 @@ private fun DashboardContent(state: GestorDashboardState) {
                     modifier = modifier
                 )
                 if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
-                _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetricCard(
-                    metric = _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetric(
+                AppDashboardMetricCard(
+                    metric = AppDashboardMetric(
                         label = language.t("common.inProgress"),
                         value = state.inProgressTasks.toString(),
                         accent = GestorRed,

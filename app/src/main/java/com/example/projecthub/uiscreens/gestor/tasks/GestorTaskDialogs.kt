@@ -12,27 +12,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,32 +27,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.projecthub.R
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.uiscreens.responsiveDialogBody
-import com.example.projecthub.viewmodel.gestor.GestorProjectTaskGroup
-import com.example.projecthub.viewmodel.gestor.GestorTaskInfoObservation
-import com.example.projecthub.viewmodel.gestor.GestorTaskInfoState
+import com.example.projecthub.uiscreens.components.AppDialogCancelButton
+import com.example.projecthub.uiscreens.components.AppDialogConfirmButton
+import com.example.projecthub.uiscreens.components.AppExpandIcon
+import com.example.projecthub.uiscreens.components.AppTextField
 import com.example.projecthub.viewmodel.gestor.GestorTaskListItem
 import com.example.projecthub.viewmodel.gestor.GestorTaskProjectOption
-import com.example.projecthub.viewmodel.gestor.GestorTaskStatusFilter
-import com.example.projecthub.viewmodel.gestor.GestorTaskUserOption
 import com.example.projecthub.viewmodel.gestor.GestorTasksState
-import com.example.projecthub.viewmodel.gestor.GestorTasksViewModel
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 @Composable
 internal fun DeleteGestorTaskDialog(
@@ -80,13 +56,13 @@ internal fun DeleteGestorTaskDialog(
         title = { Text(language.t("tasks.deleteTitle")) },
         text = { Text(language.t("tasks.deleteQuestion").format(task.title)) },
         confirmButton = {
-            _root_ide_package_.com.example.projecthub.uiscreens.AppDialogConfirmButton(
+            AppDialogConfirmButton(
                 text = language.t("common.delete"),
                 onClick = onConfirm
             )
         },
         dismissButton = {
-            _root_ide_package_.com.example.projecthub.uiscreens.AppDialogCancelButton(
+            AppDialogCancelButton(
                 text = language.t("common.cancel"),
                 onClick = onDismiss
             )
@@ -122,7 +98,7 @@ internal fun AddGestorTaskDialog(
         },
         text = {
             Column(modifier = Modifier.responsiveDialogBody()) {
-                _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
+                AppTextField(
                     value = title,
                     onValueChange = { title = it },
                     label = language.t("tasks.titleField"),
@@ -131,7 +107,7 @@ internal fun AddGestorTaskDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
+                AppTextField(
                     value = description,
                     onValueChange = { description = it },
                     label = language.t("tasks.descriptionField")
@@ -150,7 +126,7 @@ internal fun AddGestorTaskDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
+                AppTextField(
                     value = startDate,
                     onValueChange = { startDate = it },
                     label = "${language.t("common.start")} dd/mm/aaaa",
@@ -159,7 +135,7 @@ internal fun AddGestorTaskDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
+                AppTextField(
                     value = endDate,
                     onValueChange = { endDate = it },
                     label = "${language.t("common.deadline")} dd/mm/aaaa",
@@ -217,7 +193,7 @@ internal fun AddGestorTaskDialog(
             }
         },
         confirmButton = {
-            _root_ide_package_.com.example.projecthub.uiscreens.AppDialogConfirmButton(
+            AppDialogConfirmButton(
                 text = if (isSaving) {
                     language.t("common.creating")
                 } else {
@@ -237,7 +213,7 @@ internal fun AddGestorTaskDialog(
             )
         },
         dismissButton = {
-            _root_ide_package_.com.example.projecthub.uiscreens.AppDialogCancelButton(
+            AppDialogCancelButton(
                 text = language.t("common.cancel"),
                 onClick = onDismiss
             )
@@ -273,7 +249,7 @@ private fun ProjectDropdown(
                 fontWeight = FontWeight.SemiBold
             )
 
-            _root_ide_package_.com.example.projecthub.uiscreens.AppExpandIcon(expanded = expanded)
+            AppExpandIcon(expanded = expanded)
         }
 
         DropdownMenu(

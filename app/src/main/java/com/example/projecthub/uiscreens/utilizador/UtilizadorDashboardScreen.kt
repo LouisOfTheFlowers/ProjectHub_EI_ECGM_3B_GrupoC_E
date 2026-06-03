@@ -26,6 +26,9 @@ import com.example.projecthub.remote.supabase.models.UserDto
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
+import com.example.projecthub.uiscreens.components.AppDashboardMetric
+import com.example.projecthub.uiscreens.components.AppDashboardMetricCard
+import com.example.projecthub.uiscreens.components.AppOfflineState
 import com.example.projecthub.uiscreens.utilizador.projects.UtilizadorProjectsSection
 import com.example.projecthub.uiscreens.utilizador.tasks.UtilizadorTasksSection
 import com.example.projecthub.viewmodel.utilizador.UtilizadorDashboardState
@@ -77,7 +80,7 @@ fun UtilizadorDashboardScreen(
         onLogout = onLogout
     ) {
         when {
-            !hasInternet && selectedRoute != AppRoutes.UserProfile -> _root_ide_package_.com.example.projecthub.uiscreens.AppOfflineState()
+            !hasInternet && selectedRoute != AppRoutes.UserProfile -> AppOfflineState()
 
             selectedRoute == AppRoutes.UserDashboard -> {
                 UtilizadorDashboardHeader()
@@ -168,8 +171,8 @@ private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
         }
 
         state.errorMessage != null -> {
-            _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetricCard(
-                metric = _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetric(
+            AppDashboardMetricCard(
+                metric = AppDashboardMetric(
                     label = language.t("dashboard.state"),
                     value = language.t("dashboard.error"),
                     accent = UtilizadorRed,
@@ -181,8 +184,8 @@ private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
 
         else -> {
             val cards: @Composable (Modifier) -> Unit = { modifier ->
-                _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetricCard(
-                    metric = _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetric(
+                AppDashboardMetricCard(
+                    metric = AppDashboardMetric(
                         label = language.t("common.inProgress"),
                         value = state.inProgressTasks.toString(),
                         accent = UtilizadorBlue,
@@ -192,8 +195,8 @@ private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
                     modifier = modifier
                 )
                 if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
-                _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetricCard(
-                    metric = _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetric(
+                AppDashboardMetricCard(
+                    metric = AppDashboardMetric(
                         label = language.t("common.completed"),
                         value = state.completedTasks.toString(),
                         accent = UtilizadorGreen,
@@ -203,8 +206,8 @@ private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
                     modifier = modifier
                 )
                 if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
-                _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetricCard(
-                    metric = _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetric(
+                AppDashboardMetricCard(
+                    metric = AppDashboardMetric(
                         label = language.t("common.pending"),
                         value = state.pendingTasks.toString(),
                         accent = UtilizadorOrange,
@@ -214,8 +217,8 @@ private fun UtilizadorDashboardContent(state: UtilizadorDashboardState) {
                     modifier = modifier
                 )
                 if (!isLandscape) Spacer(modifier = Modifier.height(12.dp))
-                _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetricCard(
-                    metric = _root_ide_package_.com.example.projecthub.uiscreens.AppDashboardMetric(
+                AppDashboardMetricCard(
+                    metric = AppDashboardMetric(
                         label = language.t("common.delayed"),
                         value = state.lateTasks.toString(),
                         accent = UtilizadorRed,

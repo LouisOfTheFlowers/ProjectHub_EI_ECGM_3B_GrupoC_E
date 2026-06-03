@@ -1,7 +1,5 @@
 package com.example.projecthub.uiscreens.admin.projects
 
-import com.example.projecthub.uiscreens.*
-
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,6 +11,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
+import com.example.projecthub.uiscreens.components.AppDialogCancelButton
+import com.example.projecthub.uiscreens.components.AppDialogConfirmButton
 import com.example.projecthub.viewmodel.admin.AdminProjectListItem
 import com.example.projecthub.viewmodel.admin.AdminProjectsViewModel
 

@@ -50,6 +50,13 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import com.example.projecthub.ui.theme.ProjectHubColors
+import com.example.projecthub.uiscreens.components.AppFormLabel
+import com.example.projecthub.uiscreens.components.AppTextField
+import com.example.projecthub.uiscreens.components.AppBackButton
+import com.example.projecthub.uiscreens.components.AppExpandIcon
+import com.example.projecthub.uiscreens.components.AppFormCard
+import com.example.projecthub.uiscreens.components.AppPrimaryButton
+import com.example.projecthub.uiscreens.components.AppSecondaryButton
 
 private val GestorAddTaskAccent = _root_ide_package_.com.example.projecthub.uiscreens.AuthAccent
 private val GestorAddTaskRed = ProjectHubColors.Danger
@@ -71,16 +78,16 @@ fun GestorAddTaskScreen(
     val availableUsers = state.users.filter { selectedProject?.id in it.projectIds }
 
     Column {
-        _root_ide_package_.com.example.projecthub.uiscreens.AppBackButton(
+        AppBackButton(
             text = language.t("addTask.back"),
             onClick = onBack
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        _root_ide_package_.com.example.projecthub.uiscreens.AppFormCard(title = language.t("addTask.title")) {
-            _root_ide_package_.com.example.projecthub.uiscreens.AppFormLabel(language.t("addTask.taskTitle"))
-            _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
+        AppFormCard(title = language.t("addTask.title")) {
+            AppFormLabel(language.t("addTask.taskTitle"))
+            AppTextField(
                 value = title,
                 onValueChange = { title = it },
                 singleLine = true,
@@ -93,8 +100,8 @@ fun GestorAddTaskScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            _root_ide_package_.com.example.projecthub.uiscreens.AppFormLabel(language.t("projects.description"))
-            _root_ide_package_.com.example.projecthub.uiscreens.AppTextField(
+            AppFormLabel(language.t("projects.description"))
+            AppTextField(
                 value = description,
                 onValueChange = { description = it },
                 modifier = Modifier.height(120.dp),
@@ -107,7 +114,7 @@ fun GestorAddTaskScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            _root_ide_package_.com.example.projecthub.uiscreens.AppFormLabel(language.t("teams.project"))
+            AppFormLabel(language.t("teams.project"))
             GestorProjectDropdown(
                 selectedProject = selectedProject,
                 projects = state.projects,
@@ -119,7 +126,7 @@ fun GestorAddTaskScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            _root_ide_package_.com.example.projecthub.uiscreens.AppFormLabel(language.t("addTask.users"))
+            AppFormLabel(language.t("addTask.users"))
             UserMultiSelect(
                 users = availableUsers,
                 selectedUserIds = selectedUserIds,
@@ -135,7 +142,7 @@ fun GestorAddTaskScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            _root_ide_package_.com.example.projecthub.uiscreens.AppFormLabel(language.t("addProject.startDate"))
+            AppFormLabel(language.t("addProject.startDate"))
             GestorTaskDatePickerField(
                 value = startDate,
                 onClick = rememberSoundClick { activeDateField = GestorTaskDateField.Start }
@@ -143,7 +150,7 @@ fun GestorAddTaskScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            _root_ide_package_.com.example.projecthub.uiscreens.AppFormLabel(language.t("addProject.endDate"))
+            AppFormLabel(language.t("addProject.endDate"))
             GestorTaskDatePickerField(
                 value = endDate,
                 onClick = rememberSoundClick { activeDateField = GestorTaskDateField.End }
@@ -161,7 +168,7 @@ fun GestorAddTaskScreen(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            _root_ide_package_.com.example.projecthub.uiscreens.AppPrimaryButton(
+            AppPrimaryButton(
                 text = language.t("addTask.submit"),
                 onClick = {
                     onCreate(
@@ -180,7 +187,7 @@ fun GestorAddTaskScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            _root_ide_package_.com.example.projecthub.uiscreens.AppSecondaryButton(
+            AppSecondaryButton(
                 text = language.t("common.cancel"),
                 onClick = onBack,
                 enabled = !state.isCreating
@@ -241,7 +248,7 @@ private fun GestorProjectDropdown(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp
             )
-            _root_ide_package_.com.example.projecthub.uiscreens.AppExpandIcon(expanded = expanded)
+            AppExpandIcon(expanded = expanded)
         }
 
         DropdownMenu(

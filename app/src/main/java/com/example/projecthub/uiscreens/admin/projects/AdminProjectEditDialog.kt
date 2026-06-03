@@ -39,6 +39,7 @@ import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
+import com.example.projecthub.uiscreens.components.AppExpandIcon
 import com.example.projecthub.viewmodel.admin.AdminProjectListItem
 import com.example.projecthub.viewmodel.admin.AdminProjectManager
 import java.time.Instant
