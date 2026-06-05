@@ -77,6 +77,40 @@ class ProjetoRepository(
         }
     }
 
+    suspend fun createProjetoReturning(
+        nome: String,
+        descricao: String?,
+        dataInicio: String?,
+        dataFim: String?,
+        gestorId: Int?,
+        status: String = "PENDENTE"
+    ): Result<ProjetoDto> {
+        return try {
+            if (nome.isBlank()) {
+                return Result.failure(Exception("O nome do projeto nÃ£o pode estar vazio."))
+            }
+            if (nome.trim().length > PROJECT_TITLE_MAX_LENGTH) {
+                return Result.failure(Exception("O nome do projeto tem demasiados caracteres. Usa no maximo $PROJECT_TITLE_MAX_LENGTH caracteres."))
+            }
+
+            val projeto = ProjetoDto(
+                id = null,
+                nome = nome.trim(),
+                descricao = descricao?.trim(),
+                data_inicio = dataInicio,
+                data_fim = dataFim,
+                status = status,
+                gestor_id = gestorId,
+                created_at = null
+            )
+
+            Result.success(projetoRemoteDataSource.createProjetoReturning(projeto))
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun updateProjeto(
         projetoId: Int,
         nome: String,

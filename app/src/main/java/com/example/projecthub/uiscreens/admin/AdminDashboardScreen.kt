@@ -24,6 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.R
 import com.example.projecthub.navigation.AppRoutes
+import com.example.projecthub.remote.supabase.models.NotificationDto
 import com.example.projecthub.remote.supabase.models.UserDto
 import com.example.projecthub.settings.AppLanguage
 import com.example.projecthub.settings.currentAppSettings
@@ -50,6 +51,12 @@ fun AdminDashboardScreen(
     onLogout: () -> Unit,
     selectedRoute: String = AppRoutes.AdminDashboard,
     hasInternet: Boolean = true,
+    notifications: List<NotificationDto> = emptyList(),
+    unreadNotificationsCount: Int = 0,
+    notificationsLoading: Boolean = false,
+    notificationsError: String? = null,
+    onNotificationClick: (NotificationDto) -> Unit = {},
+    onMarkAllNotificationsRead: () -> Unit = {},
     onNavigate: (String) -> Unit = {},
     viewModel: AdminDashboardViewModel = viewModel()
 ) {
@@ -67,6 +74,12 @@ fun AdminDashboardScreen(
         onNavigate = onNavigate,
         profilePhotoUri = currentUser?.foto,
         profileName = currentUser?.nome,
+        notifications = notifications,
+        unreadNotificationsCount = unreadNotificationsCount,
+        notificationsLoading = notificationsLoading,
+        notificationsError = notificationsError,
+        onNotificationClick = onNotificationClick,
+        onMarkAllNotificationsRead = onMarkAllNotificationsRead,
         onLogout = onLogout
     ) {
         when {

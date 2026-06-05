@@ -448,7 +448,7 @@ class AdminProjectsViewModel(
 
             state = state.copy(isCreating = true, createErrorMessage = null)
 
-            val result = projetoRepository.createProjeto(
+            val result = projetoRepository.createProjetoReturning(
                 nome = name,
                 descricao = description,
                 dataInicio = startDate.toString(),
