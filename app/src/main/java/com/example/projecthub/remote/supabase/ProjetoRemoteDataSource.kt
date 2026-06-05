@@ -56,6 +56,15 @@ class ProjetoRemoteDataSource {
             .insert(projeto)
     }
 
+    suspend fun createProjetoReturning(projeto: ProjetoDto): ProjetoDto {
+        return SupabaseClientProvider.client
+            .from("projetos")
+            .insert(projeto) {
+                select()
+            }
+            .decodeSingle<ProjetoDto>()
+    }
+
     suspend fun updateProjeto(
         projetoId: Int,
         projeto: ProjetoDto

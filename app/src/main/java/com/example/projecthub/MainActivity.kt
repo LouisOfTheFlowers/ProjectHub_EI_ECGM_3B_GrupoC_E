@@ -41,6 +41,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.projecthub.navigation.AppRoutes
+import com.example.projecthub.remote.supabase.models.NotificationDto
 import com.example.projecthub.settings.AppNotificationHelper
 import com.example.projecthub.settings.AppSettingsProvider
 import com.example.projecthub.settings.AppThemeMode
@@ -54,6 +55,8 @@ import com.example.projecthub.uiscreens.RegisterScreen
 import com.example.projecthub.uiscreens.ResetPasswordScreen
 import com.example.projecthub.uiscreens.utilizador.UtilizadorDashboardScreen
 import com.example.projecthub.viewmodel.AuthViewModel
+import com.example.projecthub.viewmodel.NotificationsState
+import com.example.projecthub.viewmodel.NotificationsViewModel
 import com.example.projecthub.viewmodel.SettingsViewModel
 
 class MainActivity : ComponentActivity() {
@@ -103,9 +106,19 @@ class MainActivity : ComponentActivity() {
                     AppSettingsProvider(settings = settings) {
                         val authViewModel: AuthViewModel = viewModel()
                         val authState by authViewModel.state.collectAsStateWithLifecycle()
+                        val notificationsViewModel: NotificationsViewModel = viewModel()
+                        val notificationsState by notificationsViewModel.state.collectAsStateWithLifecycle()
+                        val notificationsStateHolder = rememberUpdatedState(notificationsState)
+                        val authStateHolder = rememberUpdatedState(authState)
                         val navController = rememberNavController()
                         val hasInternet = rememberHasInternet()
                         val hasInternetState = rememberUpdatedState(hasInternet)
+
+                        LaunchedEffect(authState.currentUser?.id, hasInternet) {
+                            if (hasInternet) {
+                                notificationsViewModel.loadNotifications(authState.currentUser?.id)
+                            }
+                        }
 
                         LaunchedEffect(Unit) {
                             if (passwordRecoveryIntent != null || emailConfirmationIntent != null) {
@@ -211,40 +224,112 @@ class MainActivity : ComponentActivity() {
                                 selectedRoute = AppRoutes.AdminDashboard,
                                 authViewModel = authViewModel,
                                 navController = navController,
-                                hasInternetState = hasInternetState
+                                hasInternetState = hasInternetState,
+                                notificationsState = notificationsStateHolder,
+                                onNotificationClick = { notification ->
+                                    notificationsViewModel.markAsRead(notification.id)
+                                    navigateFromNotification(notification, navController)
+                                },
+                                onMarkAllNotificationsRead = {
+                                    notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id)
+                                }
                             )
-                            adminRoute(AppRoutes.AdminProjects, AppRoutes.AdminProjects, authViewModel, navController, hasInternetState)
-                            adminRoute(AppRoutes.AdminTasks, AppRoutes.AdminTasks, authViewModel, navController, hasInternetState)
-                            adminRoute(AppRoutes.AdminTeams, AppRoutes.AdminTeams, authViewModel, navController, hasInternetState)
-                            adminRoute(AppRoutes.AdminReports, AppRoutes.AdminReports, authViewModel, navController, hasInternetState)
-                            adminRoute(AppRoutes.AdminSettings, AppRoutes.AdminSettings, authViewModel, navController, hasInternetState)
-                            adminRoute(AppRoutes.AdminProfile, AppRoutes.AdminProfile, authViewModel, navController, hasInternetState)
+                            adminRoute(AppRoutes.AdminProjects, AppRoutes.AdminProjects, authViewModel, navController, hasInternetState, notificationsStateHolder, { notification ->
+                                notificationsViewModel.markAsRead(notification.id)
+                                navigateFromNotification(notification, navController)
+                            }, { notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id) })
+                            adminRoute(AppRoutes.AdminTasks, AppRoutes.AdminTasks, authViewModel, navController, hasInternetState, notificationsStateHolder, { notification ->
+                                notificationsViewModel.markAsRead(notification.id)
+                                navigateFromNotification(notification, navController)
+                            }, { notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id) })
+                            adminRoute(AppRoutes.AdminTeams, AppRoutes.AdminTeams, authViewModel, navController, hasInternetState, notificationsStateHolder, { notification ->
+                                notificationsViewModel.markAsRead(notification.id)
+                                navigateFromNotification(notification, navController)
+                            }, { notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id) })
+                            adminRoute(AppRoutes.AdminReports, AppRoutes.AdminReports, authViewModel, navController, hasInternetState, notificationsStateHolder, { notification ->
+                                notificationsViewModel.markAsRead(notification.id)
+                                navigateFromNotification(notification, navController)
+                            }, { notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id) })
+                            adminRoute(AppRoutes.AdminSettings, AppRoutes.AdminSettings, authViewModel, navController, hasInternetState, notificationsStateHolder, { notification ->
+                                notificationsViewModel.markAsRead(notification.id)
+                                navigateFromNotification(notification, navController)
+                            }, { notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id) })
+                            adminRoute(AppRoutes.AdminProfile, AppRoutes.AdminProfile, authViewModel, navController, hasInternetState, notificationsStateHolder, { notification ->
+                                notificationsViewModel.markAsRead(notification.id)
+                                navigateFromNotification(notification, navController)
+                            }, { notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id) })
 
                             gestorRoute(
                                 route = AppRoutes.GestorDashboard,
                                 selectedRoute = AppRoutes.GestorDashboard,
                                 authViewModel = authViewModel,
                                 navController = navController,
-                                hasInternetState = hasInternetState
+                                hasInternetState = hasInternetState,
+                                notificationsState = notificationsStateHolder,
+                                onNotificationClick = { notification ->
+                                    notificationsViewModel.markAsRead(notification.id)
+                                    navigateFromNotification(notification, navController)
+                                },
+                                onMarkAllNotificationsRead = {
+                                    notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id)
+                                }
                             )
-                            gestorRoute(AppRoutes.GestorProjects, AppRoutes.GestorProjects, authViewModel, navController, hasInternetState)
-                            gestorRoute(AppRoutes.GestorTasks, AppRoutes.GestorTasks, authViewModel, navController, hasInternetState)
-                            gestorRoute(AppRoutes.GestorTeam, AppRoutes.GestorTeam, authViewModel, navController, hasInternetState)
-                            gestorRoute(AppRoutes.GestorReports, AppRoutes.GestorReports, authViewModel, navController, hasInternetState)
-                            gestorRoute(AppRoutes.GestorSettings, AppRoutes.GestorSettings, authViewModel, navController, hasInternetState)
-                            gestorRoute(AppRoutes.GestorProfile, AppRoutes.GestorProfile, authViewModel, navController, hasInternetState)
+                            gestorRoute(AppRoutes.GestorProjects, AppRoutes.GestorProjects, authViewModel, navController, hasInternetState, notificationsStateHolder, { notification ->
+                                notificationsViewModel.markAsRead(notification.id)
+                                navigateFromNotification(notification, navController)
+                            }, { notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id) })
+                            gestorRoute(AppRoutes.GestorTasks, AppRoutes.GestorTasks, authViewModel, navController, hasInternetState, notificationsStateHolder, { notification ->
+                                notificationsViewModel.markAsRead(notification.id)
+                                navigateFromNotification(notification, navController)
+                            }, { notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id) })
+                            gestorRoute(AppRoutes.GestorTeam, AppRoutes.GestorTeam, authViewModel, navController, hasInternetState, notificationsStateHolder, { notification ->
+                                notificationsViewModel.markAsRead(notification.id)
+                                navigateFromNotification(notification, navController)
+                            }, { notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id) })
+                            gestorRoute(AppRoutes.GestorReports, AppRoutes.GestorReports, authViewModel, navController, hasInternetState, notificationsStateHolder, { notification ->
+                                notificationsViewModel.markAsRead(notification.id)
+                                navigateFromNotification(notification, navController)
+                            }, { notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id) })
+                            gestorRoute(AppRoutes.GestorSettings, AppRoutes.GestorSettings, authViewModel, navController, hasInternetState, notificationsStateHolder, { notification ->
+                                notificationsViewModel.markAsRead(notification.id)
+                                navigateFromNotification(notification, navController)
+                            }, { notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id) })
+                            gestorRoute(AppRoutes.GestorProfile, AppRoutes.GestorProfile, authViewModel, navController, hasInternetState, notificationsStateHolder, { notification ->
+                                notificationsViewModel.markAsRead(notification.id)
+                                navigateFromNotification(notification, navController)
+                            }, { notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id) })
 
                             userRoute(
                                 route = AppRoutes.UserDashboard,
                                 selectedRoute = AppRoutes.UserDashboard,
                                 authViewModel = authViewModel,
                                 navController = navController,
-                                hasInternetState = hasInternetState
+                                hasInternetState = hasInternetState,
+                                notificationsState = notificationsStateHolder,
+                                onNotificationClick = { notification ->
+                                    notificationsViewModel.markAsRead(notification.id)
+                                    navigateFromNotification(notification, navController)
+                                },
+                                onMarkAllNotificationsRead = {
+                                    notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id)
+                                }
                             )
-                            userRoute(AppRoutes.UserTasks, AppRoutes.UserTasks, authViewModel, navController, hasInternetState)
-                            userRoute(AppRoutes.UserProjects, AppRoutes.UserProjects, authViewModel, navController, hasInternetState)
-                            userRoute(AppRoutes.UserSettings, AppRoutes.UserSettings, authViewModel, navController, hasInternetState)
-                            userRoute(AppRoutes.UserProfile, AppRoutes.UserProfile, authViewModel, navController, hasInternetState)
+                            userRoute(AppRoutes.UserTasks, AppRoutes.UserTasks, authViewModel, navController, hasInternetState, notificationsStateHolder, { notification ->
+                                notificationsViewModel.markAsRead(notification.id)
+                                navigateFromNotification(notification, navController)
+                            }, { notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id) })
+                            userRoute(AppRoutes.UserProjects, AppRoutes.UserProjects, authViewModel, navController, hasInternetState, notificationsStateHolder, { notification ->
+                                notificationsViewModel.markAsRead(notification.id)
+                                navigateFromNotification(notification, navController)
+                            }, { notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id) })
+                            userRoute(AppRoutes.UserSettings, AppRoutes.UserSettings, authViewModel, navController, hasInternetState, notificationsStateHolder, { notification ->
+                                notificationsViewModel.markAsRead(notification.id)
+                                navigateFromNotification(notification, navController)
+                            }, { notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id) })
+                            userRoute(AppRoutes.UserProfile, AppRoutes.UserProfile, authViewModel, navController, hasInternetState, notificationsStateHolder, { notification ->
+                                notificationsViewModel.markAsRead(notification.id)
+                                navigateFromNotification(notification, navController)
+                            }, { notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id) })
 
                             composable(
                                 route = AppRoutes.UserTaskObservations,
@@ -258,6 +343,17 @@ class MainActivity : ComponentActivity() {
                                     onLogout = { logoutAndGoToLogin(authViewModel, navController) },
                                     selectedRoute = AppRoutes.UserTasks,
                                     hasInternet = currentHasInternet,
+                                    notifications = notificationsStateHolder.value.notifications,
+                                    unreadNotificationsCount = notificationsStateHolder.value.unreadCount,
+                                    notificationsLoading = notificationsStateHolder.value.isLoading,
+                                    notificationsError = notificationsStateHolder.value.errorMessage,
+                                    onNotificationClick = { notification ->
+                                        notificationsViewModel.markAsRead(notification.id)
+                                        navigateFromNotification(notification, navController)
+                                    },
+                                    onMarkAllNotificationsRead = {
+                                        notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id)
+                                    },
                                     taskObservationsId = if (currentHasInternet) backStackEntry.arguments?.getInt("taskId") else null,
                                     onNavigate = { section ->
                                         navController.navigate(section) {
@@ -280,6 +376,17 @@ class MainActivity : ComponentActivity() {
                                     onLogout = { logoutAndGoToLogin(authViewModel, navController) },
                                     selectedRoute = AppRoutes.UserProjects,
                                     hasInternet = currentHasInternet,
+                                    notifications = notificationsStateHolder.value.notifications,
+                                    unreadNotificationsCount = notificationsStateHolder.value.unreadCount,
+                                    notificationsLoading = notificationsStateHolder.value.isLoading,
+                                    notificationsError = notificationsStateHolder.value.errorMessage,
+                                    onNotificationClick = { notification ->
+                                        notificationsViewModel.markAsRead(notification.id)
+                                        navigateFromNotification(notification, navController)
+                                    },
+                                    onMarkAllNotificationsRead = {
+                                        notificationsViewModel.markAllAsRead(authStateHolder.value.currentUser?.id)
+                                    },
                                     projectHistoryId = if (currentHasInternet) backStackEntry.arguments?.getInt("projectId") else null,
                                     onNavigate = { section ->
                                         navController.navigate(section) {
@@ -349,6 +456,18 @@ private fun navigateAfterAuthentication(
     }
 }
 
+private fun navigateFromNotification(
+    notification: NotificationDto,
+    navController: NavHostController
+) {
+    val route = notification.relatedRoute?.takeIf { it.isNotBlank() } ?: return
+    runCatching {
+        navController.navigate(route) {
+            launchSingleTop = true
+        }
+    }
+}
+
 @androidx.compose.runtime.Composable
 private fun rememberHasInternet(): Boolean {
     val context = LocalContext.current
@@ -401,11 +520,15 @@ private fun NavGraphBuilder.adminRoute(
     selectedRoute: String,
     authViewModel: AuthViewModel,
     navController: NavHostController,
-    hasInternetState: State<Boolean>
+    hasInternetState: State<Boolean>,
+    notificationsState: State<NotificationsState>,
+    onNotificationClick: (NotificationDto) -> Unit,
+    onMarkAllNotificationsRead: () -> Unit
 ) {
     composable(route) {
         val authState by authViewModel.state.collectAsStateWithLifecycle()
         val hasInternet = hasInternetState.value
+        val currentNotificationsState = notificationsState.value
 
         AdminDashboardScreen(
             currentUser = authState.currentUser,
@@ -413,6 +536,12 @@ private fun NavGraphBuilder.adminRoute(
             onLogout = { logoutAndGoToLogin(authViewModel, navController) },
             selectedRoute = selectedRoute,
             hasInternet = hasInternet,
+            notifications = currentNotificationsState.notifications,
+            unreadNotificationsCount = currentNotificationsState.unreadCount,
+            notificationsLoading = currentNotificationsState.isLoading,
+            notificationsError = currentNotificationsState.errorMessage,
+            onNotificationClick = onNotificationClick,
+            onMarkAllNotificationsRead = onMarkAllNotificationsRead,
             onNavigate = { section ->
                 navController.navigate(section) {
                     launchSingleTop = true
@@ -427,11 +556,15 @@ private fun NavGraphBuilder.gestorRoute(
     selectedRoute: String,
     authViewModel: AuthViewModel,
     navController: NavHostController,
-    hasInternetState: State<Boolean>
+    hasInternetState: State<Boolean>,
+    notificationsState: State<NotificationsState>,
+    onNotificationClick: (NotificationDto) -> Unit,
+    onMarkAllNotificationsRead: () -> Unit
 ) {
     composable(route) {
         val authState by authViewModel.state.collectAsStateWithLifecycle()
         val hasInternet = hasInternetState.value
+        val currentNotificationsState = notificationsState.value
 
         GestorDashboardScreen(
             gestorId = authState.currentUser?.id,
@@ -440,6 +573,12 @@ private fun NavGraphBuilder.gestorRoute(
             onLogout = { logoutAndGoToLogin(authViewModel, navController) },
             selectedRoute = selectedRoute,
             hasInternet = hasInternet,
+            notifications = currentNotificationsState.notifications,
+            unreadNotificationsCount = currentNotificationsState.unreadCount,
+            notificationsLoading = currentNotificationsState.isLoading,
+            notificationsError = currentNotificationsState.errorMessage,
+            onNotificationClick = onNotificationClick,
+            onMarkAllNotificationsRead = onMarkAllNotificationsRead,
             onNavigate = { section ->
                 navController.navigate(section) {
                     launchSingleTop = true
@@ -454,11 +593,15 @@ private fun NavGraphBuilder.userRoute(
     selectedRoute: String,
     authViewModel: AuthViewModel,
     navController: NavHostController,
-    hasInternetState: State<Boolean>
+    hasInternetState: State<Boolean>,
+    notificationsState: State<NotificationsState>,
+    onNotificationClick: (NotificationDto) -> Unit,
+    onMarkAllNotificationsRead: () -> Unit
 ) {
     composable(route) {
         val authState by authViewModel.state.collectAsStateWithLifecycle()
         val hasInternet = hasInternetState.value
+        val currentNotificationsState = notificationsState.value
 
         UtilizadorDashboardScreen(
             userId = authState.currentUser?.id,
@@ -467,6 +610,12 @@ private fun NavGraphBuilder.userRoute(
             onLogout = { logoutAndGoToLogin(authViewModel, navController) },
             selectedRoute = selectedRoute,
             hasInternet = hasInternet,
+            notifications = currentNotificationsState.notifications,
+            unreadNotificationsCount = currentNotificationsState.unreadCount,
+            notificationsLoading = currentNotificationsState.isLoading,
+            notificationsError = currentNotificationsState.errorMessage,
+            onNotificationClick = onNotificationClick,
+            onMarkAllNotificationsRead = onMarkAllNotificationsRead,
             onNavigate = { section ->
                 navController.navigate(section) {
                     launchSingleTop = true

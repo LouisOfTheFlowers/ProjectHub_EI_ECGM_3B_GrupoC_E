@@ -206,7 +206,7 @@ class AdminTasksViewModel(
 
             state = state.copy(isCreating = true, createErrorMessage = null)
 
-            val result = tarefaRepository.createTarefa(
+            val result = tarefaRepository.createTarefaReturning(
                 titulo = title,
                 descricao = description,
                 projetoId = projectId,

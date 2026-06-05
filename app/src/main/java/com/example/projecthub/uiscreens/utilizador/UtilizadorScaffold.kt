@@ -41,11 +41,13 @@ import androidx.compose.ui.unit.sp
 import com.example.projecthub.R
 import com.example.projecthub.navigation.AppRoutes
 import com.example.projecthub.navigation.SidebarDestination
+import com.example.projecthub.remote.supabase.models.NotificationDto
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.uiscreens.AuthAccent
 import com.example.projecthub.uiscreens.TopBarProfilePhoto
+import com.example.projecthub.uiscreens.components.AppNotificationsMenu
 import com.example.projecthub.uiscreens.isLandscapeLayout
 
 private val UtilizadorScaffoldAccent = AuthAccent
@@ -56,6 +58,12 @@ fun UtilizadorScaffold(
     onNavigate: (String) -> Unit,
     profilePhotoUri: String?,
     profileName: String?,
+    notifications: List<NotificationDto> = emptyList(),
+    unreadNotificationsCount: Int = 0,
+    notificationsLoading: Boolean = false,
+    notificationsError: String? = null,
+    onNotificationClick: (NotificationDto) -> Unit = {},
+    onMarkAllNotificationsRead: () -> Unit = {},
     onLogout: () -> Unit,
     content: @Composable () -> Unit
 ) {
@@ -76,6 +84,12 @@ fun UtilizadorScaffold(
                 onMenuClick = { isSidebarOpen = true },
                 profilePhotoUri = profilePhotoUri,
                 profileName = profileName,
+                notifications = notifications,
+                unreadNotificationsCount = unreadNotificationsCount,
+                notificationsLoading = notificationsLoading,
+                notificationsError = notificationsError,
+                onNotificationClick = onNotificationClick,
+                onMarkAllNotificationsRead = onMarkAllNotificationsRead,
                 onProfileClick = { onNavigate(AppRoutes.UserProfile) }
             )
 
@@ -119,6 +133,12 @@ private fun UtilizadorTopBar(
     onMenuClick: () -> Unit,
     profilePhotoUri: String?,
     profileName: String?,
+    notifications: List<NotificationDto>,
+    unreadNotificationsCount: Int,
+    notificationsLoading: Boolean,
+    notificationsError: String?,
+    onNotificationClick: (NotificationDto) -> Unit,
+    onMarkAllNotificationsRead: () -> Unit,
     onProfileClick: () -> Unit
 ) {
     Box(
@@ -148,15 +168,32 @@ private fun UtilizadorTopBar(
             fontSize = 21.sp
         )
 
-        TopBarProfilePhoto(
-            photoUri = profilePhotoUri,
-            name = profileName,
+        Row(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
-                .size(40.dp)
-                .clickable(onClick = onProfileClick)
-                .padding(4.dp)
-        )
+                .height(48.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AppNotificationsMenu(
+                notifications = notifications,
+                unreadCount = unreadNotificationsCount,
+                isLoading = notificationsLoading,
+                errorMessage = notificationsError,
+                onNotificationClick = onNotificationClick,
+                onMarkAllRead = onMarkAllNotificationsRead
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            TopBarProfilePhoto(
+                photoUri = profilePhotoUri,
+                name = profileName,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clickable(onClick = onProfileClick)
+                    .padding(4.dp)
+            )
+        }
     }
 }
 
