@@ -39,7 +39,6 @@ fun GestorTasksScreen(
     var taskToDelete by remember { mutableStateOf<GestorTaskListItem?>(null) }
     var taskToEdit by remember { mutableStateOf<GestorTaskListItem?>(null) }
     var taskToView by remember { mutableStateOf<GestorTaskListItem?>(null) }
-    var taskToViewObservations by remember { mutableStateOf<GestorTaskListItem?>(null) }
 
     LaunchedEffect(gestorId) {
         viewModel.loadTasks(gestorId)
@@ -55,21 +54,6 @@ fun GestorTasksScreen(
             onBack = {
                 viewModel.clearTaskInfo()
                 taskToView = null
-            }
-        )
-        return
-    }
-
-    taskToViewObservations?.let { task ->
-        LaunchedEffect(task.id) {
-            viewModel.loadTaskInfo(task)
-        }
-
-        GestorTaskObservationsPage(
-            state = state.detailState,
-            onBack = {
-                viewModel.clearTaskInfo()
-                taskToViewObservations = null
             }
         )
         return
@@ -148,8 +132,7 @@ fun GestorTasksScreen(
                     taskToEdit = it
                 },
                 onDeleteTask = { taskToDelete = it },
-                onMoreInfo = { taskToView = it },
-                onObservations = { taskToViewObservations = it }
+                onMoreInfo = { taskToView = it }
             )
         }
     }

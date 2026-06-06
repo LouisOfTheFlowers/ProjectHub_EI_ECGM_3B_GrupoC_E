@@ -33,15 +33,13 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import com.example.projecthub.ui.theme.ProjectHubColors
+import com.example.projecthub.uiscreens.components.AppStatusChip
 import com.example.projecthub.uiscreens.components.AppInfoRow
+import com.example.projecthub.uiscreens.components.statusColorForLabel
 
 @Composable
 internal fun TaskCard(task: AdminTaskListItem) {
-    val statusColor = when {
-        task.isCompleted -> TasksGreen
-        task.isDelayed -> TasksRed
-        else -> TasksOrange
-    }
+    val statusColor = statusColorForLabel(task.statusLabel)
 
     Card(
         modifier = Modifier
@@ -52,32 +50,26 @@ internal fun TaskCard(task: AdminTaskListItem) {
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
+            Text(
+                text = task.title,
+                color = ProjectHubColors.Ink,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 15.sp
+            )
+            Text(
+                text = task.description,
+                color = ProjectHubColors.Muted,
+                fontSize = 12.sp
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = task.statusLabel.uppercase(),
-                        color = statusColor,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 11.sp
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = task.title,
-                        color = ProjectHubColors.Ink,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 16.sp
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = task.description,
-                        color = ProjectHubColors.Muted,
-                        fontSize = 13.sp
-                    )
-                }
+                AppStatusChip(text = task.statusLabel)
 
                 CompletionIcon(
                     isCompleted = task.isCompleted,

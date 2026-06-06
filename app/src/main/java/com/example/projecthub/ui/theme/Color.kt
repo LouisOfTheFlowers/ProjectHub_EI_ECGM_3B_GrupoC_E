@@ -57,9 +57,9 @@ object ProjectHubColors {
         private set
     var SidebarMutedText = Color(0xFF94A3B8)
         private set
-    var HeaderBackground = Color(0xFFD8F3F6)
+    var HeaderBackground = Accent
         private set
-    var HeaderContent = LightInkBase
+    var HeaderContent = Color.White
         private set
 
     var Border = BorderBase
@@ -107,8 +107,8 @@ object ProjectHubColors {
             SidebarBackground = Color(0xFF0F1724)
             SidebarSelected = Color(0xFF1E293B)
             SidebarMutedText = Color(0xFF94A3B8)
-            HeaderBackground = Color(0xFFD8F3F6)
-            HeaderContent = LightInkBase
+            HeaderBackground = Accent
+            HeaderContent = Color.White
             Border = BorderBase
             BorderSoft = BorderSoftBase
             SurfaceSoft = SurfaceSoftBase

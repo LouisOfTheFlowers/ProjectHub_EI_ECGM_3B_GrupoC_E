@@ -505,25 +505,9 @@ private fun ProjectObservationDetailPage(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    DetailItem(
-                        label = currentAppSettings().language.t("user.tasks.completion"),
-                        value = "${observation.completionPercent}%",
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    DetailItem(
-                        label = currentAppSettings().language.t("common.hours"),
-                        value = observation.spentHours?.let { "$it h" } ?: "-",
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
                 DetailItem(
-                    label = currentAppSettings().language.t("common.location"),
-                    value = observation.local,
+                    label = currentAppSettings().language.t("common.hours"),
+                    value = observation.spentHours?.let { "$it h" } ?: "-",
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -576,12 +560,10 @@ private fun ProjectObservationRow(
             text = observation.text,
             userName = observation.userName,
             date = observation.date,
-            completionPercent = observation.completionPercent,
             spentHours = observation.spentHours,
             photoUrls = observation.photoUrls
         ),
-        onClick = onClick,
-        showPhotoPreview = false
+        onClick = onClick
     )
 }
 

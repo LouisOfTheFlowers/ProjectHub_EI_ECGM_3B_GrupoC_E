@@ -30,9 +30,7 @@ import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.uiscreens.components.AppBackButton
 import com.example.projecthub.uiscreens.components.AppMessageCard
-import com.example.projecthub.uiscreens.components.AppObservationCard
-import com.example.projecthub.uiscreens.components.AppObservationUiModel
-import com.example.projecthub.viewmodel.admin.AdminProjectInfoObservation
+import com.example.projecthub.uiscreens.components.AppStatusChip
 import com.example.projecthub.viewmodel.admin.AdminProjectInfoParticipant
 import com.example.projecthub.viewmodel.admin.AdminProjectInfoState
 import com.example.projecthub.viewmodel.admin.AdminProjectInfoTask
@@ -94,8 +92,6 @@ internal fun AdminProjectDetailPage(
                 Spacer(modifier = Modifier.height(12.dp))
                 AdminProjectParticipantsCard(participants = state.participants)
                 Spacer(modifier = Modifier.height(12.dp))
-                AdminProjectRatingsCard(participants = state.participants)
-                Spacer(modifier = Modifier.height(12.dp))
                 AdminProjectTasksCard(tasks = state.tasks)
             }
         }
@@ -147,57 +143,6 @@ private fun AdminProjectParticipantsCard(participants: List<AdminProjectInfoPart
 }
 
 @Composable
-private fun AdminProjectRatingsCard(participants: List<AdminProjectInfoParticipant>) {
-    val language = currentAppSettings().language
-
-    AdminProjectSectionCard(title = language.t("admin.projects.ratings")) {
-        if (participants.isEmpty()) {
-            Text(language.t("manager.team.noRatings"), color = ProjectHubColors.Muted, fontSize = 14.sp)
-        } else {
-            LazyColumn(
-                modifier = Modifier.heightIn(max = 360.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(
-                    items = participants,
-                    key = { it.id }
-                ) { participant ->
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = participant.name,
-                                color = ProjectHubColors.Ink,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Text(
-                                text = participant.rating
-                                    ?.let { rating ->
-                                        val clamped = rating.coerceIn(0, 5)
-                                        "${"â˜…".repeat(clamped)}${"â˜†".repeat(5 - clamped)} $clamped/5"
-                                    }
-                                    ?: "â˜†â˜†â˜†â˜†â˜† 0/5",
-                                color = participant.rating?.let { ProjectHubColors.Rating } ?: ProjectHubColors.Muted,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp
-                            )
-                        }
-                        participant.comment?.takeIf { it.isNotBlank() }?.let { comment ->
-                            Text(comment, color = ProjectHubColors.Muted, fontSize = 12.sp)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun AdminProjectTasksCard(tasks: List<AdminProjectInfoTask>) {
     val language = currentAppSettings().language
     AdminProjectSectionCard(title = language.t("reports.tasks")) {
@@ -241,12 +186,7 @@ private fun AdminProjectTaskBlock(task: AdminProjectInfoTask) {
                 Text(task.title, color = ProjectHubColors.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
                 Text(task.description, color = ProjectHubColors.Muted, fontSize = 12.sp)
             }
-            Text(
-                text = task.statusLabel,
-                color = ProjectsAccent,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp
-            )
+            AppStatusChip(text = task.statusLabel)
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -257,47 +197,7 @@ private fun AdminProjectTaskBlock(task: AdminProjectInfoTask) {
             task.assignees.takeIf { it.isNotEmpty() }?.joinToString()
                 ?: language.t("tasks.noAssignees")
         )
-
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = language.t("user.tasks.observations"),
-            color = ProjectHubColors.Ink,
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.sp
-        )
-
-        if (task.observations.isEmpty()) {
-            Text(language.t("user.tasks.noObservationsDetail"), color = ProjectHubColors.Muted, fontSize = 12.sp)
-        } else {
-            LazyColumn(
-                modifier = Modifier.heightIn(max = 300.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(
-                    items = task.observations,
-                    key = { it.id ?: it.text.hashCode() }
-                ) { observation ->
-                    AdminProjectObservationBlock(observation = observation)
-                }
-            }
-        }
     }
-}
-
-@Composable
-private fun AdminProjectObservationBlock(observation: AdminProjectInfoObservation) {
-    AppObservationCard(
-        observation = AppObservationUiModel(
-            text = observation.text,
-            userName = observation.userName,
-            date = observation.date,
-            completionPercent = observation.completionPercent,
-            spentHours = observation.spentHours,
-            location = observation.local,
-            photoUrls = observation.photoUrls
-        ),
-        modifier = Modifier.padding(top = 8.dp)
-    )
 }
 
 @Composable

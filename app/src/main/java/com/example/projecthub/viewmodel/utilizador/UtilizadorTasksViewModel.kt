@@ -1,6 +1,7 @@
 package com.example.projecthub.viewmodel.utilizador
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projecthub.remote.supabase.models.ObservacaoDto
 import com.example.projecthub.remote.supabase.models.ObservacaoFotoDto
@@ -8,6 +9,7 @@ import com.example.projecthub.remote.supabase.models.RegistoTarefaDto
 import com.example.projecthub.remote.supabase.models.TarefaDto
 import com.example.projecthub.repository.ObservacaoFotoRepository
 import com.example.projecthub.repository.ObservacaoRepository
+import com.example.projecthub.repository.ObservationPhotoStorageRepository
 import com.example.projecthub.repository.ProjetoRepository
 import com.example.projecthub.repository.RegistoTarefaRepository
 import com.example.projecthub.repository.TarefaRepository
@@ -40,13 +42,27 @@ data class UtilizadorTaskObservation(
 )
 
 class UtilizadorTasksViewModel(
+    application: Application,
     private val projetoRepository: ProjetoRepository = ProjetoRepository(),
     private val tarefaRepository: TarefaRepository = TarefaRepository(),
     private val tarefaUserRepository: TarefaUserRepository = TarefaUserRepository(),
     private val registoTarefaRepository: RegistoTarefaRepository = RegistoTarefaRepository(),
     private val observacaoRepository: ObservacaoRepository = ObservacaoRepository(),
-    private val observacaoFotoRepository: ObservacaoFotoRepository = ObservacaoFotoRepository()
-) : ViewModel() {
+    private val observacaoFotoRepository: ObservacaoFotoRepository = ObservacaoFotoRepository(),
+    private val observationPhotoStorageRepository: ObservationPhotoStorageRepository =
+        ObservationPhotoStorageRepository(application.contentResolver)
+) : AndroidViewModel(application) {
+
+    constructor(application: Application) : this(
+        application = application,
+        projetoRepository = ProjetoRepository(),
+        tarefaRepository = TarefaRepository(),
+        tarefaUserRepository = TarefaUserRepository(),
+        registoTarefaRepository = RegistoTarefaRepository(),
+        observacaoRepository = ObservacaoRepository(),
+        observacaoFotoRepository = ObservacaoFotoRepository(),
+        observationPhotoStorageRepository = ObservationPhotoStorageRepository(application.contentResolver)
+    )
 
     private val _state = MutableStateFlow(UtilizadorTasksState())
     val stateFlow: StateFlow<UtilizadorTasksState> = _state
@@ -186,9 +202,25 @@ class UtilizadorTasksViewModel(
 
             val observacaoId = observacaoResult.getOrNull()?.id
             if (!photoUri.isNullOrBlank() && observacaoId != null) {
+                val uploadResult = observationPhotoStorageRepository.uploadObservationPhoto(
+                    observationId = observacaoId,
+                    photoUri = photoUri
+                )
+
+                if (uploadResult.isFailure) {
+                    state = state.copy(
+                        isSaving = false,
+                        errorMessage = uploadResult.exceptionOrNull().toUserMessage(
+                            fallback = "A observação foi guardada, mas não foi possível enviar a fotografia."
+                        )
+                    )
+                    loadTasks(userId)
+                    return@launch
+                }
+
                 val photoResult = observacaoFotoRepository.createFoto(
                     observacaoId = observacaoId,
-                    fotoUrl = photoUri
+                    fotoUrl = uploadResult.getOrThrow()
                 )
 
                 if (photoResult.isFailure) {

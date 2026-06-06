@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,7 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.projecthub.uiscreens.components.AppOutlinedActionButton
+import com.example.projecthub.settings.rememberSoundClick
+import com.example.projecthub.uiscreens.AuthAccent
 
 @Composable
 internal fun ProjectMeta(
@@ -92,10 +95,23 @@ internal fun HistoryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AppOutlinedActionButton(
-        text = text,
-        onClick = onClick,
+    Button(
+        onClick = rememberSoundClick(onClick),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = AuthAccent,
+            contentColor = Color.White
+        ),
+        shape = RoundedCornerShape(8.dp),
         modifier = modifier.height(50.dp)
-    )
+    ) {
+        Text(
+            text = text,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
 }
 

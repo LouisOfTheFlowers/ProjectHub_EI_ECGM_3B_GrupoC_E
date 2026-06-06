@@ -66,6 +66,18 @@ fun ProjectHubTheme(
         baseColorScheme
     } else {
         baseColorScheme.copy(
+            primary = ProjectHubColors.Accent,
+            secondary = ProjectHubColors.SuccessDark,
+            tertiary = Cyan40,
+            background = ProjectHubColors.LightBackground,
+            surface = ProjectHubColors.LightSurface,
+            surfaceVariant = ProjectHubColors.SurfaceSoft,
+            onPrimary = Color.White,
+            onSecondary = Color.White,
+            onTertiary = Color.White,
+            onBackground = ProjectHubColors.LightInk,
+            onSurface = ProjectHubColors.LightInk,
+            onSurfaceVariant = ProjectHubColors.SlateMuted,
             surfaceContainerLowest = ProjectHubColors.LightSurface,
             surfaceContainerLow = ProjectHubColors.LightSurface,
             surfaceContainer = ProjectHubColors.LightSurface,

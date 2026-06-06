@@ -179,15 +179,19 @@ fun AppObservationsButton(
     compact: Boolean = false
 ) {
     val label = count?.let { "$text ($it)" } ?: text
-    OutlinedButton(
+    Button(
         onClick = rememberSoundClick(onClick),
         enabled = enabled,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = AuthAccent,
+            contentColor = Color.White
+        ),
         shape = RoundedCornerShape(8.dp),
         modifier = modifier.height(if (compact) 36.dp else 44.dp)
     ) {
         Text(
             text = label,
-            color = AuthAccent,
+            color = Color.White,
             fontWeight = FontWeight.Bold,
             fontSize = if (compact) 12.sp else 14.sp,
             maxLines = 1,
@@ -204,15 +208,19 @@ fun AppMoreInfoButton(
     enabled: Boolean = true,
     compact: Boolean = false
 ) {
-    OutlinedButton(
+    Button(
         onClick = rememberSoundClick(onClick),
         enabled = enabled,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = AuthAccent,
+            contentColor = Color.White
+        ),
         shape = RoundedCornerShape(8.dp),
         modifier = modifier.height(if (compact) 34.dp else 44.dp)
     ) {
         Text(
             text = text,
-            color = AuthAccent,
+            color = Color.White,
             fontWeight = FontWeight.Bold,
             fontSize = if (compact) 12.sp else 14.sp,
             maxLines = 1,

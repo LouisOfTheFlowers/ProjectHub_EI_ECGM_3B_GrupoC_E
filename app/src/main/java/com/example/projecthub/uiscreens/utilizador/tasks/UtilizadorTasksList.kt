@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -100,14 +101,18 @@ internal fun UserTaskCard(
                         text = language.t("user.tasks.observations"),
                         onClick = onOpenObservations,
                         enabled = !isSaving,
-                        compact = true
+                        compact = false,
+                        modifier = Modifier.width(96.dp)
                     )
 
                     AppFilledActionButton(
                         text = if (completed) language.t("user.tasks.completed") else language.t("user.tasks.complete"),
                         onClick = onComplete,
                         enabled = !isSaving && !completed,
-                        containerColor = ProjectHubColors.Success
+                        containerColor = ProjectHubColors.Success,
+                        modifier = Modifier
+                            .width(96.dp)
+                            .height(44.dp)
                     )
                 }
             }

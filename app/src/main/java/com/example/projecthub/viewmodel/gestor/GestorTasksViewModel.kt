@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projecthub.remote.supabase.models.TarefaDto
 import com.example.projecthub.repository.ObservacaoRepository
+import com.example.projecthub.repository.ObservacaoFotoRepository
 import com.example.projecthub.repository.ProjetoRepository
 import com.example.projecthub.repository.ProjetoUserRepository
 import com.example.projecthub.repository.RegistoTarefaRepository
@@ -63,7 +64,8 @@ data class GestorTaskInfoObservation(
     val userName: String,
     val date: String,
     val completionPercent: Int,
-    val spentHours: Float?
+    val spentHours: Float?,
+    val photoUrls: List<String> = emptyList()
 )
 
 data class GestorTaskInfoState(
@@ -110,6 +112,7 @@ class GestorTasksViewModel(
     private val tarefaUserRepository: TarefaUserRepository = TarefaUserRepository(),
     private val registoTarefaRepository: RegistoTarefaRepository = RegistoTarefaRepository(),
     private val observacaoRepository: ObservacaoRepository = ObservacaoRepository(),
+    private val observacaoFotoRepository: ObservacaoFotoRepository = ObservacaoFotoRepository(),
     private val userRemoteDataSource: UserRemoteDataSource = UserRemoteDataSource()
 ) : ViewModel() {
 
@@ -201,7 +204,7 @@ class GestorTasksViewModel(
                     project.id?.let { GestorTaskProjectOption(it, project.nome) }
                 }.sortedBy { it.name.lowercase() },
                 users = userOptions,
-                expandedProjectIds = sourceGroups.map { it.projectId }.toSet(),
+                expandedProjectIds = emptySet(),
                 isLoading = false
             )
             applyFilters()
@@ -235,11 +238,12 @@ class GestorTasksViewModel(
                 )
             )
 
-            val recordsResult = registoTarefaRepository.getRegistosByTarefa(task.id)
+            val recordsResult = registoTarefaRepository.getRegistos()
             val observationsResult = observacaoRepository.getObservacoes()
+            val photosResult = observacaoFotoRepository.getFotos()
             val usersResult = runCatching { userRemoteDataSource.getUsers() }
 
-            if (recordsResult.isFailure || observationsResult.isFailure || usersResult.isFailure) {
+            if (recordsResult.isFailure || observationsResult.isFailure || photosResult.isFailure || usersResult.isFailure) {
                 state = state.copy(
                     detailState = GestorTaskInfoState(
                         task = task,
@@ -254,7 +258,10 @@ class GestorTasksViewModel(
                 .mapNotNull { user -> user.id?.let { it to user } }
                 .toMap()
             val records = recordsResult.getOrDefault(emptyList())
+                .filter { it.tarefa_id == task.id }
             val recordsById = records.mapNotNull { record -> record.id?.let { it to record } }.toMap()
+            val photosByObservation = photosResult.getOrDefault(emptyList())
+                .groupBy { it.observacao_id }
             val observations = observationsResult
                 .getOrDefault(emptyList())
                 .mapNotNull { observation ->
@@ -268,7 +275,14 @@ class GestorTasksViewModel(
                         userName = userName,
                         date = (observation.created_at ?: record.created_at ?: record.data).toUiDateText(),
                         completionPercent = record.taxa_conclusao,
-                        spentHours = record.tempo_gasto
+                        spentHours = record.tempo_gasto,
+                        photoUrls = observation.id
+                            ?.let { observationId ->
+                                photosByObservation[observationId]
+                                    .orEmpty()
+                                    .map { photo -> photo.foto_url }
+                            }
+                            .orEmpty()
                     )
                 }
                 .sortedByDescending { it.date }

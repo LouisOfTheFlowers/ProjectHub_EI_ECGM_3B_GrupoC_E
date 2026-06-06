@@ -22,7 +22,6 @@ import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.uiscreens.AuthAccent
-import com.example.projecthub.uiscreens.isLandscapeLayout
 import com.example.projecthub.viewmodel.utilizador.UtilizadorProjectItem
 
 @Composable
@@ -32,7 +31,6 @@ internal fun UserProjectCard(
 ) {
     val language = currentAppSettings().language
     val project = item.project
-    val isLandscape = isLandscapeLayout()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -79,70 +77,32 @@ internal fun UserProjectCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (isLandscape) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        ProjectMetric(
-                            label = language.t("common.completed"),
-                            value = item.completedTasks.toString(),
-                            color = ProjectHubColors.Success,
-                            modifier = Modifier.weight(1f)
-                        )
-                        ProjectMetric(
-                            label = language.t("user.projects.late"),
-                            value = item.lateTasks.toString(),
-                            color = ProjectHubColors.Danger,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        ProjectMetric(
-                            label = language.t("common.progress"),
-                            value = projectProgress(item),
-                            color = AuthAccent,
-                            modifier = Modifier.weight(1f)
-                        )
-                        HistoryButton(
-                            text = language.t("user.projects.viewHistory"),
-                            onClick = onClick,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ProjectMetric(
+                        label = language.t("common.completed"),
+                        value = item.completedTasks.toString(),
+                        color = ProjectHubColors.Success,
+                        modifier = Modifier.weight(1f)
+                    )
+                    ProjectMetric(
+                        label = language.t("user.projects.late"),
+                        value = item.lateTasks.toString(),
+                        color = ProjectHubColors.Danger,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
-            } else {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        ProjectMetric(
-                            label = language.t("common.completed"),
-                            value = item.completedTasks.toString(),
-                            color = ProjectHubColors.Success,
-                            modifier = Modifier.weight(1f)
-                        )
-                        ProjectMetric(
-                            label = language.t("user.projects.late"),
-                            value = item.lateTasks.toString(),
-                            color = ProjectHubColors.Danger,
-                            modifier = Modifier.weight(1f)
-                        )
-                        ProjectMetric(
-                            label = language.t("common.progress"),
-                            value = projectProgress(item),
-                            color = AuthAccent,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ProjectMetric(
+                        label = language.t("common.progress"),
+                        value = projectProgress(item),
+                        color = AuthAccent,
+                        modifier = Modifier.weight(1f)
+                    )
                     HistoryButton(
                         text = language.t("user.projects.viewHistory"),
                         onClick = onClick,
-                        modifier = Modifier.padding(start = 12.dp)
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }

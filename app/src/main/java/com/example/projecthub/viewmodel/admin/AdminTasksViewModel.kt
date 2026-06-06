@@ -144,7 +144,7 @@ class AdminTasksViewModel(
 
             state = state.copy(
                 projects = projectOptions,
-                expandedProjectIds = sourceGroups.map { it.projectId }.toSet(),
+                expandedProjectIds = emptySet(),
                 isLoading = false
             )
             applyFilters()
@@ -271,9 +271,12 @@ class AdminTasksViewModel(
     }
 
     private fun TarefaDto.toListItem(): AdminTaskListItem {
+        val today = LocalDate.now()
+        val startDate = data_inicio?.toLocalDateOrNull()
         val dueDate = data_fim?.toLocalDateOrNull()
         val isCompleted = status.isCompletedStatus()
-        val isDelayed = !isCompleted && dueDate != null && dueDate.isBefore(LocalDate.now())
+        val isDelayed = !isCompleted && dueDate != null && dueDate.isBefore(today)
+        val isInProgress = !isCompleted && !isDelayed && startDate != null && !startDate.isAfter(today)
 
         return AdminTaskListItem(
             id = id ?: 0,
@@ -282,6 +285,7 @@ class AdminTasksViewModel(
             statusLabel = when {
                 isCompleted -> "Completada"
                 isDelayed -> "Atrasada"
+                isInProgress -> "Em progresso"
                 else -> "Pendente"
             },
             startDate = data_inicio?.take(10) ?: "-",

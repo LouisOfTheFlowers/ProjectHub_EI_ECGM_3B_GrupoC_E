@@ -37,7 +37,6 @@ import com.example.projecthub.uiscreens.components.AppCompactStatCard
 import com.example.projecthub.uiscreens.components.AppDropdownField
 import com.example.projecthub.uiscreens.components.AppExpandIcon
 import com.example.projecthub.uiscreens.components.AppMoreInfoButton
-import com.example.projecthub.uiscreens.components.AppObservationsButton
 import com.example.projecthub.uiscreens.components.AppSearchField
 import com.example.projecthub.viewmodel.gestor.GestorProjectTaskGroup
 import com.example.projecthub.viewmodel.gestor.GestorTaskListItem
@@ -130,8 +129,7 @@ internal fun TaskProjectList(
     onToggleProject: (Int) -> Unit,
     onEditTask: (GestorTaskListItem) -> Unit,
     onDeleteTask: (GestorTaskListItem) -> Unit,
-    onMoreInfo: (GestorTaskListItem) -> Unit,
-    onObservations: (GestorTaskListItem) -> Unit
+    onMoreInfo: (GestorTaskListItem) -> Unit
 ) {
     val language = currentAppSettings().language
 
@@ -186,8 +184,7 @@ internal fun TaskProjectList(
                         onToggleProject = onToggleProject,
                         onEditTask = onEditTask,
                         onDeleteTask = onDeleteTask,
-                        onMoreInfo = onMoreInfo,
-                        onObservations = onObservations
+                        onMoreInfo = onMoreInfo
                     )
                 }
             }
@@ -201,8 +198,7 @@ private fun ProjectTaskGroupCard(
     onToggleProject: (Int) -> Unit,
     onEditTask: (GestorTaskListItem) -> Unit,
     onDeleteTask: (GestorTaskListItem) -> Unit,
-    onMoreInfo: (GestorTaskListItem) -> Unit,
-    onObservations: (GestorTaskListItem) -> Unit
+    onMoreInfo: (GestorTaskListItem) -> Unit
 ) {
     val language = currentAppSettings().language
 
@@ -230,17 +226,6 @@ private fun ProjectTaskGroupCard(
                         color = ProjectHubColors.Ink,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 18.sp
-                    )
-                    Text(
-                        text = language.t("tasks.groupSummary")
-                            .format(
-                                group.totalTasks,
-                                group.completedTasks,
-                                group.inProgressTasks,
-                                group.pendingTasks
-                            ),
-                        color = ProjectHubColors.Muted,
-                        fontSize = 12.sp
                     )
                 }
 
@@ -270,8 +255,7 @@ private fun ProjectTaskGroupCard(
                                 task = task,
                                 onEditTask = onEditTask,
                                 onDeleteTask = onDeleteTask,
-                                onMoreInfo = onMoreInfo,
-                                onObservations = onObservations
+                                onMoreInfo = onMoreInfo
                             )
                         }
                     }
@@ -286,8 +270,7 @@ private fun TaskRow(
     task: GestorTaskListItem,
     onEditTask: (GestorTaskListItem) -> Unit,
     onDeleteTask: (GestorTaskListItem) -> Unit,
-    onMoreInfo: (GestorTaskListItem) -> Unit,
-    onObservations: (GestorTaskListItem) -> Unit
+    onMoreInfo: (GestorTaskListItem) -> Unit
 ) {
     val language = currentAppSettings().language
     Column(
@@ -375,13 +358,6 @@ private fun TaskRow(
             )
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        AppObservationsButton(
-            text = language.t("user.tasks.observations"),
-            onClick = { onObservations(task) },
-            compact = true
-        )
     }
 }
 

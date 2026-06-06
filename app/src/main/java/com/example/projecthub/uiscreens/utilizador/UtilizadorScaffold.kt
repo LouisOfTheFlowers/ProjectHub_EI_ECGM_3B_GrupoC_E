@@ -77,7 +77,6 @@ fun UtilizadorScaffold(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .border(5.dp, ProjectHubColors.HeaderBackground)
                 .background(MaterialTheme.colorScheme.surface)
         ) {
             UtilizadorTopBar(

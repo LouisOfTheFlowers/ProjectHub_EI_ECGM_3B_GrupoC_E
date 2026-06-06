@@ -13,9 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -26,7 +24,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,8 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,16 +40,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
-import com.example.projecthub.R
-import com.example.projecthub.settings.AppLanguage
+import com.example.projecthub.uiscreens.components.AppExpandIcon
 import com.example.projecthub.viewmodel.admin.AdminProjectTaskGroup
 import com.example.projecthub.viewmodel.admin.AdminTaskListItem
 import com.example.projecthub.viewmodel.admin.AdminTaskStatusFilter
 import com.example.projecthub.viewmodel.admin.AdminTasksState
 import com.example.projecthub.viewmodel.admin.AdminTasksViewModel
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 import com.example.projecthub.ui.theme.ProjectHubColors
 
 @Composable
@@ -134,34 +125,12 @@ private fun ProjectTaskSection(
                     .padding(horizontal = 14.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(TasksAccent.copy(alpha = 0.14f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = if (group.isExpanded) "-" else "+",
-                        color = TasksAccent,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 20.sp
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = group.projectName,
                         color = ProjectHubColors.Ink,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 17.sp
-                    )
-                    Text(
-                        text = language.t("tasks.visibleSummary").format(group.visibleTasks.size, group.pendingTasks, group.completedTasks),
-                        color = ProjectHubColors.Muted,
-                        fontSize = 12.sp
                     )
                 }
 
@@ -175,6 +144,10 @@ private fun ProjectTaskSection(
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp
                 )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                AppExpandIcon(expanded = group.isExpanded)
             }
 
             if (group.isExpanded) {

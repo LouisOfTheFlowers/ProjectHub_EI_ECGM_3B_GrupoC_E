@@ -44,6 +44,7 @@ import com.example.projecthub.viewmodel.gestor.GestorProjectListItem
 internal val GestorProjectsAccent = AuthAccent
 internal val GestorProjectsBlue = ProjectHubColors.Info
 internal val GestorProjectsGreen = ProjectHubColors.Success
+internal val GestorProjectsOrange = ProjectHubColors.Warning
 internal val GestorProjectsRed = ProjectHubColors.Danger
 
 internal val GestorProjectStatuses = listOf(
@@ -74,24 +75,40 @@ internal fun ProjectDetails(
 
     Spacer(modifier = Modifier.height(14.dp))
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        TaskLegend(
-            color = GestorProjectsGreen,
-            text = "${language.t("common.completed")}: ${project.completedTasks}"
-        )
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            TaskLegend(
+                color = GestorProjectsGreen,
+                text = "${language.t("common.completed")}: ${project.completedTasks}",
+                modifier = Modifier.weight(1f)
+            )
 
-        TaskLegend(
-            color = GestorProjectsBlue,
-            text = "${language.t("common.inProgress")}: ${project.inProgressTasks}"
-        )
+            TaskLegend(
+                color = GestorProjectsBlue,
+                text = "${language.t("common.inProgress")}: ${project.inProgressTasks}",
+                modifier = Modifier.weight(1f)
+            )
+        }
 
-        TaskLegend(
-            color = ProjectHubColors.SidebarMutedText,
-            text = "${language.t("common.pending")}: ${project.pendingTasks}"
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            TaskLegend(
+                color = GestorProjectsOrange,
+                text = "${language.t("common.pending")}: ${project.pendingTasks}",
+                modifier = Modifier.weight(1f)
+            )
+
+            TaskLegend(
+                color = GestorProjectsRed,
+                text = "${language.t("common.delayed")}: ${project.lateTasks}",
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
 
     Spacer(modifier = Modifier.height(6.dp))
@@ -119,9 +136,13 @@ internal fun DetailItem(
 @Composable
 private fun TaskLegend(
     color: Color,
-    text: String
+    text: String,
+    modifier: Modifier = Modifier
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Box(
             modifier = Modifier
                 .size(10.dp)

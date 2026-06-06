@@ -7,12 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.projecthub.remote.supabase.UserRemoteDataSource
 import com.example.projecthub.remote.supabase.models.ProjetoDto
 import com.example.projecthub.remote.supabase.models.TarefaDto
-import com.example.projecthub.repository.AvaliacaoRepository
-import com.example.projecthub.repository.ObservacaoFotoRepository
-import com.example.projecthub.repository.ObservacaoRepository
 import com.example.projecthub.repository.ProjetoRepository
 import com.example.projecthub.repository.ProjetoUserRepository
-import com.example.projecthub.repository.RegistoTarefaRepository
 import com.example.projecthub.repository.TarefaRepository
 import com.example.projecthub.repository.TarefaUserRepository
 import com.example.projecthub.viewmodel.ProjectUiListItem
@@ -46,20 +42,7 @@ data class AdminProjectListItem(
 data class AdminProjectInfoParticipant(
     val id: Int,
     val name: String,
-    val email: String,
-    val rating: Int?,
-    val comment: String?
-)
-
-data class AdminProjectInfoObservation(
-    val id: Int?,
-    val text: String,
-    val userName: String,
-    val date: String,
-    val local: String,
-    val completionPercent: Int,
-    val spentHours: Float?,
-    val photoUrls: List<String>
+    val email: String
 )
 
 data class AdminProjectInfoTask(
@@ -69,8 +52,7 @@ data class AdminProjectInfoTask(
     val statusLabel: String,
     val startDate: String,
     val dueDate: String,
-    val assignees: List<String>,
-    val observations: List<AdminProjectInfoObservation>
+    val assignees: List<String>
 )
 
 data class AdminProjectInfoState(
@@ -104,10 +86,6 @@ class AdminProjectsViewModel(
     private val projetoUserRepository: ProjetoUserRepository = ProjetoUserRepository(),
     private val tarefaRepository: TarefaRepository = TarefaRepository(),
     private val tarefaUserRepository: TarefaUserRepository = TarefaUserRepository(),
-    private val registoTarefaRepository: RegistoTarefaRepository = RegistoTarefaRepository(),
-    private val observacaoRepository: ObservacaoRepository = ObservacaoRepository(),
-    private val observacaoFotoRepository: ObservacaoFotoRepository = ObservacaoFotoRepository(),
-    private val avaliacaoRepository: AvaliacaoRepository = AvaliacaoRepository(),
     private val userRemoteDataSource: UserRemoteDataSource = UserRemoteDataSource()
 ) : ViewModel() {
 
@@ -255,22 +233,12 @@ class AdminProjectsViewModel(
             val tasksResult = tarefaRepository.getTarefasByProjeto(project.id)
             val projectUsersResult = projetoUserRepository.getUsersByProjeto(project.id)
             val taskUsersResult = tarefaUserRepository.getTarefaUsers()
-            val ratingsResult = avaliacaoRepository.getAvaliacoesByProjeto(project.id)
-            val allRatingsResult = avaliacaoRepository.getAvaliacoes()
-            val recordsResult = registoTarefaRepository.getRegistos()
-            val observationsResult = observacaoRepository.getObservacoes()
-            val photosResult = observacaoFotoRepository.getFotos()
             val usersResult = runCatching { userRemoteDataSource.getUsers() }
 
             if (
                 tasksResult.isFailure ||
                 projectUsersResult.isFailure ||
                 taskUsersResult.isFailure ||
-                ratingsResult.isFailure ||
-                allRatingsResult.isFailure ||
-                recordsResult.isFailure ||
-                observationsResult.isFailure ||
-                photosResult.isFailure ||
                 usersResult.isFailure
             ) {
                 state = state.copy(
@@ -287,15 +255,6 @@ class AdminProjectsViewModel(
                 .getOrDefault(emptyList())
                 .mapNotNull { user -> user.id?.let { id -> id to user } }
                 .toMap()
-
-            val ratingsByUser = (
-                ratingsResult.getOrDefault(emptyList()) +
-                    allRatingsResult
-                        .getOrDefault(emptyList())
-                        .filter { it.projeto_id == project.id }
-                )
-                .distinctBy { it.user_id }
-                .associateBy { it.user_id }
 
             val tasks = tasksResult
                 .getOrDefault(emptyList())
@@ -316,59 +275,14 @@ class AdminProjectsViewModel(
             val participants = participantUserIds
                 .mapNotNull { userId ->
                     val user = usersById[userId] ?: return@mapNotNull null
-                    val rating = ratingsByUser[userId]
 
                     AdminProjectInfoParticipant(
                         id = userId,
                         name = user.nome.ifBlank { user.username },
-                        email = user.email,
-                        rating = rating?.classificacao,
-                        comment = rating?.comentario
+                        email = user.email
                     )
                 }
                 .sortedBy { it.name.lowercase() }
-
-            val records = recordsResult
-                .getOrDefault(emptyList())
-                .filter { it.tarefa_id in taskIds }
-
-            val recordsById = records
-                .mapNotNull { record -> record.id?.let { id -> id to record } }
-                .toMap()
-
-            val photosByObservation = photosResult
-                .getOrDefault(emptyList())
-                .groupBy { it.observacao_id }
-
-            val observationsByTask = observationsResult
-                .getOrDefault(emptyList())
-                .mapNotNull { observation ->
-                    val record = recordsById[observation.registo_id] ?: return@mapNotNull null
-                    val user = usersById[record.user_id]
-                    val userName = user?.nome?.ifBlank { user.username }
-                        ?: "Utilizador ${record.user_id}"
-
-                    record.tarefa_id to AdminProjectInfoObservation(
-                        id = observation.id,
-                        text = observation.texto,
-                        userName = userName,
-                        date = (observation.created_at ?: record.created_at ?: record.data).toUiDateText(),
-                        local = record.local?.takeIf { it.isNotBlank() } ?: "-",
-                        completionPercent = record.taxa_conclusao,
-                        spentHours = record.tempo_gasto,
-                        photoUrls = observation.id
-                            ?.let { observationId ->
-                                photosByObservation[observationId]
-                                    .orEmpty()
-                                    .map { photo -> photo.foto_url }
-                            }
-                            .orEmpty()
-                    )
-                }
-                .groupBy(
-                    keySelector = { it.first },
-                    valueTransform = { it.second }
-                )
 
             val infoTasks = tasks.mapNotNull { task ->
                 val taskId = task.id ?: return@mapNotNull null
@@ -388,10 +302,7 @@ class AdminProjectsViewModel(
                     statusLabel = task.toTaskStatusLabel(),
                     startDate = task.data_inicio.toUiDateText(),
                     dueDate = task.data_fim.toUiDateText(),
-                    assignees = assignees,
-                    observations = observationsByTask[taskId]
-                        .orEmpty()
-                        .sortedByDescending { it.date }
+                    assignees = assignees
                 )
             }
 
@@ -656,10 +567,13 @@ class AdminProjectsViewModel(
     }
 
     private fun TarefaDto.toTaskStatusLabel(): String {
+        val startDate = data_inicio?.toLocalDateOrNull()
+        val hasStarted = startDate != null && !startDate.isAfter(LocalDate.now())
+
         return when {
             status.isCompletedStatus() -> "Concluída"
             isLate() -> "Atrasada"
-            status.isInProgressStatus() -> "Em progresso"
+            status.isInProgressStatus() || (status.isPendingStatus() && hasStarted) -> "Em progresso"
             else -> "Pendente"
         }
     }

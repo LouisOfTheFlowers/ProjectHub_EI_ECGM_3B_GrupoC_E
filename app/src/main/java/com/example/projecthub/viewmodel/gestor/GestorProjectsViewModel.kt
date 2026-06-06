@@ -48,6 +48,7 @@ data class GestorProjectListItem(
     val completedTasks: Int,
     val inProgressTasks: Int,
     val pendingTasks: Int,
+    val lateTasks: Int,
     val members: List<GestorProjectMember>,
     val progressPercent: Int,
     val isCompleted: Boolean,
@@ -616,11 +617,19 @@ class GestorProjectsViewModel(
         }
 
         val pendingTasks = tasks.count { task ->
-            !task.status.isCompletedStatus() && task.isPendingByStartDate()
+            !task.status.isCompletedStatus() &&
+                !task.isLate() &&
+                task.isPendingByStartDate()
         }
 
         val inProgressTasks = tasks.count { task ->
-            !task.status.isCompletedStatus() && !task.isPendingByStartDate()
+            !task.status.isCompletedStatus() &&
+                !task.isLate() &&
+                !task.isPendingByStartDate()
+        }
+
+        val lateTasks = tasks.count { task ->
+            task.isLate()
         }
 
         val progressPercent = if (tasks.isEmpty()) {
@@ -654,6 +663,7 @@ class GestorProjectsViewModel(
             completedTasks = completedTasks,
             inProgressTasks = inProgressTasks,
             pendingTasks = pendingTasks,
+            lateTasks = lateTasks,
             members = members,
             progressPercent = progressPercent,
             isCompleted = isCompleted,

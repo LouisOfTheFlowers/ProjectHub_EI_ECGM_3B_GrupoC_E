@@ -100,7 +100,6 @@ private fun ObservationCard(observation: UtilizadorTaskObservation) {
         observation = AppObservationUiModel(
             text = observation.observation.texto,
             date = observation.record.data.toUiDate(),
-            completionPercent = observation.record.taxa_conclusao,
             photoUrls = observation.photos.map { it.foto_url }
         )
     )
