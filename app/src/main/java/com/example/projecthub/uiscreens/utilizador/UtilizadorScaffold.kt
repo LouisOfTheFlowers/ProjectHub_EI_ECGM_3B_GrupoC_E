@@ -47,6 +47,7 @@ import com.example.projecthub.settings.t
 import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.uiscreens.AuthAccent
 import com.example.projecthub.uiscreens.TopBarProfilePhoto
+import com.example.projecthub.uiscreens.appResponsiveLayout
 import com.example.projecthub.uiscreens.components.AppNotificationsMenu
 import com.example.projecthub.uiscreens.isLandscapeLayout
 
@@ -68,18 +69,45 @@ fun UtilizadorScaffold(
     content: @Composable () -> Unit
 ) {
     var isSidebarOpen by remember { mutableStateOf(false) }
+    val layout = appResponsiveLayout()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-        ) {
-            UtilizadorTopBar(
+        if (layout.isLandscape) {
+            Row(modifier = Modifier.fillMaxSize()) {
+                UtilizadorSidebar(
+                    selectedSection = selectedRoute,
+                    onNavigate = onNavigate,
+                    onLogout = onLogout,
+                    sidebarWidth = layout.sidebarWidth
+                )
+                UtilizadorMainContent(
+                    modifier = Modifier.weight(1f),
+                    showMenu = false,
+                    topBarHeight = layout.topBarHeight,
+                    contentPadding = layout.contentPadding,
+                    onMenuClick = {},
+                    profilePhotoUri = profilePhotoUri,
+                    profileName = profileName,
+                    notifications = notifications,
+                    unreadNotificationsCount = unreadNotificationsCount,
+                    notificationsLoading = notificationsLoading,
+                    notificationsError = notificationsError,
+                    onNotificationClick = onNotificationClick,
+                    onMarkAllNotificationsRead = onMarkAllNotificationsRead,
+                    onProfileClick = { onNavigate(AppRoutes.UserProfile) },
+                    content = content
+                )
+            }
+        } else {
+            UtilizadorMainContent(
+                modifier = Modifier.fillMaxSize(),
+                showMenu = true,
+                topBarHeight = layout.topBarHeight,
+                contentPadding = layout.contentPadding,
                 onMenuClick = { isSidebarOpen = true },
                 profilePhotoUri = profilePhotoUri,
                 profileName = profileName,
@@ -89,22 +117,12 @@ fun UtilizadorScaffold(
                 notificationsError = notificationsError,
                 onNotificationClick = onNotificationClick,
                 onMarkAllNotificationsRead = onMarkAllNotificationsRead,
-                onProfileClick = { onNavigate(AppRoutes.UserProfile) }
+                onProfileClick = { onNavigate(AppRoutes.UserProfile) },
+                content = content
             )
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
-                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 22.dp)
-            ) {
-                item {
-                    content()
-                }
-            }
         }
 
-        if (isSidebarOpen) {
+        if (!layout.isLandscape && isSidebarOpen) {
             Row(modifier = Modifier.fillMaxSize()) {
                 UtilizadorSidebar(
                     selectedSection = selectedRoute,
@@ -128,7 +146,60 @@ fun UtilizadorScaffold(
 }
 
 @Composable
+private fun UtilizadorMainContent(
+    modifier: Modifier,
+    showMenu: Boolean,
+    topBarHeight: androidx.compose.ui.unit.Dp,
+    contentPadding: PaddingValues,
+    onMenuClick: () -> Unit,
+    profilePhotoUri: String?,
+    profileName: String?,
+    notifications: List<NotificationDto>,
+    unreadNotificationsCount: Int,
+    notificationsLoading: Boolean,
+    notificationsError: String?,
+    onNotificationClick: (NotificationDto) -> Unit,
+    onMarkAllNotificationsRead: () -> Unit,
+    onProfileClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .border(5.dp, ProjectHubColors.HeaderBackground)
+            .background(MaterialTheme.colorScheme.surface)
+    ) {
+        UtilizadorTopBar(
+            showMenu = showMenu,
+            height = topBarHeight,
+            onMenuClick = onMenuClick,
+            profilePhotoUri = profilePhotoUri,
+            profileName = profileName,
+            notifications = notifications,
+            unreadNotificationsCount = unreadNotificationsCount,
+            notificationsLoading = notificationsLoading,
+            notificationsError = notificationsError,
+            onNotificationClick = onNotificationClick,
+            onMarkAllNotificationsRead = onMarkAllNotificationsRead,
+            onProfileClick = onProfileClick
+        )
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+            contentPadding = contentPadding
+        ) {
+            item {
+                content()
+            }
+        }
+    }
+}
+
+@Composable
 private fun UtilizadorTopBar(
+    showMenu: Boolean,
+    height: androidx.compose.ui.unit.Dp,
     onMenuClick: () -> Unit,
     profilePhotoUri: String?,
     profileName: String?,
@@ -145,19 +216,21 @@ private fun UtilizadorTopBar(
             .fillMaxWidth()
             .background(ProjectHubColors.HeaderBackground)
             .statusBarsPadding()
-            .height(62.dp)
+            .height(height)
             .padding(horizontal = 18.dp),
         contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .size(48.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .clickable(onClick = onMenuClick),
-            contentAlignment = Alignment.Center
-        ) {
-            UtilizadorMenuIcon(color = ProjectHubColors.HeaderContent)
+        if (showMenu) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .clickable(onClick = onMenuClick),
+                contentAlignment = Alignment.Center
+            ) {
+                UtilizadorMenuIcon(color = ProjectHubColors.HeaderContent)
+            }
         }
 
         Text(
@@ -200,13 +273,14 @@ private fun UtilizadorTopBar(
 private fun UtilizadorSidebar(
     selectedSection: String,
     onNavigate: (String) -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    sidebarWidth: androidx.compose.ui.unit.Dp = 284.dp
 ) {
     val language = currentAppSettings().language
     val isLandscape = isLandscapeLayout()
     Column(
         modifier = Modifier
-            .width(284.dp)
+            .width(sidebarWidth)
             .fillMaxHeight()
             .background(ProjectHubColors.SidebarBackground)
             .statusBarsPadding()
@@ -345,6 +419,5 @@ private fun UtilizadorMenuIcon(
         modifier = modifier.size(28.dp)
     )
 }
-
 
 
