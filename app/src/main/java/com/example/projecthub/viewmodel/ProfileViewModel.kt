@@ -12,6 +12,7 @@ import com.example.projecthub.local.entities.UserEntity
 import com.example.projecthub.remote.supabase.AuthRemoteDataSource
 import com.example.projecthub.remote.supabase.UserRemoteDataSource
 import com.example.projecthub.remote.supabase.models.UserDto
+import com.example.projecthub.repository.ProfilePhotoStorageRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -38,6 +39,7 @@ class ProfileViewModel(
 
     private val authRemoteDataSource = AuthRemoteDataSource()
     private val userRemoteDataSource = UserRemoteDataSource()
+    private val profilePhotoStorageRepository = ProfilePhotoStorageRepository(application.contentResolver)
     private val database = DatabaseProvider.getDatabase(application)
     private val syncQueueDao = database.syncQueueDao()
     private val userDao = database.userDao()
@@ -177,14 +179,17 @@ class ProfileViewModel(
             }
 
             val result = runCatching {
-                userRemoteDataSource.updateUserPhoto(userId, photoUri)
+                val remotePhotoUrl = uploadProfilePhotoIfNeeded(userId, photoUri).getOrThrow()
+                userRemoteDataSource.updateUserPhoto(userId, remotePhotoUrl)
+                remotePhotoUrl
             }
 
             if (result.isSuccess) {
-                saveUserLocally(updatedUser)
+                val syncedUser = currentUser.copy(foto = result.getOrThrow())
+                saveUserLocally(syncedUser)
                 _state.update {
                     it.copy(
-                        user = updatedUser,
+                        user = syncedUser,
                         isSaving = false,
                         message = if (photoUri.isNullOrBlank()) {
                             "Foto removida."
@@ -193,7 +198,7 @@ class ProfileViewModel(
                         }
                     )
                 }
-                onUserUpdated(updatedUser)
+                onUserUpdated(syncedUser)
                 syncPendingProfileUpdates()
             } else if (isNetworkError(result.exceptionOrNull())) {
                 saveProfilePhotoOffline(updatedUser, userId, photoUri, onUserUpdated)
@@ -530,18 +535,28 @@ class ProfileViewModel(
     private suspend fun syncProfilePhotoAction(action: SyncQueueEntity) {
         val payload = action.decodeProfilePhotoPayload() ?: return
         val result = runCatching {
-            userRemoteDataSource.updateUserPhoto(payload.userId, payload.photoUri)
+            val remotePhotoUrl = uploadProfilePhotoIfNeeded(payload.userId, payload.photoUri).getOrThrow()
+            userRemoteDataSource.updateUserPhoto(payload.userId, remotePhotoUrl)
+            remotePhotoUrl
         }
 
         if (result.isSuccess) {
             syncQueueDao.markAsSynced(action.id)
             val currentUser = _state.value.user
             if (currentUser?.id == payload.userId) {
-                val syncedUser = currentUser.copy(foto = payload.photoUri)
+                val syncedUser = currentUser.copy(foto = result.getOrThrow())
                 saveUserLocally(syncedUser)
                 _state.update { it.copy(user = syncedUser) }
             }
         }
+    }
+
+    private suspend fun uploadProfilePhotoIfNeeded(userId: Int, photoUri: String?): Result<String?> {
+        if (photoUri.isNullOrBlank() || photoUri.isRemotePhotoUrl()) {
+            return Result.success(photoUri)
+        }
+
+        return profilePhotoStorageRepository.uploadProfilePhoto(userId, photoUri)
     }
 
     private suspend fun syncProfileDetailsAction(action: SyncQueueEntity) {
@@ -565,6 +580,11 @@ class ProfileViewModel(
     }
 
     private suspend fun queueProfilePhotoUpdate(userId: Int, photoUri: String?) {
+        syncQueueDao.getPendingSyncActions()
+            .filter { it.action == PROFILE_PHOTO_UPDATE }
+            .filter { action -> action.decodeProfilePhotoPayload()?.userId == userId }
+            .forEach { action -> syncQueueDao.deleteSyncAction(action) }
+
         syncQueueDao.insertSyncAction(
             SyncQueueEntity(
                 action = PROFILE_PHOTO_UPDATE,
@@ -641,6 +661,11 @@ class ProfileViewModel(
             message.contains("unable to resolve host", ignoreCase = true) ||
             message.contains("failed to connect", ignoreCase = true) ||
             message.contains("connection", ignoreCase = true)
+    }
+
+    private fun String.isRemotePhotoUrl(): Boolean {
+        return startsWith("http://", ignoreCase = true) ||
+            startsWith("https://", ignoreCase = true)
     }
 
     @Serializable

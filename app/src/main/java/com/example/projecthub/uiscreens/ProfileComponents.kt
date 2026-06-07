@@ -1,6 +1,5 @@
 package com.example.projecthub.uiscreens
 
-import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,18 +17,20 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.projecthub.R
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.t
@@ -51,23 +52,19 @@ internal fun ProfilePhoto(
             .border(3.dp, ProfilePhotoAccent, CircleShape),
         contentAlignment = Alignment.Center
     ) {
-        val bitmap = rememberProfileImageBitmap(photoUri)
-
-        when {
-            bitmap != null -> Image(
-                bitmap = bitmap,
-                contentDescription = language.t("profile.photoDescription"),
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-
-            else -> Text(
-                text = name.firstOrNull()?.uppercaseChar()?.toString() ?: "G",
-                color = ProfilePhotoAccent,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 42.sp
-            )
-        }
+        ProfilePhotoImage(
+            photoUri = photoUri,
+            contentDescription = language.t("profile.photoDescription"),
+            modifier = Modifier.fillMaxSize(),
+            fallback = {
+                Text(
+                    text = name.firstOrNull()?.uppercaseChar()?.toString() ?: "G",
+                    color = ProfilePhotoAccent,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 42.sp
+                )
+            }
+        )
     }
 }
 
@@ -78,7 +75,6 @@ internal fun TopBarProfilePhoto(
     modifier: Modifier = Modifier
 ) {
     val language = currentAppSettings().language
-    val bitmap = rememberProfileImageBitmap(photoUri)
 
     Box(
         modifier = modifier
@@ -87,44 +83,49 @@ internal fun TopBarProfilePhoto(
             .border(1.dp, ProjectHubColors.HeaderContent.copy(alpha = 0.18f), CircleShape),
         contentAlignment = Alignment.Center
     ) {
-        when {
-            bitmap != null -> Image(
-                bitmap = bitmap,
-                contentDescription = language.t("profile.title"),
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-
-            !name.isNullOrBlank() -> Text(
-                text = name.first().uppercaseChar().toString(),
-                color = ProfilePhotoAccent,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 17.sp
-            )
-
-            else -> Image(
-                painter = painterResource(id = R.drawable.projecthub_logo),
-                contentDescription = language.t("profile.title"),
-                modifier = Modifier.padding(4.dp)
-            )
-        }
+        ProfilePhotoImage(
+            photoUri = photoUri,
+            contentDescription = language.t("profile.title"),
+            modifier = Modifier.fillMaxSize(),
+            fallback = {
+                if (!name.isNullOrBlank()) {
+                    Text(
+                        text = name.first().uppercaseChar().toString(),
+                        color = ProfilePhotoAccent,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 17.sp
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.projecthub_logo),
+                        contentDescription = language.t("profile.title"),
+                        modifier = Modifier.padding(4.dp)
+                    )
+                }
+            }
+        )
     }
 }
 
 @Composable
-private fun rememberProfileImageBitmap(photoUri: String?): androidx.compose.ui.graphics.ImageBitmap? {
-    val context = LocalContext.current
+private fun ProfilePhotoImage(
+    photoUri: String?,
+    contentDescription: String,
+    modifier: Modifier = Modifier,
+    fallback: @Composable () -> Unit
+) {
+    var hasLoadError by remember(photoUri) { mutableStateOf(false) }
 
-    return remember(photoUri) {
-        if (photoUri.isNullOrBlank()) {
-            null
-        } else {
-            runCatching {
-                context.contentResolver.openInputStream(Uri.parse(photoUri))?.use { input ->
-                    android.graphics.BitmapFactory.decodeStream(input)?.asImageBitmap()
-                }
-            }.getOrNull()
-        }
+    if (photoUri.isNullOrBlank() || hasLoadError) {
+        fallback()
+    } else {
+        AsyncImage(
+            model = photoUri,
+            contentDescription = contentDescription,
+            modifier = modifier,
+            contentScale = ContentScale.Crop,
+            onError = { hasLoadError = true }
+        )
     }
 }
 
