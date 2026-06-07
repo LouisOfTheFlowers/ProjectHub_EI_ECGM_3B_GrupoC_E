@@ -21,9 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.projecthub.R
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.ui.theme.ProjectHubColors
 import com.example.projecthub.uiscreens.components.AppMessageCard
@@ -120,11 +122,11 @@ internal fun UserCheckRow(
             contentAlignment = Alignment.Center
         ) {
             if (checked) {
-                Text(
-                    text = "âœ“",
-                    color = Color.White,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 13.sp
+                Icon(
+                    painter = painterResource(R.drawable.ic_check_circle_24),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(14.dp)
                 )
             }
         }

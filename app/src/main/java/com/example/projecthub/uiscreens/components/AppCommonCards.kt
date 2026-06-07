@@ -136,7 +136,14 @@ fun AppCompactStatCard(
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.Center
         ) {
-            Text(text = title, color = ProjectHubColors.Muted, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+            Text(
+                text = title,
+                color = ProjectHubColors.Muted,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 11.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
             Text(text = value, color = accent, fontWeight = FontWeight.ExtraBold, fontSize = 27.sp)
         }
     }
