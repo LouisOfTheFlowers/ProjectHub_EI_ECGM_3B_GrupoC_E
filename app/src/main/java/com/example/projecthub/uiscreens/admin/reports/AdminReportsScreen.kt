@@ -29,9 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +52,7 @@ import com.example.projecthub.viewmodel.admin.AdminReportSummary
 import com.example.projecthub.viewmodel.admin.AdminReportsState
 import com.example.projecthub.viewmodel.admin.AdminReportsViewModel
 import com.example.projecthub.ui.theme.ProjectHubColors
+import java.nio.charset.Charset
 import java.util.Locale
 
 private val ReportsAccent = AuthAccent
@@ -69,17 +68,16 @@ fun AdminReportsScreen(
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     val language = currentAppSettings().language
     val context = LocalContext.current
-    var pendingExport by remember { mutableStateOf<AdminReportExport?>(null) }
 
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv"),
         onResult = { uri ->
-            val export = pendingExport
+            val export = viewModel.getPendingExport()
 
             if (uri != null && export != null) {
                 try {
                     context.contentResolver.openOutputStream(uri)?.use { output ->
-                        output.write(export.content.toByteArray(Charsets.UTF_8))
+                        output.write(export.content.toByteArray(Charset.forName("windows-1252")))
                     } ?: error(language.t("reports.openFileError"))
 
                     Toast.makeText(
@@ -94,7 +92,7 @@ fun AdminReportsScreen(
                 }
             }
 
-            pendingExport = null
+            viewModel.clearPendingExport()
         }
     )
 
@@ -117,7 +115,6 @@ fun AdminReportsScreen(
                 state = state,
                 onExport = { type ->
                     val export = viewModel.buildExport(type) ?: return@ReportsContent
-                    pendingExport = export
                     exportLauncher.launch(export.fileName)
                 }
             )

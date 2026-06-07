@@ -85,6 +85,7 @@ class AdminReportsViewModel(
     )
 
     private var source: ReportsSource? = null
+    private var pendingExport: AdminReportExport? = null
 
     private val _state = MutableStateFlow(AdminReportsState())
     val stateFlow: StateFlow<AdminReportsState> = _state
@@ -186,7 +187,15 @@ class AdminReportsViewModel(
             fileName = fileName,
             content = content,
             label = type.title
-        )
+        ).also { pendingExport = it }
+    }
+
+    fun getPendingExport(): AdminReportExport? {
+        return pendingExport
+    }
+
+    fun clearPendingExport() {
+        pendingExport = null
     }
 
     fun setExportError(message: String) {
@@ -208,7 +217,7 @@ class AdminReportsViewModel(
             AdminReportCard(
                 type = AdminReportExportType.Users,
                 title = "Estatísticas por utilizador",
-                description = "Projetos, tarefas, registos, progresso médio e tempo gasto por cada utilizador.",
+                description = "Perfil, estado, projetos, tarefas concluídas e horas por utilizador.",
                 rows = source.users.size,
                 primaryMetric = "$activeUsers ativos",
                 secondaryMetric = "$usersWithProjects com projeto"
@@ -216,7 +225,7 @@ class AdminReportsViewModel(
             AdminReportCard(
                 type = AdminReportExportType.Projects,
                 title = "Estatísticas por projeto",
-                description = "Estado, equipa, tarefas concluídas, atrasos, progresso e horas registadas.",
+                description = "Gestor, datas, equipa, tarefas, progresso e horas por projeto.",
                 rows = source.projects.size,
                 primaryMetric = "$completedProjects concluídos",
                 secondaryMetric = "$delayedProjects atrasados"
@@ -224,7 +233,7 @@ class AdminReportsViewModel(
             AdminReportCard(
                 type = AdminReportExportType.Tasks,
                 title = "Estatísticas por tarefa",
-                description = "Projeto associado, responsáveis, registos, conclusão média, horas e atrasos.",
+                description = "Projeto, prazo, responsáveis, progresso, horas e atrasos por tarefa.",
                 rows = source.tasks.size,
                 primaryMetric = "$completedTasks completadas",
                 secondaryMetric = "${totalHours.formatNumber()} h"
@@ -237,7 +246,9 @@ class AdminReportsViewModel(
         val taskIdsByUser = source.taskUsers
             .groupBy { it.user_id }
             .mapValues { (_, links) -> links.map { it.tarefa_id }.toSet() }
-        val projectCountsByUser = source.projectUsers.groupingBy { it.user_id }.eachCount()
+        val directProjectIdsByUser = source.projectUsers
+            .groupBy { it.user_id }
+            .mapValues { (_, links) -> links.map { it.projeto_id }.toSet() }
         val recordsByUser = source.records.groupBy { it.user_id }
 
         val rows = source.users
@@ -249,37 +260,31 @@ class AdminReportsViewModel(
                 val completedAssignedTasks = assignedTaskIds.count { taskId ->
                     tasksById[taskId]?.status?.isCompletedStatus() == true
                 }
+                val projectIds = directProjectIdsByUser[userId].orEmpty() +
+                    assignedTaskIds.mapNotNull { taskId -> tasksById[taskId]?.projeto_id }
 
                 listOf(
-                    userId.toString(),
                     user.nome,
-                    user.username,
                     user.email,
-                    user.role,
-                    user.status,
-                    (projectCountsByUser[userId] ?: 0).toString(),
+                    user.role.toDisplayLabel(),
+                    user.status.toDisplayLabel(),
+                    projectIds.size.toString(),
                     assignedTaskIds.size.toString(),
                     completedAssignedTasks.toString(),
-                    records.size.toString(),
-                    records.map { it.taxa_conclusao }.averageOrZero().roundToInt().toString(),
                     records.sumOf { (it.tempo_gasto ?: 0f).toDouble() }.toFloat().formatNumber()
                 )
             }
 
         return buildCsv(
             headers = listOf(
-                "user_id",
-                "nome",
-                "username",
-                "email",
-                "role",
-                "status",
-                "projetos_atribuidos",
-                "tarefas_atribuidas",
-                "tarefas_concluidas",
-                "registos",
-                "taxa_media_conclusao_percentagem",
-                "tempo_total_horas"
+                "Nome",
+                "Email",
+                "Perfil",
+                "Estado",
+                "Projetos",
+                "Tarefas",
+                "Concluídas",
+                "Horas"
             ),
             rows = rows
         )
@@ -299,7 +304,6 @@ class AdminReportsViewModel(
                 val taskIds = projectTasks.mapNotNull { it.id }.toSet()
                 val projectRecords = taskIds.flatMap { taskId -> recordsByTask[taskId].orEmpty() }
                 val completedTasks = projectTasks.count { it.status.isCompletedStatus() }
-                val pendingTasks = projectTasks.size - completedTasks
                 val delayedTasks = projectTasks.count { it.isDelayed() }
                 val progress = if (projectTasks.isEmpty()) {
                     projectRecords.map { it.taxa_conclusao }.averageOrZero().roundToInt()
@@ -308,41 +312,33 @@ class AdminReportsViewModel(
                 }
 
                 listOf(
-                    projectId.toString(),
                     project.nome,
                     project.gestor_id?.let { usersById[it] }.orEmpty(),
-                    project.status,
+                    project.status.toDisplayLabel(),
                     project.data_inicio.toCsvDate(),
                     project.data_fim.toCsvDate(),
                     (memberCountsByProject[projectId] ?: 0).toString(),
                     projectTasks.size.toString(),
                     completedTasks.toString(),
-                    pendingTasks.toString(),
                     delayedTasks.toString(),
                     progress.toString(),
-                    projectRecords.map { it.taxa_conclusao }.averageOrZero().roundToInt().toString(),
-                    projectRecords.sumOf { (it.tempo_gasto ?: 0f).toDouble() }.toFloat().formatNumber(),
-                    projectRecords.size.toString()
+                    projectRecords.sumOf { (it.tempo_gasto ?: 0f).toDouble() }.toFloat().formatNumber()
                 )
             }
 
         return buildCsv(
             headers = listOf(
-                "projeto_id",
-                "projeto",
-                "gestor",
-                "status",
-                "data_inicio",
-                "data_fim",
-                "membros",
-                "tarefas",
-                "tarefas_concluidas",
-                "tarefas_pendentes",
-                "tarefas_atrasadas",
-                "progresso_percentagem",
-                "taxa_media_conclusao_percentagem",
-                "tempo_total_horas",
-                "registos"
+                "Projeto",
+                "Gestor",
+                "Estado",
+                "Início",
+                "Prazo",
+                "Membros",
+                "Tarefas",
+                "Concluídas",
+                "Atrasadas",
+                "Progresso (%)",
+                "Horas"
             ),
             rows = rows
         )
@@ -360,15 +356,11 @@ class AdminReportsViewModel(
                 val records = recordsByTask[taskId].orEmpty()
 
                 listOf(
-                    taskId.toString(),
                     task.titulo,
-                    task.descricao.orEmpty(),
                     projectsById[task.projeto_id].orEmpty(),
-                    task.status,
-                    task.data_inicio.toCsvDate(),
+                    task.status.toDisplayLabel(),
                     task.data_fim.toCsvDate(),
                     (userCountsByTask[taskId] ?: 0).toString(),
-                    records.size.toString(),
                     records.map { it.taxa_conclusao }.averageOrZero().roundToInt().toString(),
                     records.sumOf { (it.tempo_gasto ?: 0f).toDouble() }.toFloat().formatNumber(),
                     if (task.isDelayed()) "Sim" else "Não"
@@ -377,18 +369,14 @@ class AdminReportsViewModel(
 
         return buildCsv(
             headers = listOf(
-                "tarefa_id",
-                "tarefa",
-                "descricao",
-                "projeto",
-                "status",
-                "data_inicio",
-                "data_fim",
-                "utilizadores_atribuidos",
-                "registos",
-                "taxa_media_conclusao_percentagem",
-                "tempo_total_horas",
-                "atrasada"
+                "Tarefa",
+                "Projeto",
+                "Estado",
+                "Prazo",
+                "Responsáveis",
+                "Progresso (%)",
+                "Horas",
+                "Atrasada"
             ),
             rows = rows
         )
@@ -446,6 +434,24 @@ class AdminReportsViewModel(
             "FINALIZADO",
             "FINALIZADA"
         )
+    }
+
+    private fun String.toDisplayLabel(): String {
+        return when (normalizedStatus()) {
+            "ADMIN" -> "Administrador"
+            "GESTOR" -> "Gestor"
+            "UTILIZADOR" -> "Utilizador"
+            "ATIVO", "ACTIVO" -> "Ativo"
+            "INATIVO", "INACTIVO" -> "Inativo"
+            "PENDENTE" -> "Pendente"
+            "EM_PROGRESSO" -> "Em progresso"
+            "ATRASADO", "ATRASADA" -> "Atrasado"
+            "CONCLUIDO", "CONCLUIDA", "COMPLETO", "COMPLETA",
+            "COMPLETADO", "COMPLETADA", "FINALIZADO", "FINALIZADA" -> "Concluído"
+            else -> trim()
+                .lowercase()
+                .replaceFirstChar { it.titlecase() }
+        }
     }
 
     private fun String.normalizedStatus(): String {

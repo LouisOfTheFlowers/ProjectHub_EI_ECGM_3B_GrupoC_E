@@ -61,19 +61,7 @@ fun LoginScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 28.dp, vertical = 36.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        AuthHeader(subtitle = language.t("login.subtitle"))
-
-        Spacer(modifier = Modifier.height(32.dp))
-
+    AuthResponsiveLayout(subtitle = language.t("login.subtitle")) {
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },

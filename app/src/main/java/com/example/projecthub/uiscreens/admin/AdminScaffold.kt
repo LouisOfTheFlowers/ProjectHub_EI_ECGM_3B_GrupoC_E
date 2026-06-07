@@ -74,19 +74,46 @@ fun AdminScaffold(
 ) {
     var isSidebarOpen by remember { mutableStateOf(false) }
     val openSidebar = rememberSoundClick { isSidebarOpen = true }
+    val layout = appResponsiveLayout()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-        ) {
-            AdminTopBar(
-                onMenuClick = { isSidebarOpen = true },
+        if (layout.isLandscape) {
+            Row(modifier = Modifier.fillMaxSize()) {
+                AdminSidebar(
+                    selectedSection = selectedRoute,
+                    onNavigate = onNavigate,
+                    onLogout = onLogout,
+                    sidebarWidth = layout.sidebarWidth
+                )
+                AdminMainContent(
+                    modifier = Modifier.weight(1f),
+                    showMenu = false,
+                    topBarHeight = layout.topBarHeight,
+                    contentPadding = layout.contentPadding,
+                    onMenuClick = {},
+                    profilePhotoUri = profilePhotoUri,
+                    profileName = profileName,
+                    notifications = notifications,
+                    unreadNotificationsCount = unreadNotificationsCount,
+                    notificationsLoading = notificationsLoading,
+                    notificationsError = notificationsError,
+                    onNotificationClick = onNotificationClick,
+                    onMarkAllNotificationsRead = onMarkAllNotificationsRead,
+                    onProfileClick = { onNavigate(AppRoutes.AdminProfile) },
+                    content = content
+                )
+            }
+        } else {
+            AdminMainContent(
+                modifier = Modifier.fillMaxSize(),
+                showMenu = true,
+                topBarHeight = layout.topBarHeight,
+                contentPadding = layout.contentPadding,
+                onMenuClick = openSidebar,
                 profilePhotoUri = profilePhotoUri,
                 profileName = profileName,
                 notifications = notifications,
@@ -95,22 +122,12 @@ fun AdminScaffold(
                 notificationsError = notificationsError,
                 onNotificationClick = onNotificationClick,
                 onMarkAllNotificationsRead = onMarkAllNotificationsRead,
-                onProfileClick = { onNavigate(AppRoutes.AdminProfile) }
+                onProfileClick = { onNavigate(AppRoutes.AdminProfile) },
+                content = content
             )
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
-                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 22.dp)
-            ) {
-                item {
-                    content()
-                }
-            }
         }
 
-        if (isSidebarOpen) {
+        if (!layout.isLandscape && isSidebarOpen) {
             SidebarOverlay(
                 selectedSection = selectedRoute,
                 onDismiss = { isSidebarOpen = false },
@@ -125,7 +142,60 @@ fun AdminScaffold(
 }
 
 @Composable
+private fun AdminMainContent(
+    modifier: Modifier,
+    showMenu: Boolean,
+    topBarHeight: androidx.compose.ui.unit.Dp,
+    contentPadding: PaddingValues,
+    onMenuClick: () -> Unit,
+    profilePhotoUri: String?,
+    profileName: String?,
+    notifications: List<NotificationDto>,
+    unreadNotificationsCount: Int,
+    notificationsLoading: Boolean,
+    notificationsError: String?,
+    onNotificationClick: (NotificationDto) -> Unit,
+    onMarkAllNotificationsRead: () -> Unit,
+    onProfileClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .border(5.dp, ProjectHubColors.HeaderBackground)
+            .background(MaterialTheme.colorScheme.surface)
+    ) {
+        AdminTopBar(
+            showMenu = showMenu,
+            height = topBarHeight,
+            onMenuClick = onMenuClick,
+            profilePhotoUri = profilePhotoUri,
+            profileName = profileName,
+            notifications = notifications,
+            unreadNotificationsCount = unreadNotificationsCount,
+            notificationsLoading = notificationsLoading,
+            notificationsError = notificationsError,
+            onNotificationClick = onNotificationClick,
+            onMarkAllNotificationsRead = onMarkAllNotificationsRead,
+            onProfileClick = onProfileClick
+        )
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+            contentPadding = contentPadding
+        ) {
+            item {
+                content()
+            }
+        }
+    }
+}
+
+@Composable
 private fun AdminTopBar(
+    showMenu: Boolean,
+    height: androidx.compose.ui.unit.Dp,
     onMenuClick: () -> Unit,
     profilePhotoUri: String?,
     profileName: String?,
@@ -142,19 +212,21 @@ private fun AdminTopBar(
             .fillMaxWidth()
             .background(ProjectHubColors.HeaderBackground)
             .statusBarsPadding()
-            .height(62.dp)
+            .height(height)
             .padding(horizontal = 18.dp),
         contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .size(48.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .clickable(onClick = onMenuClick),
-            contentAlignment = Alignment.Center
-        ) {
-            MenuIcon(color = ProjectHubColors.HeaderContent)
+        if (showMenu) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .clickable(onClick = onMenuClick),
+                contentAlignment = Alignment.Center
+            ) {
+                MenuIcon(color = ProjectHubColors.HeaderContent)
+            }
         }
 
         Text(
@@ -222,7 +294,8 @@ private fun SidebarOverlay(
 private fun AdminSidebar(
     selectedSection: String,
     onNavigate: (String) -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    sidebarWidth: androidx.compose.ui.unit.Dp = 284.dp
 ) {
     val language = currentAppSettings().language
     val isLandscape = isLandscapeLayout()
@@ -236,7 +309,7 @@ private fun AdminSidebar(
     )
     Column(
         modifier = Modifier
-            .width(284.dp)
+            .width(sidebarWidth)
             .fillMaxHeight()
             .background(ProjectHubColors.SidebarBackground)
             .statusBarsPadding()
@@ -370,6 +443,5 @@ private fun MenuIcon(
         modifier = modifier.size(28.dp)
     )
 }
-
 
 
