@@ -15,7 +15,7 @@ object DatabaseProvider {
                 AppDatabase::class.java,
                 "projecthub_database"
             )
-                .fallbackToDestructiveMigration()
+                .fallbackToDestructiveMigration(dropAllTables = true)
                 .build()
 
             INSTANCE = instance

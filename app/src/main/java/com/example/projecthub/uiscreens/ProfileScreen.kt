@@ -1,24 +1,17 @@
 package com.example.projecthub.uiscreens
 
 import android.content.Intent
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -38,18 +31,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.projecthub.R
 import com.example.projecthub.remote.supabase.models.UserDto
 import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
@@ -68,22 +57,33 @@ fun ProfileScreen(
     onAccountDeleted: () -> Unit,
     viewModel: ProfileViewModel = viewModel()
 ) {
-    val state = viewModel.state
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val language = currentAppSettings().language
     val context = LocalContext.current
+    val currentUser = state.user
+    val isAdminUser = currentUser?.role.equals("ADMIN", ignoreCase = true)
+    var isEditingDetails by remember { mutableStateOf(false) }
     var isEditingEmail by remember { mutableStateOf(false) }
     var isEditingPassword by remember { mutableStateOf(false) }
     var isConfirmingDelete by remember { mutableStateOf(false) }
+    var profileNameInput by remember(currentUser?.id) { mutableStateOf(currentUser?.nome.orEmpty()) }
+    var profileUsernameInput by remember(currentUser?.id) { mutableStateOf(currentUser?.username.orEmpty()) }
     var emailInput by remember(user?.email) { mutableStateOf(user?.email.orEmpty()) }
     var emailCode by remember { mutableStateOf("") }
     var oldPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var successDialogMessage by remember { mutableStateOf<String?>(null) }
-    val currentUser = state.user
 
-    LaunchedEffect(user?.id, user?.foto) {
+    LaunchedEffect(user?.id, user?.nome, user?.username, user?.email, user?.foto) {
         viewModel.setUser(user)
+    }
+
+    LaunchedEffect(currentUser?.nome, currentUser?.username, isEditingDetails) {
+        if (!isEditingDetails && currentUser != null) {
+            profileNameInput = currentUser.nome
+            profileUsernameInput = currentUser.username
+        }
     }
 
     val photoPicker = rememberLauncherForActivityResult(
@@ -116,6 +116,10 @@ fun ProfileScreen(
             isEditingEmail = false
             emailCode = ""
         }
+
+        if (message.contains("perfil", ignoreCase = true) || message.contains("profile", ignoreCase = true)) {
+            isEditingDetails = false
+        }
     }
 
     successDialogMessage?.let { message ->
@@ -146,6 +150,78 @@ fun ProfileScreen(
         )
     }
 
+    if (isEditingDetails && currentUser != null) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!state.isSaving) {
+                    profileNameInput = currentUser.nome
+                    profileUsernameInput = currentUser.username
+                    isEditingDetails = false
+                }
+            },
+            title = {
+                Text(
+                    text = language.t("profile.changeData"),
+                    fontWeight = FontWeight.ExtraBold
+                )
+            },
+            text = {
+                Column(modifier = Modifier.responsiveDialogBody()) {
+                    OutlinedTextField(
+                        value = profileNameInput,
+                        onValueChange = { profileNameInput = it },
+                        label = { Text(language.t("profile.name")) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = profileUsernameInput,
+                        onValueChange = { profileUsernameInput = it },
+                        label = { Text(language.t("profile.username")) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = rememberSoundClick {
+                        viewModel.updateProfileDetails(
+                            nome = profileNameInput,
+                            username = profileUsernameInput,
+                            onUserUpdated = onUserUpdated
+                        )
+                    },
+                    enabled = !state.isSaving,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ProfileAccent,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = if (state.isSaving) language.t("common.saving") else language.t("common.save"),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = rememberSoundClick {
+                        profileNameInput = currentUser.nome
+                        profileUsernameInput = currentUser.username
+                        isEditingDetails = false
+                    },
+                    enabled = !state.isSaving,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(language.t("common.cancel"))
+                }
+            }
+        )
+    }
+
     if (isEditingPassword) {
         AlertDialog(
             onDismissRequest = {
@@ -161,7 +237,7 @@ fun ProfileScreen(
                 )
             },
             text = {
-                Column {
+                Column(modifier = Modifier.responsiveDialogBody()) {
                     OutlinedTextField(
                         value = oldPassword,
                         onValueChange = { oldPassword = it },
@@ -195,7 +271,7 @@ fun ProfileScreen(
                     onClick = rememberSoundClick {
                         viewModel.updatePassword(oldPassword, newPassword, confirmPassword)
                     },
-                    enabled = !state.isSaving,
+                    enabled = !state.isSaving && !state.isOffline,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = ProfileAccent,
                         contentColor = Color.White
@@ -239,7 +315,7 @@ fun ProfileScreen(
                 )
             },
             text = {
-                Column {
+                Column(modifier = Modifier.responsiveDialogBody()) {
                     Text(
                         text = language.t("profile.currentEmail").format(currentUser.email),
                         color = ProjectHubColors.Muted,
@@ -248,7 +324,7 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedButton(
                         onClick = rememberSoundClick { viewModel.sendEmailChangeCode() },
-                        enabled = !state.isSendingEmailCode && !state.isSaving,
+                        enabled = !state.isSendingEmailCode && !state.isSaving && !state.isOffline,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp)
                     ) {
@@ -286,7 +362,7 @@ fun ProfileScreen(
                     onClick = rememberSoundClick {
                         viewModel.updateEmail(emailInput, emailCode, onUserUpdated)
                     },
-                    enabled = !state.isSaving && state.emailCodeSent,
+                    enabled = !state.isSaving && state.emailCodeSent && !state.isOffline,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = ProfileAccent,
                         contentColor = Color.White
@@ -315,7 +391,7 @@ fun ProfileScreen(
         )
     }
 
-    if (isConfirmingDelete) {
+    if (isConfirmingDelete && !isAdminUser) {
         AlertDialog(
             onDismissRequest = {
                 if (!state.isDeleting) {
@@ -334,7 +410,7 @@ fun ProfileScreen(
             confirmButton = {
                 Button(
                     onClick = rememberSoundClick { viewModel.deleteAccount(onAccountDeleted) },
-                    enabled = !state.isDeleting,
+                    enabled = !state.isDeleting && !state.isOffline,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = ProfileRed,
                         contentColor = Color.White
@@ -377,6 +453,11 @@ fun ProfileScreen(
         if (currentUser == null) {
             ProfileMessageCard(language.t("profile.loadError"), ProfileRed)
             return@Column
+        }
+
+        if (state.isOffline) {
+            ProfileMessageCard(language.t("profile.offlineNotice"), ProfileAccent)
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
         Card(
@@ -457,6 +538,41 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
+        AccountActionCard(title = language.t("profile.data")) {
+            Text(
+                text = currentUser.nome,
+                color = ProjectHubColors.Ink,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp
+            )
+            Text(
+                text = "@${currentUser.username}",
+                color = ProjectHubColors.Muted,
+                fontSize = 14.sp
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = rememberSoundClick {
+                    profileNameInput = currentUser.nome
+                    profileUsernameInput = currentUser.username
+                    isEditingDetails = true
+                },
+                enabled = !state.isSaving && !state.isDeleting,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ProfileAccent,
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(language.t("profile.changeData"), fontWeight = FontWeight.Bold)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
         state.errorMessage?.let {
             ProfileMessageCard(message = it, color = ProfileRed)
             Spacer(modifier = Modifier.height(12.dp))
@@ -474,7 +590,7 @@ fun ProfileScreen(
 
             Button(
                 onClick = rememberSoundClick { isEditingEmail = true },
-                enabled = !state.isSaving && !state.isDeleting,
+                enabled = !state.isSaving && !state.isDeleting && !state.isOffline,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = ProfileAccent,
@@ -497,7 +613,7 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(10.dp))
             Button(
                 onClick = rememberSoundClick { isEditingPassword = true },
-                enabled = !state.isSaving && !state.isDeleting,
+                enabled = !state.isSaving && !state.isDeleting && !state.isOffline,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = ProfileAccent,
@@ -511,158 +627,27 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        AccountActionCard(title = language.t("profile.deleteAccount")) {
-            Text(
-                text = language.t("profile.deleteHint"),
-                color = ProjectHubColors.Muted,
-                fontSize = 13.sp
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-
-            TextButton(
-                onClick = rememberSoundClick { isConfirmingDelete = true },
-                enabled = !state.isSaving && !state.isDeleting,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+        if (!isAdminUser) {
+            AccountActionCard(title = language.t("profile.deleteAccount")) {
                 Text(
-                    text = language.t("profile.deleteAccount"),
-                    color = ProfileRed,
-                    fontWeight = FontWeight.ExtraBold
+                    text = language.t("profile.deleteHint"),
+                    color = ProjectHubColors.Muted,
+                    fontSize = 13.sp
                 )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                TextButton(
+                    onClick = rememberSoundClick { isConfirmingDelete = true },
+                    enabled = !state.isSaving && !state.isDeleting && !state.isOffline,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = language.t("profile.deleteAccount"),
+                        color = ProfileRed,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
             }
         }
-    }
-}
-
-@Composable
-private fun ProfilePhoto(
-    photoUri: String?,
-    name: String,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .clip(CircleShape)
-            .background(ProfileAccent.copy(alpha = 0.12f))
-            .border(3.dp, ProfileAccent, CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
-        val bitmap = rememberProfileImageBitmap(photoUri)
-
-        when {
-            bitmap != null -> Image(
-                bitmap = bitmap,
-                contentDescription = currentAppSettings().language.t("profile.photoDescription"),
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-
-            else -> Text(
-                text = name.firstOrNull()?.uppercaseChar()?.toString() ?: "G",
-                color = ProfileAccent,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 42.sp
-            )
-        }
-    }
-}
-
-@Composable
-internal fun TopBarProfilePhoto(
-    photoUri: String?,
-    name: String?,
-    modifier: Modifier = Modifier
-) {
-    val bitmap = rememberProfileImageBitmap(photoUri)
-
-    Box(
-        modifier = modifier
-            .clip(CircleShape)
-            .background(Color.White)
-            .border(1.dp, ProjectHubColors.HeaderContent.copy(alpha = 0.18f), CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
-        when {
-            bitmap != null -> Image(
-                bitmap = bitmap,
-                contentDescription = currentAppSettings().language.t("profile.title"),
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-
-            !name.isNullOrBlank() -> Text(
-                text = name.first().uppercaseChar().toString(),
-                color = ProfileAccent,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 17.sp
-            )
-
-            else -> Image(
-                painter = painterResource(id = R.drawable.projecthub_logo),
-                contentDescription = currentAppSettings().language.t("profile.title"),
-                modifier = Modifier.padding(4.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun rememberProfileImageBitmap(photoUri: String?): androidx.compose.ui.graphics.ImageBitmap? {
-    val context = LocalContext.current
-
-    return androidx.compose.runtime.remember(photoUri) {
-        if (photoUri.isNullOrBlank()) {
-            null
-        } else {
-            runCatching {
-                context.contentResolver.openInputStream(Uri.parse(photoUri))?.use { input ->
-                    android.graphics.BitmapFactory.decodeStream(input)?.asImageBitmap()
-                }
-            }.getOrNull()
-        }
-    }
-}
-
-@Composable
-private fun AccountActionCard(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = ProjectHubColors.LightSurface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-        Text(
-            text = title,
-            color = ProjectHubColors.Ink,
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 16.sp
-        )
-            Spacer(modifier = Modifier.height(10.dp))
-            content()
-        }
-    }
-}
-
-@Composable
-private fun ProfileMessageCard(
-    message: String,
-    color: Color
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f))
-    ) {
-        Text(
-            text = message,
-            color = color,
-            fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
-            modifier = Modifier.padding(12.dp)
-        )
     }
 }

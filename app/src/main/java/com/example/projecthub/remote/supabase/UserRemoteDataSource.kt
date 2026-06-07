@@ -74,10 +74,35 @@ class UserRemoteDataSource {
             }
     }
 
+    suspend fun updateUserRole(userId: Int, role: String) {
+        SupabaseClientProvider.client
+            .from("users")
+            .update(mapOf("role" to role)) {
+                filter {
+                    eq("id", userId)
+                }
+            }
+    }
+
     suspend fun updateUserPhoto(userId: Int, photoUri: String?) {
         SupabaseClientProvider.client
             .from("users")
             .update(mapOf("foto" to photoUri)) {
+                filter {
+                    eq("id", userId)
+                }
+            }
+    }
+
+    suspend fun updateUserProfile(userId: Int, nome: String, username: String) {
+        SupabaseClientProvider.client
+            .from("users")
+            .update(
+                mapOf(
+                    "nome" to nome,
+                    "username" to username
+                )
+            ) {
                 filter {
                     eq("id", userId)
                 }

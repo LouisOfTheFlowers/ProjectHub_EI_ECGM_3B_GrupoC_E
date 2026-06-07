@@ -9,7 +9,7 @@ interface SyncQueueDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSyncAction(syncAction: SyncQueueEntity)
 
-    @Query("SELECT * FROM sync_queue WHERE synced = 0")
+    @Query("SELECT * FROM sync_queue WHERE synced = 0 ORDER BY id ASC")
     suspend fun getPendingSyncActions(): List<SyncQueueEntity>
 
     @Query("UPDATE sync_queue SET synced = 1 WHERE id = :id")
