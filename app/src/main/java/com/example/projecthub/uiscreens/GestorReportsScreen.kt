@@ -27,10 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,12 +44,12 @@ import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
 import com.example.projecthub.viewmodel.GestorReportCard
-import com.example.projecthub.viewmodel.GestorReportExport
 import com.example.projecthub.viewmodel.GestorReportExportType
 import com.example.projecthub.viewmodel.GestorReportSummary
 import com.example.projecthub.viewmodel.GestorReportsState
 import com.example.projecthub.viewmodel.GestorReportsViewModel
 import com.example.projecthub.ui.theme.ProjectHubColors
+import java.nio.charset.Charset
 
 private val GestorReportsAccent = AuthAccent
 private val GestorReportsGreen = ProjectHubColors.SuccessDark
@@ -66,8 +63,8 @@ fun GestorReportsScreen(
     viewModel: GestorReportsViewModel = viewModel()
 ) {
     val state = viewModel.state
+    val language = currentAppSettings().language
     val context = LocalContext.current
-    var pendingExport by remember { mutableStateOf<GestorReportExport?>(null) }
 
     LaunchedEffect(gestorId) {
         viewModel.loadReports(gestorId)
@@ -76,27 +73,27 @@ fun GestorReportsScreen(
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv"),
         onResult = { uri ->
-            val export = pendingExport
+            val export = viewModel.getPendingExport()
 
             if (uri != null && export != null) {
                 try {
                     context.contentResolver.openOutputStream(uri)?.use { output ->
-                        output.write(export.content.toByteArray(Charsets.UTF_8))
-                    } ?: error("Não foi possível abrir o ficheiro selecionado.")
+                        output.write(export.content.toByteArray(Charset.forName("windows-1252")))
+                    } ?: error(language.t("reports.openFileError"))
 
                     Toast.makeText(
                         context,
-                        "Relatório de ${export.label.lowercase()} exportado.",
+                        language.t("reports.exported").format(export.label.lowercase()),
                         Toast.LENGTH_SHORT
                     ).show()
                 } catch (e: Exception) {
                     viewModel.setExportError(
-                        e.message ?: "Não foi possível exportar o relatório."
+                        e.message ?: language.t("reports.exportError")
                     )
                 }
             }
 
-            pendingExport = null
+            viewModel.clearPendingExport()
         }
     )
 
@@ -116,7 +113,6 @@ fun GestorReportsScreen(
                 state = state,
                 onExport = { type ->
                     val export = viewModel.buildExport(type) ?: return@GestorReportsContent
-                    pendingExport = export
                     exportLauncher.launch(export.fileName)
                 }
             )
@@ -307,6 +303,7 @@ private fun GestorReportExportCard(
     card: GestorReportCard,
     onExport: () -> Unit
 ) {
+    val language = currentAppSettings().language
     val accent = when (card.type) {
         GestorReportExportType.Users -> GestorReportsAccent
         GestorReportExportType.Projects -> GestorReportsBlue

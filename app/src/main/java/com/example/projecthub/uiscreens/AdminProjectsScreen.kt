@@ -520,19 +520,10 @@ private fun ProjectListCard(
                         fontSize = 12.sp
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-<<<<<<< Updated upstream
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         ActionIconButton("?", ProjectsAccent, onEdit)
                         ActionIconButton("X", ProjectsRed, onDelete)
                     }
-=======
-                    Text(
-                        text = if (project.isExpanded) "^" else "v",
-                        color = ProjectHubColors.Muted,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
->>>>>>> Stashed changes
                 }
             }
 

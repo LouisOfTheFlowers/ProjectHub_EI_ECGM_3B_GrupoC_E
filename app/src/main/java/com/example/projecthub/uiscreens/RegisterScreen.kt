@@ -60,19 +60,7 @@ fun RegisterScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 28.dp, vertical = 36.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        AuthHeader(subtitle = language.t("register.subtitle"))
-
-        Spacer(modifier = Modifier.height(32.dp))
-
+    AuthResponsiveLayout(subtitle = language.t("register.subtitle")) {
         OutlinedTextField(
             value = nome,
             onValueChange = { nome = it },

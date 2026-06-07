@@ -26,10 +26,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,12 +43,12 @@ import com.example.projecthub.settings.currentAppSettings
 import com.example.projecthub.settings.rememberSoundClick
 import com.example.projecthub.settings.t
 import com.example.projecthub.viewmodel.AdminReportCard
-import com.example.projecthub.viewmodel.AdminReportExport
 import com.example.projecthub.viewmodel.AdminReportExportType
 import com.example.projecthub.viewmodel.AdminReportSummary
 import com.example.projecthub.viewmodel.AdminReportsState
 import com.example.projecthub.viewmodel.AdminReportsViewModel
 import com.example.projecthub.ui.theme.ProjectHubColors
+import java.nio.charset.Charset
 
 private val ReportsAccent = AuthAccent
 private val ReportsGreen = ProjectHubColors.SuccessDark
@@ -66,28 +63,31 @@ fun AdminReportsScreen(
     val state = viewModel.state
     val language = currentAppSettings().language
     val context = LocalContext.current
-    var pendingExport by remember { mutableStateOf<AdminReportExport?>(null) }
 
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv"),
         onResult = { uri ->
-            val export = pendingExport
+            val export = viewModel.getPendingExport()
 
             if (uri != null && export != null) {
                 try {
                     context.contentResolver.openOutputStream(uri)?.use { output ->
-                        output.write(export.content.toByteArray(Charsets.UTF_8))
-                    } ?: error("Não foi possível abrir o ficheiro selecionado.")
+                        output.write(export.content.toByteArray(Charset.forName("windows-1252")))
+                    } ?: error(language.t("reports.openFileError"))
 
-                    Toast.makeText(context, "${export.label} CSV", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        language.t("reports.exported").format(export.label.lowercase()),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 } catch (e: Exception) {
                     viewModel.setExportError(
-                        e.message ?: "Não foi possível exportar o relatório."
+                        e.message ?: language.t("reports.exportError")
                     )
                 }
             }
 
-            pendingExport = null
+            viewModel.clearPendingExport()
         }
     )
 
@@ -107,7 +107,6 @@ fun AdminReportsScreen(
                 state = state,
                 onExport = { type ->
                     val export = viewModel.buildExport(type) ?: return@ReportsContent
-                    pendingExport = export
                     exportLauncher.launch(export.fileName)
                 }
             )
@@ -298,6 +297,7 @@ private fun ReportExportCard(
     card: AdminReportCard,
     onExport: () -> Unit
 ) {
+    val language = currentAppSettings().language
     val accent = when (card.type) {
         AdminReportExportType.Users -> ReportsAccent
         AdminReportExportType.Projects -> ReportsBlue

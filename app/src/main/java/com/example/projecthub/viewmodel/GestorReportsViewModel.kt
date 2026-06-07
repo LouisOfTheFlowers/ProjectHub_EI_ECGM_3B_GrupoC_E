@@ -85,6 +85,7 @@ class GestorReportsViewModel(
     )
 
     private var source: ReportsSource? = null
+    private var pendingExport: GestorReportExport? = null
 
     var state by mutableStateOf(GestorReportsState())
         private set
@@ -195,7 +196,15 @@ class GestorReportsViewModel(
             fileName = "projecthub_${type.filePrefix}_${LocalDate.now()}.csv",
             content = content,
             label = type.title
-        )
+        ).also { pendingExport = it }
+    }
+
+    fun getPendingExport(): GestorReportExport? {
+        return pendingExport
+    }
+
+    fun clearPendingExport() {
+        pendingExport = null
     }
 
     fun setExportError(message: String) {
@@ -221,7 +230,7 @@ class GestorReportsViewModel(
             GestorReportCard(
                 type = GestorReportExportType.Users,
                 title = "Estatísticas por utilizador",
-                description = "Equipa associada aos teus projetos, tarefas atribuídas, progresso e tempo registado.",
+                description = "Equipa, projetos, tarefas concluídas e horas por utilizador.",
                 rows = source.users.size,
                 primaryMetric = "$usersWithTasks com tarefas",
                 secondaryMetric = "${source.projectUsers.size} associações"
@@ -229,7 +238,7 @@ class GestorReportsViewModel(
             GestorReportCard(
                 type = GestorReportExportType.Projects,
                 title = "Estatísticas por projeto",
-                description = "Projetos atribuídos a ti, equipa, tarefas concluídas, atrasos, progresso e horas.",
+                description = "Datas, equipa, tarefas, progresso e horas por projeto.",
                 rows = source.projects.size,
                 primaryMetric = "$completedProjects concluídos",
                 secondaryMetric = "$delayedTasks tarefas atrasadas"
@@ -237,7 +246,7 @@ class GestorReportsViewModel(
             GestorReportCard(
                 type = GestorReportExportType.Tasks,
                 title = "Estatísticas por tarefa",
-                description = "Tarefas dos teus projetos com responsáveis, registos, conclusão média e tempo gasto.",
+                description = "Projeto, prazo, responsáveis, progresso, horas e atrasos por tarefa.",
                 rows = source.tasks.size,
                 primaryMetric = "$completedTasks completadas",
                 secondaryMetric = "${totalHours.formatNumber()} h"
@@ -246,7 +255,6 @@ class GestorReportsViewModel(
     }
 
     private fun buildUsersCsv(source: ReportsSource): String {
-        val projectsById = source.projects.mapNotNull { project -> project.id?.let { it to project } }.toMap()
         val tasksById = source.tasks.mapNotNull { task -> task.id?.let { it to task } }.toMap()
         val projectIdsByUser = source.projectUsers
             .groupBy { it.user_id }
@@ -266,41 +274,29 @@ class GestorReportsViewModel(
                 val completedAssignedTasks = assignedTaskIds.count { taskId ->
                     tasksById[taskId]?.status?.isCompletedStatus() == true
                 }
-                val projectNames = userProjectIds
-                    .mapNotNull { projectsById[it]?.nome }
-                    .sorted()
-                    .joinToString(", ")
+                val associatedProjectIds = userProjectIds +
+                    assignedTaskIds.mapNotNull { taskId -> tasksById[taskId]?.projeto_id }
 
                 listOf(
-                    userId.toString(),
                     user.nome,
-                    user.username,
                     user.email,
-                    user.status,
-                    projectNames,
-                    userProjectIds.size.toString(),
+                    user.status.toDisplayLabel(),
+                    associatedProjectIds.size.toString(),
                     assignedTaskIds.size.toString(),
                     completedAssignedTasks.toString(),
-                    records.size.toString(),
-                    records.map { it.taxa_conclusao }.averageOrZero().roundToInt().toString(),
                     records.sumOf { (it.tempo_gasto ?: 0f).toDouble() }.toFloat().formatNumber()
                 )
             }
 
         return buildCsv(
             headers = listOf(
-                "user_id",
-                "nome",
-                "username",
-                "email",
-                "status",
-                "projetos",
-                "total_projetos",
-                "tarefas_atribuidas",
-                "tarefas_concluidas",
-                "registos",
-                "taxa_media_conclusao_percentagem",
-                "tempo_total_horas"
+                "Nome",
+                "Email",
+                "Estado",
+                "Projetos",
+                "Tarefas",
+                "Concluídas",
+                "Horas"
             ),
             rows = rows
         )
@@ -319,7 +315,6 @@ class GestorReportsViewModel(
                 val taskIds = projectTasks.mapNotNull { it.id }.toSet()
                 val projectRecords = taskIds.flatMap { taskId -> recordsByTask[taskId].orEmpty() }
                 val completedTasks = projectTasks.count { it.status.isCompletedStatus() }
-                val pendingTasks = projectTasks.size - completedTasks
                 val delayedTasks = projectTasks.count { it.isDelayed() }
                 val progress = if (projectTasks.isEmpty()) {
                     projectRecords.map { it.taxa_conclusao }.averageOrZero().roundToInt()
@@ -328,39 +323,31 @@ class GestorReportsViewModel(
                 }
 
                 listOf(
-                    projectId.toString(),
                     project.nome,
-                    project.status,
+                    project.status.toDisplayLabel(),
                     project.data_inicio.toCsvDate(),
                     project.data_fim.toCsvDate(),
                     (memberCountsByProject[projectId] ?: 0).toString(),
                     projectTasks.size.toString(),
                     completedTasks.toString(),
-                    pendingTasks.toString(),
                     delayedTasks.toString(),
                     progress.toString(),
-                    projectRecords.map { it.taxa_conclusao }.averageOrZero().roundToInt().toString(),
-                    projectRecords.sumOf { (it.tempo_gasto ?: 0f).toDouble() }.toFloat().formatNumber(),
-                    projectRecords.size.toString()
+                    projectRecords.sumOf { (it.tempo_gasto ?: 0f).toDouble() }.toFloat().formatNumber()
                 )
             }
 
         return buildCsv(
             headers = listOf(
-                "projeto_id",
-                "projeto",
-                "status",
-                "data_inicio",
-                "data_fim",
-                "membros",
-                "tarefas",
-                "tarefas_concluidas",
-                "tarefas_pendentes",
-                "tarefas_atrasadas",
-                "progresso_percentagem",
-                "taxa_media_conclusao_percentagem",
-                "tempo_total_horas",
-                "registos"
+                "Projeto",
+                "Estado",
+                "Início",
+                "Prazo",
+                "Membros",
+                "Tarefas",
+                "Concluídas",
+                "Atrasadas",
+                "Progresso (%)",
+                "Horas"
             ),
             rows = rows
         )
@@ -378,15 +365,11 @@ class GestorReportsViewModel(
                 val records = recordsByTask[taskId].orEmpty()
 
                 listOf(
-                    taskId.toString(),
                     task.titulo,
-                    task.descricao.orEmpty(),
                     projectsById[task.projeto_id].orEmpty(),
-                    task.status,
-                    task.data_inicio.toCsvDate(),
+                    task.status.toDisplayLabel(),
                     task.data_fim.toCsvDate(),
                     (userCountsByTask[taskId] ?: 0).toString(),
-                    records.size.toString(),
                     records.map { it.taxa_conclusao }.averageOrZero().roundToInt().toString(),
                     records.sumOf { (it.tempo_gasto ?: 0f).toDouble() }.toFloat().formatNumber(),
                     if (task.isDelayed()) "Sim" else "Não"
@@ -395,18 +378,14 @@ class GestorReportsViewModel(
 
         return buildCsv(
             headers = listOf(
-                "tarefa_id",
-                "tarefa",
-                "descricao",
-                "projeto",
-                "status",
-                "data_inicio",
-                "data_fim",
-                "utilizadores_atribuidos",
-                "registos",
-                "taxa_media_conclusao_percentagem",
-                "tempo_total_horas",
-                "atrasada"
+                "Tarefa",
+                "Projeto",
+                "Estado",
+                "Prazo",
+                "Responsáveis",
+                "Progresso (%)",
+                "Horas",
+                "Atrasada"
             ),
             rows = rows
         )
@@ -464,6 +443,21 @@ class GestorReportsViewModel(
             "FINALIZADO",
             "FINALIZADA"
         )
+    }
+
+    private fun String.toDisplayLabel(): String {
+        return when (normalizedStatus()) {
+            "ATIVO", "ACTIVO" -> "Ativo"
+            "INATIVO", "INACTIVO" -> "Inativo"
+            "PENDENTE" -> "Pendente"
+            "EM_PROGRESSO" -> "Em progresso"
+            "ATRASADO", "ATRASADA" -> "Atrasado"
+            "CONCLUIDO", "CONCLUIDA", "COMPLETO", "COMPLETA",
+            "COMPLETADO", "COMPLETADA", "FINALIZADO", "FINALIZADA" -> "Concluído"
+            else -> trim()
+                .lowercase()
+                .replaceFirstChar { it.titlecase() }
+        }
     }
 
     private fun String.normalizedStatus(): String {
