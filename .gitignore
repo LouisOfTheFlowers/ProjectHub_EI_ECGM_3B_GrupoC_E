@@ -16,6 +16,7 @@ out/
 
 # Local configuration
 local.properties
+release-keystore.properties
 
 # OS files
 .DS_Store
