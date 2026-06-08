@@ -76,53 +76,25 @@ fun UtilizadorScaffold(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        if (layout.isLandscape) {
-            Row(modifier = Modifier.fillMaxSize()) {
-                UtilizadorSidebar(
-                    selectedSection = selectedRoute,
-                    onNavigate = onNavigate,
-                    onLogout = onLogout,
-                    sidebarWidth = layout.sidebarWidth
-                )
-                UtilizadorMainContent(
-                    modifier = Modifier.weight(1f),
-                    showMenu = false,
-                    topBarHeight = layout.topBarHeight,
-                    contentPadding = layout.contentPadding,
-                    onMenuClick = {},
-                    profilePhotoUri = profilePhotoUri,
-                    profileName = profileName,
-                    notifications = notifications,
-                    unreadNotificationsCount = unreadNotificationsCount,
-                    notificationsLoading = notificationsLoading,
-                    notificationsError = notificationsError,
-                    onNotificationClick = onNotificationClick,
-                    onMarkAllNotificationsRead = onMarkAllNotificationsRead,
-                    onProfileClick = { onNavigate(AppRoutes.UserProfile) },
-                    content = content
-                )
-            }
-        } else {
-            UtilizadorMainContent(
-                modifier = Modifier.fillMaxSize(),
-                showMenu = true,
-                topBarHeight = layout.topBarHeight,
-                contentPadding = layout.contentPadding,
-                onMenuClick = { isSidebarOpen = true },
-                profilePhotoUri = profilePhotoUri,
-                profileName = profileName,
-                notifications = notifications,
-                unreadNotificationsCount = unreadNotificationsCount,
-                notificationsLoading = notificationsLoading,
-                notificationsError = notificationsError,
-                onNotificationClick = onNotificationClick,
-                onMarkAllNotificationsRead = onMarkAllNotificationsRead,
-                onProfileClick = { onNavigate(AppRoutes.UserProfile) },
-                content = content
-            )
-        }
+        UtilizadorMainContent(
+            modifier = Modifier.fillMaxSize(),
+            showMenu = true,
+            topBarHeight = layout.topBarHeight,
+            contentPadding = layout.contentPadding,
+            onMenuClick = { isSidebarOpen = true },
+            profilePhotoUri = profilePhotoUri,
+            profileName = profileName,
+            notifications = notifications,
+            unreadNotificationsCount = unreadNotificationsCount,
+            notificationsLoading = notificationsLoading,
+            notificationsError = notificationsError,
+            onNotificationClick = onNotificationClick,
+            onMarkAllNotificationsRead = onMarkAllNotificationsRead,
+            onProfileClick = { onNavigate(AppRoutes.UserProfile) },
+            content = content
+        )
 
-        if (!layout.isLandscape && isSidebarOpen) {
+        if (isSidebarOpen) {
             Row(modifier = Modifier.fillMaxSize()) {
                 UtilizadorSidebar(
                     selectedSection = selectedRoute,
@@ -130,7 +102,8 @@ fun UtilizadorScaffold(
                         onNavigate(section)
                         isSidebarOpen = false
                     },
-                    onLogout = onLogout
+                    onLogout = onLogout,
+                    sidebarWidth = layout.sidebarWidth
                 )
 
                 Box(
@@ -419,5 +392,4 @@ private fun UtilizadorMenuIcon(
         modifier = modifier.size(28.dp)
     )
 }
-
 

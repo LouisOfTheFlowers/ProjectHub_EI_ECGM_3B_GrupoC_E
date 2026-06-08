@@ -77,55 +77,28 @@ fun GestorScaffold(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        if (layout.isLandscape) {
-            Row(modifier = Modifier.fillMaxSize()) {
-                GestorSidebar(
-                    selectedSection = selectedRoute,
-                    onNavigate = onNavigate,
-                    onLogout = onLogout,
-                    sidebarWidth = layout.sidebarWidth
-                )
-                GestorMainContent(
-                    modifier = Modifier.weight(1f),
-                    showMenu = false,
-                    topBarHeight = layout.topBarHeight,
-                    contentPadding = layout.contentPadding,
-                    onMenuClick = {},
-                    profilePhotoUri = profilePhotoUri,
-                    profileName = profileName,
-                    notifications = notifications,
-                    unreadNotificationsCount = unreadNotificationsCount,
-                    notificationsLoading = notificationsLoading,
-                    notificationsError = notificationsError,
-                    onNotificationClick = onNotificationClick,
-                    onMarkAllNotificationsRead = onMarkAllNotificationsRead,
-                    onProfileClick = { onNavigate(AppRoutes.GestorProfile) },
-                    content = content
-                )
-            }
-        } else {
-            GestorMainContent(
-                modifier = Modifier.fillMaxSize(),
-                showMenu = true,
-                topBarHeight = layout.topBarHeight,
-                contentPadding = layout.contentPadding,
-                onMenuClick = openSidebar,
-                profilePhotoUri = profilePhotoUri,
-                profileName = profileName,
-                notifications = notifications,
-                unreadNotificationsCount = unreadNotificationsCount,
-                notificationsLoading = notificationsLoading,
-                notificationsError = notificationsError,
-                onNotificationClick = onNotificationClick,
-                onMarkAllNotificationsRead = onMarkAllNotificationsRead,
-                onProfileClick = { onNavigate(AppRoutes.GestorProfile) },
-                content = content
-            )
-        }
+        GestorMainContent(
+            modifier = Modifier.fillMaxSize(),
+            showMenu = true,
+            topBarHeight = layout.topBarHeight,
+            contentPadding = layout.contentPadding,
+            onMenuClick = openSidebar,
+            profilePhotoUri = profilePhotoUri,
+            profileName = profileName,
+            notifications = notifications,
+            unreadNotificationsCount = unreadNotificationsCount,
+            notificationsLoading = notificationsLoading,
+            notificationsError = notificationsError,
+            onNotificationClick = onNotificationClick,
+            onMarkAllNotificationsRead = onMarkAllNotificationsRead,
+            onProfileClick = { onNavigate(AppRoutes.GestorProfile) },
+            content = content
+        )
 
-        if (!layout.isLandscape && isSidebarOpen) {
+        if (isSidebarOpen) {
             GestorSidebarOverlay(
                 selectedSection = selectedRoute,
+                sidebarWidth = layout.sidebarWidth,
                 onDismiss = { isSidebarOpen = false },
                 onNavigate = { section ->
                     onNavigate(section)
@@ -264,6 +237,7 @@ private fun GestorTopBar(
 @Composable
 private fun GestorSidebarOverlay(
     selectedSection: String,
+    sidebarWidth: androidx.compose.ui.unit.Dp,
     onDismiss: () -> Unit,
     onNavigate: (String) -> Unit,
     onLogout: () -> Unit
@@ -272,7 +246,8 @@ private fun GestorSidebarOverlay(
         GestorSidebar(
             selectedSection = selectedSection,
             onNavigate = onNavigate,
-            onLogout = onLogout
+            onLogout = onLogout,
+            sidebarWidth = sidebarWidth
         )
 
         Box(
@@ -441,5 +416,4 @@ private fun GestorMenuIcon(
         modifier = modifier.size(28.dp)
     )
 }
-
 

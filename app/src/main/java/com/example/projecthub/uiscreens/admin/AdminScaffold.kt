@@ -81,55 +81,28 @@ fun AdminScaffold(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        if (layout.isLandscape) {
-            Row(modifier = Modifier.fillMaxSize()) {
-                AdminSidebar(
-                    selectedSection = selectedRoute,
-                    onNavigate = onNavigate,
-                    onLogout = onLogout,
-                    sidebarWidth = layout.sidebarWidth
-                )
-                AdminMainContent(
-                    modifier = Modifier.weight(1f),
-                    showMenu = false,
-                    topBarHeight = layout.topBarHeight,
-                    contentPadding = layout.contentPadding,
-                    onMenuClick = {},
-                    profilePhotoUri = profilePhotoUri,
-                    profileName = profileName,
-                    notifications = notifications,
-                    unreadNotificationsCount = unreadNotificationsCount,
-                    notificationsLoading = notificationsLoading,
-                    notificationsError = notificationsError,
-                    onNotificationClick = onNotificationClick,
-                    onMarkAllNotificationsRead = onMarkAllNotificationsRead,
-                    onProfileClick = { onNavigate(AppRoutes.AdminProfile) },
-                    content = content
-                )
-            }
-        } else {
-            AdminMainContent(
-                modifier = Modifier.fillMaxSize(),
-                showMenu = true,
-                topBarHeight = layout.topBarHeight,
-                contentPadding = layout.contentPadding,
-                onMenuClick = openSidebar,
-                profilePhotoUri = profilePhotoUri,
-                profileName = profileName,
-                notifications = notifications,
-                unreadNotificationsCount = unreadNotificationsCount,
-                notificationsLoading = notificationsLoading,
-                notificationsError = notificationsError,
-                onNotificationClick = onNotificationClick,
-                onMarkAllNotificationsRead = onMarkAllNotificationsRead,
-                onProfileClick = { onNavigate(AppRoutes.AdminProfile) },
-                content = content
-            )
-        }
+        AdminMainContent(
+            modifier = Modifier.fillMaxSize(),
+            showMenu = true,
+            topBarHeight = layout.topBarHeight,
+            contentPadding = layout.contentPadding,
+            onMenuClick = openSidebar,
+            profilePhotoUri = profilePhotoUri,
+            profileName = profileName,
+            notifications = notifications,
+            unreadNotificationsCount = unreadNotificationsCount,
+            notificationsLoading = notificationsLoading,
+            notificationsError = notificationsError,
+            onNotificationClick = onNotificationClick,
+            onMarkAllNotificationsRead = onMarkAllNotificationsRead,
+            onProfileClick = { onNavigate(AppRoutes.AdminProfile) },
+            content = content
+        )
 
-        if (!layout.isLandscape && isSidebarOpen) {
+        if (isSidebarOpen) {
             SidebarOverlay(
                 selectedSection = selectedRoute,
+                sidebarWidth = layout.sidebarWidth,
                 onDismiss = { isSidebarOpen = false },
                 onNavigate = { section ->
                     onNavigate(section)
@@ -268,6 +241,7 @@ private fun AdminTopBar(
 @Composable
 private fun SidebarOverlay(
     selectedSection: String,
+    sidebarWidth: androidx.compose.ui.unit.Dp,
     onDismiss: () -> Unit,
     onNavigate: (String) -> Unit,
     onLogout: () -> Unit
@@ -277,7 +251,8 @@ private fun SidebarOverlay(
         AdminSidebar(
             selectedSection = selectedSection,
             onNavigate = onNavigate,
-            onLogout = onLogout
+            onLogout = onLogout,
+            sidebarWidth = sidebarWidth
         )
 
         Box(
@@ -443,5 +418,4 @@ private fun MenuIcon(
         modifier = modifier.size(28.dp)
     )
 }
-
 
