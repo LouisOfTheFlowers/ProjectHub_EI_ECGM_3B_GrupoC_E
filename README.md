@@ -213,4 +213,7 @@ Areas cobertas:
 
 ## Autores
 
-EI-3B-GrupoC e ECGM-GrupoE.
+Filipa Calheiros
+Luís Flores
+Daniel Alves
+Tomás Felicíssimo
